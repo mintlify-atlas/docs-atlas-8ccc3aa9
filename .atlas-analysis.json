@@ -1,0 +1,149 @@
+{
+  "projectType": "frontend",
+  "projectName": "HAI Build Code Generator",
+  "projectDescription": "VS Code extension that streamlines development workflows through AI-powered task execution, intelligent file management, and automated code generation.",
+  "theme": "palm",
+  "primaryColor": "#6366F1",
+  "lightColor": "#818CF8",
+  "darkColor": "#4F46E5",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/ai-powered-coding",
+              "features/task-management",
+              "features/file-identification",
+              "features/inline-editing",
+              "features/experts",
+              "features/mcp-integration"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/settings",
+              "configuration/llm-providers",
+              "configuration/telemetry",
+              "configuration/experts-setup"
+            ]
+          },
+          {
+            "group": "Usage Guides",
+            "pages": [
+              "guides/getting-started",
+              "guides/task-execution",
+              "guides/code-generation",
+              "guides/git-integration",
+              "guides/jupyter-notebooks"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/cli-usage",
+              "advanced/api-integration",
+              "advanced/custom-experts",
+              "advanced/cor-matrix"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Extension API",
+            "pages": [
+              "api/overview",
+              "api/commands",
+              "api/slash-commands",
+              "api/events"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "api/cli/overview",
+              "api/cli/commands",
+              "api/cli/options"
+            ]
+          },
+          {
+            "group": "LLM Providers",
+            "pages": [
+              "api/providers/overview",
+              "api/providers/anthropic",
+              "api/providers/openai",
+              "api/providers/openrouter",
+              "api/providers/custom"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contributing",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "contributing/overview",
+              "contributing/setup",
+              "contributing/architecture",
+              "contributing/testing"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "contributing/guidelines",
+              "contributing/code-of-conduct",
+              "changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI-powered code generation with multiple LLM providers",
+    "Intelligent task management and execution",
+    "Smart file identification and context generation",
+    "Inline editing with AI assistance",
+    "Domain experts (built-in and custom)",
+    "MCP (Model Context Protocol) integration",
+    "Git commit message generation",
+    "Jupyter notebook support",
+    "CLI tool for autonomous coding",
+    "COR-Matrix code retention tracking",
+    "Telemetry and observability"
+  ],
+  "publicApiSurface": [
+    "hai.addToChat",
+    "hai.focusChatInput",
+    "hai.generateGitCommitMessage",
+    "hai.explainCode",
+    "hai.improveCode",
+    "hai.jupyterGenerateCell",
+    "hai.jupyterExplainCell",
+    "hai.jupyterImproveCell",
+    "hai.plusButtonClicked",
+    "hai.mcpButtonClicked",
+    "hai.historyButtonClicked",
+    "hai.settingsButtonClicked",
+    "hai.haiBuildTaskListClicked",
+    "cline CLI",
+    "createClineAPI()"
+  ]
+}
