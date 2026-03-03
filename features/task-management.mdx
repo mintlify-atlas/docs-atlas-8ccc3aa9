@@ -1,0 +1,429 @@
+---
+title: "HAI Tasks"
+description: "Integrate AI-generated user stories and tasks from Specif AI directly into your development workflow."
+---
+
+HAI Tasks brings AI-generated user stories and development tasks from [Specif AI](https://github.com/presidio-oss/specif-ai) directly into HAI Build Code Generator. Review, execute, and manage your entire development backlog without leaving your IDE.
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/gifs/hai-detailed-view.gif" alt="HAI Tasks detailed view" />
+  <p style={{textAlign: 'center', fontStyle: 'italic', marginTop: '8px'}}>Detailed View of HAI Tasks</p>
+</Frame>
+
+## What is HAI Tasks?
+
+HAI Tasks is a task management interface that:
+
+- **Loads** AI-generated user stories from Specif AI
+- **Displays** tasks in a structured, searchable interface
+- **Executes** tasks with a single click
+- **Tracks** progress across stories and subtasks
+- **Manages** your entire development workflow
+
+<Info>
+HAI Tasks works seamlessly with Specif AI but can also be used independently for organizing any development work.
+</Info>
+
+## Getting Started
+
+<Steps>
+  <Step title="Access HAI Tasks">
+    Open the HAI Build sidebar and navigate to the Tasks tab.
+    
+    <Frame>
+      <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/img/hai-home.png" alt="HAI Home" />
+    </Frame>
+  </Step>
+  <Step title="Load Tasks">
+    Import tasks from Specif AI or create your own task list.
+  </Step>
+  <Step title="Review Stories">
+    Click the eye icon to view story details, objectives, and acceptance criteria.
+  </Step>
+  <Step title="Execute Tasks">
+    Click on a task to execute it with the AI code generator.
+  </Step>
+</Steps>
+
+## Task Structure
+
+HAI Tasks organizes work hierarchically:
+
+<Accordion title="User Stories">
+**User Stories** represent high-level features or requirements:
+
+```typescript
+interface IHaiStory {
+  id: string
+  name: string
+  description: string
+  storyTicketId?: string
+  tasks: IHaiTask[]
+}
+```
+
+Each story contains:
+- **ID**: Unique identifier
+- **Name**: Story title
+- **Description**: Detailed objectives and context
+- **Ticket ID**: Optional reference to external tracking system
+- **Tasks**: List of subtasks to complete the story
+</Accordion>
+
+<Accordion title="Tasks">
+**Tasks** are actionable work items:
+
+```typescript
+interface IHaiTask {
+  id: string
+  list: string
+  subTaskTicketId?: string
+}
+```
+
+Each task includes:
+- **ID**: Unique identifier
+- **List**: Task description/prompt for the AI
+- **Ticket ID**: Optional reference to task tracking
+
+Reference: `webview-ui/src/components/hai/hai-tasks-list.tsx:1`
+</Accordion>
+
+## Task List Interface
+
+The HAI Tasks interface provides powerful organization and search capabilities:
+
+### Search and Filter
+
+<Frame>
+  <img src="/images/task-search.png" alt="Task search interface" />
+</Frame>
+
+Search across:
+- Story names and descriptions
+- Story ticket IDs
+- Task descriptions
+- Subtask ticket IDs
+
+**Fuzzy Search**: Uses [Fuse.js](https://fusejs.io/) for intelligent matching:
+
+```typescript
+const fuse = new Fuse(haiTaskList, {
+  keys: [
+    "id",
+    "name",
+    "description",
+    "storyTicketId",
+    "tasks.id",
+    "tasks.list",
+    "tasks.subTaskTicketId"
+  ],
+  threshold: 0.5,
+  ignoreLocation: true
+})
+```
+
+See: `webview-ui/src/components/hai/hai-tasks-list.tsx:47`
+
+### Accordion View
+
+Stories are displayed in an expandable accordion:
+
+<CardGroup cols={2}>
+  <Card title="Expand/Collapse All" icon="arrows-up-down">
+    Control visibility of all stories at once
+  </Card>
+  <Card title="Individual Stories" icon="square-caret-down">
+    Expand specific stories to view their tasks
+  </Card>
+</CardGroup>
+
+**Keyboard Navigation**: Use arrow keys to navigate between stories and tasks.
+
+### Task Actions
+
+<Tabs>
+  <Tab title="View Details">
+    Click the **eye icon** to see:
+    - Full story description
+    - Prerequisites and dependencies
+    - Expected outcomes
+    - All associated tasks
+    
+    Component: `webview-ui/src/components/hai/DetailedView.tsx`
+  </Tab>
+  <Tab title="Execute Task">
+    Click a task to:
+    - Load task description into AI chat
+    - Automatically start code generation
+    - Track execution progress
+    - Monitor completion status
+  </Tab>
+  <Tab title="Reset Tasks">
+    Clear all loaded tasks and start fresh.
+  </Tab>
+</Tabs>
+
+## Integrating with Specif AI
+
+Specif AI generates structured user stories and tasks from requirements. Here's how to integrate:
+
+<Steps>
+  <Step title="Generate with Specif AI">
+    Use Specif AI to create user stories from:
+    - Product requirements
+    - Feature specifications
+    - Bug reports
+    - Enhancement requests
+  </Step>
+  <Step title="Export Task File">
+    Specif AI exports a JSON file containing stories and tasks:
+    
+    ```json
+    [
+      {
+        "id": "story-001",
+        "name": "User Authentication",
+        "description": "Implement secure user authentication system",
+        "storyTicketId": "AUTH-123",
+        "tasks": [
+          {
+            "id": "task-001",
+            "list": "Create user registration component with email validation",
+            "subTaskTicketId": "AUTH-124"
+          },
+          {
+            "id": "task-002",
+            "list": "Implement JWT-based authentication",
+            "subTaskTicketId": "AUTH-125"
+          }
+        ]
+      }
+    ]
+    ```
+  </Step>
+  <Step title="Load in HAI Build">
+    Import the JSON file into HAI Tasks interface.
+  </Step>
+  <Step title="Execute Tasks">
+    Work through tasks sequentially or jump to specific items.
+  </Step>
+</Steps>
+
+<Tip>
+Use ticket IDs to maintain traceability between Specif AI, HAI Build, and your project management tools (Jira, Linear, etc.).
+</Tip>
+
+## Task Execution Workflow
+
+When you execute a task from HAI Tasks:
+
+<Steps>
+  <Step title="Task Selection">
+    Click on a task to select it for execution.
+  </Step>
+  <Step title="Context Loading">
+    HAI Build loads:
+    - Task description as the initial prompt
+    - Story context for additional background
+    - Related files from previous tasks
+  </Step>
+  <Step title="AI Generation">
+    The AI code generator:
+    - Analyzes the task requirements
+    - Creates an implementation plan
+    - Generates code changes
+    - Executes necessary commands
+  </Step>
+  <Step title="Progress Tracking">
+    Monitor progress through:
+    - Real-time chat updates
+    - File change notifications
+    - Terminal command output
+    - Focus Chain todo list (if enabled)
+  </Step>
+  <Step title="Completion">
+    Review and approve:
+    - All code changes
+    - Test results
+    - Documentation updates
+  </Step>
+</Steps>
+
+## Task Components
+
+The HAI Tasks interface is built with React components:
+
+<CardGroup cols={2}>
+  <Card title="HaiTasksList" icon="list">
+    Main component managing task display and search
+    
+    `webview-ui/src/components/hai/hai-tasks-list.tsx`
+  </Card>
+  <Card title="HaiStoryAccordion" icon="accordion">
+    Expandable story view with task list
+    
+    `webview-ui/src/components/hai/HaiStoryAccordion.tsx`
+  </Card>
+  <Card title="HaiTaskComponent" icon="check-square">
+    Individual task rendering and interaction
+    
+    `webview-ui/src/components/hai/HaiTaskComponent.tsx`
+  </Card>
+  <Card title="DetailedView" icon="eye">
+    Full story and task details modal
+    
+    `webview-ui/src/components/hai/DetailedView.tsx`
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Break Down Large Stories">
+    - Keep individual tasks focused and atomic
+    - Limit tasks to 30-60 minute chunks
+    - Create clear, actionable task descriptions
+    - Include acceptance criteria in task text
+  </Accordion>
+  <Accordion title="Use Descriptive Names">
+    - Story names should clearly indicate the feature
+    - Task descriptions should be specific and actionable
+    - Include technical context when relevant
+    - Reference related files or components
+  </Accordion>
+  <Accordion title="Maintain Task Order">
+    - Sequence tasks logically (setup → implementation → testing)
+    - Consider dependencies between tasks
+    - Place infrastructure tasks early
+    - Save integration tasks for later
+  </Accordion>
+  <Accordion title="Track Progress">
+    - Use ticket IDs to link with external tools
+    - Review completed tasks periodically
+    - Update story descriptions as understanding evolves
+    - Mark blockers or issues in task text
+  </Accordion>
+</AccordionGroup>
+
+## Configuration
+
+### Task Storage
+
+Tasks are stored in your workspace:
+
+```
+workspace/
+├── .hai/
+│   └── tasks.json          # Task list storage
+└── ...
+```
+
+### Task Updates
+
+HAI Build tracks when tasks were last updated:
+
+```typescript
+interface TaskMetadata {
+  haiTaskLastUpdatedTs?: string  // Timestamp of last task file modification
+}
+```
+
+This enables:
+- Change detection
+- Sync status display
+- Conflict resolution
+
+## Advanced Features
+
+### Custom Task Templates
+
+Create reusable task templates:
+
+```json
+{
+  "template": "feature",
+  "tasks": [
+    {
+      "id": "{{feature}}-setup",
+      "list": "Set up {{feature}} directory structure and base files"
+    },
+    {
+      "id": "{{feature}}-impl",
+      "list": "Implement {{feature}} core functionality"
+    },
+    {
+      "id": "{{feature}}-test",
+      "list": "Write tests for {{feature}}"
+    }
+  ]
+}
+```
+
+### Task Dependencies
+
+Indicate task dependencies in descriptions:
+
+```json
+{
+  "id": "task-003",
+  "list": "Create login UI (requires: task-001 user registration component)"
+}
+```
+
+### Multi-Project Tasks
+
+Manage tasks across multiple workspaces:
+- Store tasks in a shared location
+- Use workspace-relative paths in task descriptions
+- Tag tasks with project identifiers
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+F` / `Cmd+F` | Focus search box |
+| `↑` / `↓` | Navigate tasks |
+| `Enter` | Execute selected task |
+| `Space` | Expand/collapse story |
+| `Esc` | Close detailed view |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tasks not loading">
+    - Check JSON file format
+    - Verify file permissions
+    - Review HAI Build logs
+    - Ensure valid task structure
+  </Accordion>
+  <Accordion title="Search not working">
+    - Clear search field and retry
+    - Check for special characters
+    - Verify Fuse.js is loaded
+    - Try exact string match
+  </Accordion>
+  <Accordion title="Task execution fails">
+    - Verify AI model is configured
+    - Check task description clarity
+    - Review workspace permissions
+    - Ensure necessary files exist
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Experts" icon="graduation-cap" href="/features/experts">
+    Combine tasks with domain experts for better results
+  </Card>
+  <Card title="Focus Chain" icon="list-check" href="/features/focus-chain">
+    Track task progress with automatic todo lists
+  </Card>
+  <Card title="File Identification" icon="magnifying-glass" href="/features/file-identification">
+    Help the AI find relevant files for each task
+  </Card>
+  <Card title="AI-Powered Coding" icon="robot" href="/features/ai-powered-coding">
+    Learn how the AI executes your tasks
+  </Card>
+</CardGroup>

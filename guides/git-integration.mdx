@@ -1,0 +1,510 @@
+---
+title: "Git Integration"
+description: "Leverage AI-powered git commit message generation and version control features"
+icon: "git-alt"
+---
+
+## Overview
+
+HAI Build provides intelligent Git integration that automates commit message generation while maintaining best practices for version control. The AI analyzes your changes and generates clear, conventional commit messages.
+
+## Git Commit Message Generation
+
+HAI Build can automatically generate informative commit messages based on your staged changes.
+
+### Features
+
+<CardGroup cols={2}>
+  <Card title="Conventional Commits" icon="file-contract">
+    Generates messages following conventional commit format
+  </Card>
+  <Card title="Context-Aware" icon="brain">
+    Analyzes diffs to understand what changed and why
+  </Card>
+  <Card title="Multi-Repository" icon="folders">
+    Supports workspaces with multiple git repositories
+  </Card>
+  <Card title="Customizable" icon="sliders">
+    Incorporates your notes and preferences
+  </Card>
+</CardGroup>
+
+## Generating Commit Messages
+
+<Steps>
+  <Step title="Stage Your Changes">
+    First, stage the files you want to commit using Git:
+
+    ```bash
+    git add src/components/UserProfile.tsx
+    git add src/services/user.service.ts
+    ```
+
+    Or stage all changes:
+    ```bash
+    git add .
+    ```
+  </Step>
+
+  <Step title="Trigger Generation">
+    Generate a commit message using one of these methods:
+
+    **Method 1: Source Control UI**
+    1. Open the Source Control panel in VS Code
+    2. Click the **HAI Build icon** in the Source Control toolbar
+
+    **Method 2: Command Palette**
+    1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+    2. Type **Generate Commit Message with HAI**
+    3. Press Enter
+
+    <Tip>
+      The HAI icon appears in your Source Control panel when HAI Build is installed.
+    </Tip>
+  </Step>
+
+  <Step title="Wait for Generation">
+    HAI Build will:
+    1. Analyze your staged changes with `git diff`
+    2. Understand what was modified
+    3. Generate a concise, descriptive commit message
+    4. Insert the message into the commit input box
+
+    A progress indicator shows "Generating commit message..."
+  </Step>
+
+  <Step title="Review and Edit">
+    The generated message appears in the commit message box:
+
+    - **Review** the generated message for accuracy
+    - **Edit** if you want to add more context or adjust wording
+    - **Commit** when satisfied
+
+    <Note>
+      HAI Build populates the message field but doesn't automatically commit. You maintain full control.
+    </Note>
+  </Step>
+
+  <Step title="Commit Changes">
+    Commit using your preferred method:
+
+    ```bash
+    # VS Code UI: Click the checkmark icon
+    # Or use git command:
+    git commit
+    # Message is already populated
+    ```
+  </Step>
+</Steps>
+
+## Commit Message Format
+
+HAI Build generates messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+### Structure
+
+```
+<type>: <short description>
+
+<detailed description (optional)>
+```
+
+### Commit Types
+
+HAI Build automatically determines the appropriate type:
+
+| Type | Usage |
+|------|-------|
+| `feat` | New feature or functionality |
+| `fix` | Bug fix |
+| `docs` | Documentation changes |
+| `style` | Code style/formatting (no logic change) |
+| `refactor` | Code refactoring |
+| `perf` | Performance improvements |
+| `test` | Adding or updating tests |
+| `chore` | Maintenance tasks, dependency updates |
+| `ci` | CI/CD configuration changes |
+| `build` | Build system changes |
+
+### Example Generated Messages
+
+<CodeGroup>
+```text New Feature
+feat: add user profile editing functionality
+
+Implement profile edit form with validation, image upload, 
+and API integration. Includes error handling and loading states.
+```
+
+```text Bug Fix
+fix: resolve authentication token refresh issue
+
+Fix race condition in token refresh logic that caused 
+occasional 401 errors. Add retry mechanism for failed requests.
+```
+
+```text Refactoring
+refactor: convert UserService to use async/await
+
+Replace promise chains with async/await for better readability.
+Extract error handling to dedicated utility function.
+```
+
+```text Documentation
+docs: update API integration guide
+
+Add examples for authentication, error handling, and 
+rate limiting. Include troubleshooting section.
+```
+</CodeGroup>
+
+## Advanced Features
+
+### Adding Developer Notes
+
+Provide context to influence the generated message:
+
+<Steps>
+  <Step title="Start Generation">
+    Click the HAI Build icon or use the command palette.
+  </Step>
+
+  <Step title="Enter Notes (Optional)">
+    If you've already typed notes in the commit message box:
+    - HAI Build reads your existing notes
+    - Incorporates relevant information
+    - Generates message considering your context
+
+    <Tip>
+      Add notes about **why** you made changes. HAI uses this to create more meaningful messages.
+    </Tip>
+  </Step>
+</Steps>
+
+**Example:**
+```text Your Note
+Fixed the performance issue users reported with large datasets
+
+↓ HAI generates:
+
+perf: optimize data rendering for large datasets
+
+Implement virtualization and pagination to handle datasets 
+with 10k+ items. Resolves performance degradation reported by users.
+```
+
+### Multi-Repository Workspaces
+
+When your workspace contains multiple Git repositories:
+
+<Steps>
+  <Step title="Trigger Generation">
+    Click the HAI Build icon or use the command palette.
+  </Step>
+
+  <Step title="Select Repository">
+    If multiple repositories have changes, HAI Build prompts:
+
+    ```
+    Select repository for commit message generation:
+    ○ frontend (3 files changed)
+    ○ backend (5 files changed)
+    ○ Generate for all repositories with changes
+    ```
+  </Step>
+
+  <Step title="Generate Messages">
+    - **Single Repository**: Message generated for selected repo
+    - **All Repositories**: Messages generated for each repo with changes
+  </Step>
+</Steps>
+
+### Canceling Generation
+
+If you need to stop the generation process:
+
+1. Click the **Stop** icon that appears during generation
+2. Or use Command Palette: **Generate Commit Message with HAI - Stop**
+
+<Warning>
+  Generation typically completes in a few seconds. Canceling is rarely needed.
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Stage Related Changes Together" icon="layer-group">
+    Group logically related changes in a single commit:
+
+    **Good:**
+    ```bash
+    # All changes for user authentication feature
+    git add src/auth/login.ts
+    git add src/auth/register.ts
+    git add src/components/LoginForm.tsx
+    ```
+
+    **Avoid:**
+    ```bash
+    # Unrelated changes in one commit
+    git add src/auth/login.ts
+    git add src/reports/analytics.ts
+    git add src/utils/formatting.ts
+    ```
+
+    This helps HAI generate focused, accurate commit messages.
+  </Accordion>
+
+  <Accordion title="Review Generated Messages" icon="eye">
+    Always review the generated message:
+
+    ✅ **Check:**
+    - Accuracy of the description
+    - Appropriate commit type
+    - Completeness of context
+
+    ✏️ **Edit if:**
+    - Important context is missing
+    - Wording can be clearer
+    - Ticket/issue numbers should be referenced
+
+    **Example edit:**
+    ```text
+    Generated:
+    feat: add user authentication
+
+    Edit to:
+    feat: add user authentication [PROJ-123]
+
+    Implement JWT-based authentication with refresh tokens.
+    Fixes issue where users were logged out prematurely.
+    ```
+  </Accordion>
+
+  <Accordion title="Keep Commits Atomic" icon="atom">
+    Each commit should represent a single logical change:
+
+    **Good commits:**
+    - ✅ `feat: add email validation to signup form`
+    - ✅ `fix: resolve memory leak in WebSocket connection`
+    - ✅ `refactor: extract user service to separate module`
+
+    **Poor commits:**
+    - ❌ `fix: multiple bugs and add features`
+    - ❌ `update: changed some files`
+    - ❌ `WIP: stuff`
+
+    Atomic commits help HAI generate precise messages.
+  </Accordion>
+
+  <Accordion title="Provide Context in Notes" icon="comment">
+    For complex changes, add context before generating:
+
+    ```text Your Note
+    Refactored the authentication flow to support OAuth2.
+    Broke backward compatibility with old token format.
+    Migrations included.
+
+    ↓ HAI considers this context:
+
+    refactor!: migrate authentication to OAuth2
+
+    BREAKING CHANGE: Old authentication tokens no longer supported.
+    Implement OAuth2 flow with authorization code grant.
+    Include migration script for existing user sessions.
+    ```
+
+    The `!` indicates a breaking change, following conventional commits.
+  </Accordion>
+
+  <Accordion title="Commit Frequently" icon="clock">
+    Smaller, frequent commits are easier to describe:
+
+    **Instead of:**
+    ```bash
+    # End of day: 47 files changed
+    git add .
+    git commit -m "various updates"
+    ```
+
+    **Try:**
+    ```bash
+    # After each logical change
+    git add src/auth/
+    git commit  # HAI: "feat: implement user authentication"
+
+    git add src/profile/
+    git commit  # HAI: "feat: add user profile management"
+
+    git add tests/
+    git commit  # HAI: "test: add auth and profile tests"
+    ```
+
+    Smaller diffs → More accurate messages
+  </Accordion>
+</AccordionGroup>
+
+## Integration with HAI Workflow
+
+Commit message generation integrates seamlessly with other HAI features:
+
+### After Task Execution
+
+<Steps>
+  <Step title="Complete Task">
+    Execute a HAI Task or code generation request.
+  </Step>
+
+  <Step title="Review Changes">
+    Review the diffs and accept changes.
+  </Step>
+
+  <Step title="Stage Changes">
+    ```bash
+    git add .
+    ```
+  </Step>
+
+  <Step title="Generate Commit Message">
+    Use HAI Build to generate a message based on the task changes.
+  </Step>
+
+  <Step title="Commit">
+    Commit with the generated message.
+  </Step>
+</Steps>
+
+### With Code Generation
+
+```text Workflow Example
+1. Request: "Add user profile editing feature"
+2. HAI generates: components, services, tests
+3. You review and accept changes
+4. Stage files: git add src/profile/
+5. Generate commit: HAI creates "feat: add user profile editing"
+6. Commit: git commit
+7. Push: git push
+```
+
+## Troubleshooting
+
+<Tabs>
+  <Tab title="No Changes to Commit">
+    **Issue**: "No changes found in repository"
+
+    **Solutions**:
+    - Ensure files are staged with `git add`
+    - Check `git status` to see if changes exist
+    - Verify you're in a git repository
+  </Tab>
+
+  <Tab title="Generation Fails">
+    **Issue**: Message generation fails or times out
+
+    **Solutions**:
+    1. Check your LLM API key is configured
+    2. Verify network connectivity
+    3. Try with smaller changesets
+    4. Check HAI Build logs for errors
+  </Tab>
+
+  <Tab title="Generic Messages">
+    **Issue**: Generated messages are too generic
+
+    **Solutions**:
+    - Add developer notes with context
+    - Make commits more atomic (fewer unrelated changes)
+    - Ensure meaningful variable/function names in code
+    - Review and edit the generated message
+  </Tab>
+
+  <Tab title="Wrong Commit Type">
+    **Issue**: HAI chooses incorrect type (feat vs fix, etc.)
+
+    **Solutions**:
+    - Add notes clarifying the change purpose
+    - Edit the generated message manually
+    - Stage related changes together
+  </Tab>
+</Tabs>
+
+## Configuration
+
+Customize commit message generation behavior:
+
+### Prompt Customization
+
+The commit message generator uses a configurable prompt that:
+- Follows conventional commit format
+- Creates 50-72 character titles
+- Describes what changed and why
+- Incorporates developer notes
+
+<Info>
+  Future versions will support custom prompt templates. Currently, the format follows industry best practices.
+</Info>
+
+### Model Selection
+
+Commit messages use your configured LLM provider and model:
+
+1. Go to **Settings** in HAI sidebar
+2. Select your preferred **LLM provider**
+3. Choose a **model** (faster models work well for commit messages)
+
+<Tip>
+  Commit message generation works with smaller, faster models since the task is straightforward. You don't need to use your most powerful model.
+</Tip>
+
+## Git Best Practices with HAI
+
+### Workflow Recommendations
+
+1. **Feature Branch Workflow**
+   ```bash
+   git checkout -b feature/user-profiles
+   # Make changes with HAI
+   git add .
+   # Generate commit message
+   git commit
+   git push origin feature/user-profiles
+   ```
+
+2. **Commit Often, Push Less**
+   - Commit after each logical change
+   - Push after completing a feature or at end of day
+   - Each commit has a clear, AI-generated message
+
+3. **Use Branches for Tasks**
+   - Create a branch for each HAI Task
+   - Make commits with generated messages
+   - Create PR when task is complete
+
+### Message History
+
+HAI-generated messages contribute to better:
+- **Code reviews**: Clear commit messages help reviewers
+- **Git history**: Easy to understand project evolution
+- **Debugging**: `git log` and `git blame` are more useful
+- **Changelogs**: Auto-generate from conventional commits
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Task Execution" icon="list-check" href="/guides/task-execution">
+    Execute tasks and commit changes efficiently
+  </Card>
+  <Card title="Code Generation" icon="code" href="/guides/code-generation">
+    Generate code changes worth committing
+  </Card>
+  <Card title="CLI Usage" icon="terminal" href="/advanced/cli-usage">
+    Use HAI Build from the command line
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/settings">
+    Customize HAI Build settings
+  </Card>
+</CardGroup>
+
+<Note>
+  **Pro Tip**: Combine HAI Build's code generation with automated commit messages for a seamless development workflow from ideation to version control.
+</Note>

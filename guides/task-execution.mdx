@@ -1,0 +1,307 @@
+---
+title: "Task Execution"
+description: "Execute AI-generated tasks from Specif AI integration seamlessly in HAI Build"
+icon: "list-check"
+---
+
+## Overview
+
+HAI Build integrates with [Specif AI](https://github.com/presidio-oss/specif-ai) to enable seamless execution of AI-generated user stories and development tasks. This powerful integration allows you to:
+
+- Load AI-generated tasks directly into HAI Build
+- Review task details before execution
+- Execute tasks with a single click
+- Track task progress and completion
+
+## Accessing HAI Tasks
+
+Open the HAI Tasks interface in multiple ways:
+
+<Steps>
+  <Step title="From the Sidebar">
+    Click the **HAI Tasks** icon (checklist icon) in the HAI Build sidebar toolbar.
+  </Step>
+
+  <Step title="From Command Palette">
+    1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+    2. Type **HAI Tasks**
+    3. Select **HAI Build: HAI Tasks**
+  </Step>
+</Steps>
+
+<Info>
+  The HAI Tasks feature provides a centralized interface for managing all AI-generated development tasks.
+</Info>
+
+## Understanding the Task Interface
+
+The HAI Tasks page displays:
+
+### User Stories View
+
+Tasks are organized by user stories, providing high-level context:
+
+- **Story Title**: Overview of the feature or requirement
+- **Story Description**: Detailed context and objectives
+- **Associated Tasks**: List of individual tasks for the story
+- **Eye Icon**: Click to view detailed story information
+
+### Task Details
+
+Each task includes:
+
+- **Task Title**: Clear description of the specific work
+- **Prerequisites**: Dependencies or requirements before starting
+- **Acceptance Criteria**: Conditions that define task completion
+- **Implementation Notes**: Additional context or guidance
+
+## Executing Tasks
+
+Follow this workflow to execute HAI Tasks:
+
+<Steps>
+  <Step title="Review the User Story">
+    Click the **Eye icon** next to a user story to view:
+    - Detailed story description
+    - Overall objectives
+    - List of associated tasks
+    - Dependencies and context
+
+    <Tip>
+      Understanding the full story context helps HAI make better decisions during task execution.
+    </Tip>
+  </Step>
+
+  <Step title="Select a Task">
+    From the story detail view or task list:
+    1. Click on a specific task to expand details
+    2. Review the task description, prerequisites, and acceptance criteria
+    3. Ensure all prerequisites are met before proceeding
+  </Step>
+
+  <Step title="Execute the Task">
+    Click the **Execute** or **Run** button to start task execution.
+
+    HAI Build will:
+    - Load the task context into the AI agent
+    - Analyze your codebase for relevant files
+    - Create an execution plan
+    - Present the plan for your review
+  </Step>
+
+  <Step title="Review and Approve">
+    HAI presents a detailed plan showing:
+    - Files to be modified or created
+    - Proposed changes
+    - Reasoning for each change
+
+    Review the plan carefully before approving.
+  </Step>
+
+  <Step title="Monitor Execution">
+    Watch as HAI executes the task:
+    - File operations are shown in real-time
+    - Progress updates appear in the chat
+    - Proposed diffs are displayed for approval
+
+    <Warning>
+      Always review diffs before accepting changes. You maintain full control throughout execution.
+    </Warning>
+  </Step>
+
+  <Step title="Verify Completion">
+    After execution:
+    1. Review all changes made
+    2. Test the implementation
+    3. Verify acceptance criteria are met
+    4. Run tests if applicable
+  </Step>
+</Steps>
+
+## Task Execution Best Practices
+
+<AccordionGroup>
+  <Accordion title="Complete Prerequisites First" icon="check">
+    Before executing a task:
+    - Ensure all prerequisite tasks are completed
+    - Verify required dependencies are installed
+    - Check that your development environment is properly configured
+    
+    This prevents errors and ensures smooth execution.
+  </Accordion>
+
+  <Accordion title="Review Task Context" icon="eye">
+    Take time to understand:
+    - What the task is trying to accomplish
+    - Why it's part of the larger user story
+    - How it fits into your application architecture
+    
+    Provide additional context to HAI if the task description lacks details.
+  </Accordion>
+
+  <Accordion title="Execute Tasks Sequentially" icon="list-ol">
+    For related tasks within a story:
+    - Execute them in the order specified
+    - Complete and verify one task before starting the next
+    - This maintains logical flow and prevents conflicts
+  </Accordion>
+
+  <Accordion title="Provide Feedback During Execution" icon="comment">
+    If HAI's approach doesn't align with your architecture:
+    - Pause and provide clarification
+    - Reference specific files or patterns to follow
+    - Suggest alternative implementations
+    
+    HAI adapts based on your feedback.
+  </Accordion>
+
+  <Accordion title="Test After Completion" icon="flask">
+    After task execution:
+    - Run relevant test suites
+    - Manually test new functionality
+    - Ensure acceptance criteria are fully met
+    - Check for unintended side effects
+  </Accordion>
+</AccordionGroup>
+
+## Managing Multiple Tasks
+
+When working with multiple tasks:
+
+### Parallel vs Sequential Execution
+
+**Sequential Execution** (Recommended):
+```
+1. Execute Task A
+2. Review and test changes
+3. Commit changes
+4. Execute Task B
+5. Review and test changes
+6. Commit changes
+```
+
+**Why Sequential?**
+- Easier to isolate issues
+- Cleaner commit history
+- Better code review process
+- Reduced risk of conflicts
+
+### Task Priority
+
+Prioritize tasks based on:
+- **Dependencies**: Complete prerequisite tasks first
+- **Complexity**: Start with simpler tasks to build momentum
+- **Risk**: Address high-risk changes when you have full attention
+- **Impact**: Consider which tasks unlock the most value
+
+## Handling Task Execution Issues
+
+<Tabs>
+  <Tab title="Task Fails to Execute">
+    If a task won't start:
+    
+    1. **Check Prerequisites**: Verify all dependencies are met
+    2. **Review Context**: Ensure HAI has necessary file access
+    3. **Simplify Request**: Break complex tasks into smaller steps
+    4. **Provide More Context**: Add relevant files or documentation to the chat
+  </Tab>
+
+  <Tab title="Incorrect Implementation">
+    If HAI's implementation doesn't match expectations:
+    
+    1. **Pause Execution**: Don't accept changes immediately
+    2. **Explain Requirements**: Clarify what you need differently
+    3. **Show Examples**: Reference similar code in your project
+    4. **Iterate**: Request adjustments until it's correct
+  </Tab>
+
+  <Tab title="Breaking Changes">
+    If execution introduces bugs:
+    
+    1. **Use Checkpoints**: Revert to the previous checkpoint
+    2. **Identify the Issue**: Determine what went wrong
+    3. **Adjust Approach**: Modify the task or provide constraints
+    4. **Re-execute**: Try again with better guidance
+  </Tab>
+</Tabs>
+
+## Integration with Specif AI
+
+HAI Tasks work seamlessly with the Specif AI workflow:
+
+<Steps>
+  <Step title="Generate User Stories in Specif AI">
+    Use Specif AI to analyze requirements and generate:
+    - User stories
+    - Task breakdowns
+    - Acceptance criteria
+  </Step>
+
+  <Step title="Export to HAI Build">
+    Tasks generated in Specif AI are automatically available in HAI Build's HAI Tasks interface.
+  </Step>
+
+  <Step title="Execute in HAI Build">
+    Select and execute tasks directly from the HAI Tasks page.
+  </Step>
+
+  <Step title="Track Progress">
+    Monitor completion status across both platforms.
+  </Step>
+</Steps>
+
+<Info>
+  This integration creates a seamless flow from requirements gathering to implementation.
+</Info>
+
+## Advanced Task Execution
+
+### Custom Task Context
+
+Enhance task execution with additional context:
+
+```
+Before executing a task, you can provide:
+- Architecture diagrams or documentation
+- Coding standards or style guides
+- Related code examples
+- API documentation
+```
+
+Add these by:
+1. Opening the task
+2. Clicking in the chat input
+3. Pasting or dragging files before execution
+
+### Expert Modes
+
+For domain-specific tasks, activate relevant experts:
+
+- **.NET Expert**: For .NET/C# tasks
+- **Node.js Expert**: For Node.js/JavaScript tasks
+- **Terraform Expert**: For infrastructure as code
+- **Go Expert**: For Go language tasks
+- **Custom Experts**: Your own domain-specific guidelines
+
+Experts provide specialized knowledge and best practices during task execution.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Code Generation" icon="code" href="/guides/code-generation">
+    Learn advanced code generation techniques
+  </Card>
+  <Card title="Git Integration" icon="git-alt" href="/guides/git-integration">
+    Commit task changes with AI-generated messages
+  </Card>
+  <Card title="Custom Experts" icon="user-graduate" href="/advanced/custom-experts">
+    Create experts for your specific tech stack
+  </Card>
+  <Card title="MCP Integration" icon="plug" href="/features/mcp-integration">
+    Extend capabilities with Model Context Protocol
+  </Card>
+</CardGroup>
+
+<Note>
+  **Questions?** Check out our [GitHub Discussions](https://github.com/presidio-oss/hai-build-codegen/discussions) or contact us at [hai-feedback@presidio.com](mailto:hai-feedback@presidio.com)
+</Note>

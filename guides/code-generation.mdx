@@ -1,0 +1,467 @@
+---
+title: "Code Generation"
+description: "Master AI-powered code generation workflows in HAI Build"
+icon: "code"
+---
+
+## Overview
+
+HAI Build provides intelligent code generation capabilities that go beyond simple autocomplete. The AI assistant understands your codebase, follows your patterns, and generates context-aware code that integrates seamlessly with your existing architecture.
+
+## Code Generation Workflows
+
+HAI Build supports multiple approaches to code generation:
+
+<CardGroup cols={2}>
+  <Card title="Conversational Generation" icon="comments">
+    Describe what you need in the chat, and HAI generates appropriate code
+  </Card>
+  <Card title="Context-Based Generation" icon="selection">
+    Select existing code and request modifications or extensions
+  </Card>
+  <Card title="File-Level Generation" icon="file-code">
+    Request new files, components, or modules
+  </Card>
+  <Card title="Inline Improvements" icon="wand-magic-sparkles">
+    Improve, refactor, or optimize existing code
+  </Card>
+</CardGroup>
+
+## Starting a Code Generation Task
+
+<Steps>
+  <Step title="Open HAI Chat">
+    Press `Cmd+'` (Mac) or `Ctrl+'` (Windows/Linux) to open the HAI sidebar.
+  </Step>
+
+  <Step title="Describe Your Requirements">
+    Be specific about what you want to create. Include:
+    - **Purpose**: What the code should do
+    - **Context**: Where it fits in your application
+    - **Requirements**: Specific features or constraints
+    - **Patterns**: Any coding standards or patterns to follow
+
+    <Tip>
+      The more context you provide, the better HAI's generated code will match your needs.
+    </Tip>
+  </Step>
+
+  <Step title="Review the Plan">
+    HAI analyzes your codebase and presents a plan showing:
+    - Files that will be created or modified
+    - Approach to implementation
+    - Reasoning behind decisions
+  </Step>
+
+  <Step title="Accept or Refine">
+    - **Accept**: Approve the plan to proceed with code generation
+    - **Refine**: Provide feedback to adjust the approach
+  </Step>
+
+  <Step title="Review Generated Code">
+    HAI shows diffs for all changes:
+    - New file contents
+    - Modifications to existing files
+    - Deletions or refactoring
+
+    Review carefully before accepting.
+  </Step>
+</Steps>
+
+## Example Code Generation Requests
+
+### Creating New Components
+
+<CodeGroup>
+```text Simple Component
+Create a React component for a user profile card that displays 
+name, email, avatar, and a follow button. Use TypeScript and 
+Tailwind CSS for styling.
+```
+
+```text API Endpoint
+Add a new REST API endpoint at /api/users/:id/preferences 
+that handles GET and PUT requests. Use our existing authentication 
+middleware and follow our error handling patterns.
+```
+
+```text Database Schema
+Create a new Prisma schema for a blog post that includes:
+- title, content, published date
+- author relationship to User model
+- tags as an array
+- slug for URLs
+```
+
+```text Utility Function
+Write a utility function that converts markdown to HTML with 
+syntax highlighting. It should sanitize input and handle code blocks. 
+Add tests using our Jest setup.
+```
+</CodeGroup>
+
+### Modifying Existing Code
+
+<Steps>
+  <Step title="Select Code">
+    Highlight the code you want to modify in your editor.
+  </Step>
+
+  <Step title="Add to HAI">
+    Press `Cmd+'` / `Ctrl+'` or right-click → **Add to HAI**
+  </Step>
+
+  <Step title="Request Changes">
+    ```text Example requests:
+    - "Refactor this to use async/await instead of promises"
+    - "Add error handling and logging to this function"
+    - "Convert this class component to a functional component with hooks"
+    - "Add TypeScript types to this JavaScript code"
+    - "Optimize this database query for better performance"
+    ```
+  </Step>
+</Steps>
+
+## Advanced Code Generation
+
+### Using Experts for Domain-Specific Code
+
+Activate experts to generate code following specific frameworks or patterns:
+
+<Tabs>
+  <Tab title=".NET Expert">
+    Generates C# code following .NET best practices:
+    - Async/await patterns
+    - Dependency injection
+    - Entity Framework conventions
+    - ASP.NET Core patterns
+  </Tab>
+
+  <Tab title="Node.js Expert">
+    Specializes in Node.js and JavaScript ecosystem:
+    - Express.js routing patterns
+    - npm package conventions
+    - Modern JavaScript syntax
+    - Testing with Jest/Mocha
+  </Tab>
+
+  <Tab title="Terraform Expert">
+    Infrastructure as Code generation:
+    - Resource definitions
+    - Module structure
+    - Variable and output conventions
+    - Provider configurations
+  </Tab>
+
+  <Tab title="Go Expert">
+    Go language best practices:
+    - Idiomatic Go patterns
+    - Error handling
+    - Concurrency patterns
+    - Package organization
+  </Tab>
+</Tabs>
+
+<Info>
+  Learn more about configuring and creating custom experts in our [Custom Experts guide](/advanced/custom-experts).
+</Info>
+
+### Multi-File Generation
+
+Generate complete features spanning multiple files:
+
+```text Example: Full Feature Request
+Create a complete user authentication system:
+- User model with Prisma schema
+- Registration and login API endpoints
+- JWT token generation and validation middleware
+- Password hashing with bcrypt
+- Integration tests for all endpoints
+- Follow our existing API patterns in /src/api
+```
+
+HAI will:
+1. Analyze your existing code structure
+2. Plan which files to create/modify
+3. Generate all necessary code
+4. Ensure consistency across files
+5. Present changes for your review
+
+### Test Generation
+
+Generate comprehensive tests for your code:
+
+<Steps>
+  <Step title="Select Function or Component">
+    Highlight the code you want to test.
+  </Step>
+
+  <Step title="Request Tests">
+    ```text
+    Generate unit tests for this function covering:
+    - Happy path scenarios
+    - Edge cases
+    - Error conditions
+    - Mock any external dependencies
+    ```
+  </Step>
+
+  <Step title="Review Test Coverage">
+    HAI generates tests matching your testing framework and patterns.
+  </Step>
+</Steps>
+
+## Code Generation Best Practices
+
+<AccordionGroup>
+  <Accordion title="Provide Clear Context" icon="crosshairs">
+    **Include:**
+    - File paths where code should go
+    - Related files or components
+    - Coding standards or patterns to follow
+    - Dependencies or libraries to use
+
+    **Example:**
+    ```text
+    Create a new service in src/services/notification.service.ts 
+    that sends email notifications. Use our existing EmailProvider 
+    from src/providers/email.ts and follow the pattern in 
+    user.service.ts.
+    ```
+  </Accordion>
+
+  <Accordion title="Reference Existing Patterns" icon="copy">
+    Help HAI understand your codebase conventions:
+
+    ```text
+    Create a new React component for displaying orders, 
+    following the same pattern as src/components/ProductCard.tsx
+    ```
+
+    HAI will analyze the referenced file and match its style.
+  </Accordion>
+
+  <Accordion title="Specify Requirements Explicitly" icon="list-check">
+    Be explicit about:
+    - Language and framework versions
+    - Type safety requirements (TypeScript, etc.)
+    - Testing expectations
+    - Performance considerations
+    - Security requirements
+
+    **Example:**
+    ```text
+    Create a TypeScript function that validates user input. 
+    It must:
+    - Sanitize against XSS attacks
+    - Validate email format with regex
+    - Return typed validation errors
+    - Include JSDoc comments
+    - Have >90% test coverage
+    ```
+  </Accordion>
+
+  <Accordion title="Iterate and Refine" icon="rotate">
+    Don't expect perfection on the first try:
+
+    1. Review generated code
+    2. Provide specific feedback
+    3. Request adjustments
+    4. Test the implementation
+    5. Refine as needed
+
+    **Example iteration:**
+    ```text
+    The validation logic looks good, but can you:
+    - Extract the email regex to a constant
+    - Add a custom error message for invalid formats
+    - Make the function more testable by accepting validation rules as a parameter
+    ```
+  </Accordion>
+
+  <Accordion title="Review Before Accepting" icon="eye">
+    Always review generated code for:
+
+    - **Correctness**: Does it do what you asked?
+    - **Style**: Does it match your codebase conventions?
+    - **Performance**: Are there obvious inefficiencies?
+    - **Security**: Are there potential vulnerabilities?
+    - **Maintainability**: Is it readable and well-documented?
+  </Accordion>
+</AccordionGroup>
+
+## Common Code Generation Scenarios
+
+### Scaffolding New Features
+
+```text Request
+Scaffold a new feature for user notifications:
+- React components (NotificationList, NotificationItem)
+- Redux slice for state management
+- API service for fetching notifications
+- WebSocket listener for real-time updates
+- TypeScript types for all data structures
+```
+
+### Refactoring Legacy Code
+
+```text Request
+Refactor this legacy JavaScript code to modern TypeScript:
+- Convert var to const/let
+- Add proper type annotations
+- Replace callbacks with async/await
+- Extract magic numbers to named constants
+- Add JSDoc documentation
+- Maintain existing functionality
+```
+
+### Adding Integrations
+
+```text Request
+Add Stripe payment integration:
+- Create a payment service using Stripe SDK
+- Add webhook handler for payment events
+- Create database models for payments and subscriptions
+- Add API endpoints for creating and managing subscriptions
+- Include error handling and retry logic
+- Follow our service pattern in src/services/
+```
+
+### Documentation Generation
+
+```text Request
+Generate comprehensive documentation for this module:
+- JSDoc comments for all public functions
+- README.md with usage examples
+- Type definitions and interfaces
+- Example code snippets
+- Common troubleshooting scenarios
+```
+
+## Working with Generated Code
+
+### Accepting Changes
+
+<Steps>
+  <Step title="Review Diffs">
+    HAI presents changes in a diff view showing:
+    - Lines added (green)
+    - Lines removed (red)
+    - Lines modified (yellow)
+  </Step>
+
+  <Step title="Accept or Reject">
+    - **Accept**: Apply changes to your files
+    - **Reject**: Discard and provide different instructions
+    - **Modify**: Request specific adjustments
+  </Step>
+
+  <Step title="Test Changes">
+    After accepting:
+    1. Run your test suite
+    2. Test functionality manually
+    3. Check for type errors
+    4. Verify integration with existing code
+  </Step>
+</Steps>
+
+### Using Checkpoints
+
+HAI Build creates automatic checkpoints:
+
+- **Before major changes**: Revert if needed
+- **After task completion**: Jump back to working states
+- **On request**: Create manual checkpoints
+
+<Tip>
+  Use checkpoints to experiment fearlessly. You can always revert.
+</Tip>
+
+## Code Quality and Standards
+
+Ensure generated code meets your standards:
+
+### Type Safety
+
+```text Request for TypeScript
+Generate this with full TypeScript type safety:
+- Strict mode enabled
+- No 'any' types
+- Proper generics where applicable
+- Discriminated unions for variants
+```
+
+### Testing
+
+```text Request with Tests
+Create this service and include:
+- Unit tests with >80% coverage
+- Integration tests for API calls
+- Mock external dependencies
+- Test edge cases and error scenarios
+```
+
+### Documentation
+
+```text Request with Docs
+Generate this utility with:
+- JSDoc comments for all exports
+- Usage examples in comments
+- README.md with API documentation
+- Inline comments for complex logic
+```
+
+## Troubleshooting Code Generation
+
+<Tabs>
+  <Tab title="Code Doesn't Match Patterns">
+    **Issue**: Generated code doesn't follow your conventions
+
+    **Solutions**:
+    1. Reference specific files that exemplify your patterns
+    2. Provide style guide or coding standards
+    3. Create a custom expert with your conventions
+    4. Iterate with specific feedback
+  </Tab>
+
+  <Tab title="Missing Context">
+    **Issue**: Generated code doesn't integrate well
+
+    **Solutions**:
+    1. Add relevant files to the chat context
+    2. Explain your architecture explicitly
+    3. Point to similar implementations
+    4. Provide API documentation or schemas
+  </Tab>
+
+  <Tab title="Incorrect Implementation">
+    **Issue**: Code doesn't work as expected
+
+    **Solutions**:
+    1. Describe the specific issue
+    2. Provide error messages or logs
+    3. Show expected vs actual behavior
+    4. Request step-by-step debugging
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Git Integration" icon="git-alt" href="/guides/git-integration">
+    Generate commit messages for your code changes
+  </Card>
+  <Card title="Custom Experts" icon="user-graduate" href="/advanced/custom-experts">
+    Create experts for your specific frameworks
+  </Card>
+  <Card title="Inline Editing" icon="pen-to-square" href="/features/inline-editing">
+    Quick AI-assisted code modifications
+  </Card>
+  <Card title="MCP Integration" icon="plug" href="/features/mcp-integration">
+    Extend code generation with external tools
+  </Card>
+</CardGroup>
+
+<Note>
+  **Pro Tip**: The more you use HAI Build, the better it understands your codebase patterns. Over time, generated code will increasingly match your style.
+</Note>

@@ -1,0 +1,514 @@
+---
+title: 'Telemetry'
+description: 'Configure Langfuse, PostHog, and OpenTelemetry for monitoring and analytics'
+icon: 'chart-line'
+---
+
+## Overview
+
+HAI Build Code Generator supports multiple telemetry backends to help you monitor AI-powered development workflows, track performance, and analyze usage patterns.
+
+<Note>
+All telemetry configuration can be overridden per workspace using the `.hai.config` file.
+</Note>
+
+## Telemetry Providers
+
+<CardGroup cols={3}>
+  <Card title="Langfuse" icon="brain">
+    LLM observability and tracing
+  </Card>
+  <Card title="PostHog" icon="chart-mixed">
+    Product analytics and error tracking
+  </Card>
+  <Card title="OpenTelemetry" icon="signal">
+    Flexible telemetry with OTLP export
+  </Card>
+</CardGroup>
+
+## Langfuse Configuration
+
+Langfuse provides LLM-specific observability including prompt tracking, token usage, and cost analysis.
+
+### Setup
+
+<Steps>
+  <Step title="Get API Keys">
+    Obtain your Langfuse API keys from [cloud.langfuse.com](https://cloud.langfuse.com)
+  </Step>
+  
+  <Step title="Configure Environment">
+    Add to your `.env` file or `.hai.config`:
+    
+    ```bash
+    LANGFUSE_SECRET_KEY=sk-lf-...
+    LANGFUSE_PUBLIC_KEY=pk-lf-...
+    LANGFUSE_BASE_URL=https://cloud.langfuse.com
+    ```
+  </Step>
+  
+  <Step title="Verify Configuration">
+    Restart VS Code and check the HAI Build logs for Langfuse connection status
+  </Step>
+</Steps>
+
+### Workspace Override
+
+Override Langfuse configuration per workspace using `.hai.config`:
+
+```properties
+# Langfuse Configuration
+langfuse.apiUrl=https://cloud.langfuse.com
+langfuse.apiKey=sk-lf-...
+langfuse.publicKey=pk-lf-...
+```
+
+<ParamField path="langfuse.apiUrl" type="string" default="https://cloud.langfuse.com">
+  Langfuse API endpoint (optional)
+</ParamField>
+
+<ParamField path="langfuse.apiKey" type="string">
+  Langfuse secret key (corresponds to `LANGFUSE_SECRET_KEY`)
+</ParamField>
+
+<ParamField path="langfuse.publicKey" type="string">
+  Langfuse public key (corresponds to `LANGFUSE_PUBLIC_KEY`)
+</ParamField>
+
+### What Gets Tracked
+
+Langfuse captures:
+- LLM requests and responses
+- Token usage and costs
+- Prompt versions and variations
+- Model performance metrics
+- User feedback and ratings
+
+## PostHog Configuration
+
+PostHog provides product analytics and error tracking.
+
+### Setup
+
+<Steps>
+  <Step title="Get API Keys">
+    Create a PostHog account at [app.posthog.com](https://app.posthog.com) and obtain:
+    - Telemetry API key (for events)
+    - Error tracking API key (for errors)
+  </Step>
+  
+  <Step title="Configure Environment">
+    Add to your `.env` file:
+    
+    ```bash
+    TELEMETRY_SERVICE_API_KEY=phc_...
+    ERROR_SERVICE_API_KEY=phc_...
+    ```
+  </Step>
+  
+  <Step title="Workspace Override (Optional)">
+    Override per workspace in `.hai.config`:
+    
+    ```properties
+    posthog.url=https://app.posthog.com
+    posthog.apiKey=phc_...
+    ```
+  </Step>
+</Steps>
+
+<ParamField path="posthog.url" type="string" default="https://app.posthog.com">
+  PostHog API endpoint
+</ParamField>
+
+<ParamField path="posthog.apiKey" type="string">
+  PostHog API key for telemetry and error tracking
+</ParamField>
+
+### What Gets Tracked
+
+PostHog captures:
+- Feature usage events
+- User interactions
+- Error occurrences and stack traces
+- Session recordings (if enabled)
+- Performance metrics
+
+<Warning>
+Ensure you have appropriate user consent before enabling telemetry in production environments.
+</Warning>
+
+## OpenTelemetry Configuration
+
+OpenTelemetry provides flexible, vendor-neutral telemetry collection with support for logs, metrics, and traces.
+
+### Overview
+
+OpenTelemetry in HAI Build focuses on:
+- **Logs (Events)**: Primary signal for telemetry (recommended)
+- **Metrics**: Optional performance counters
+- **Exporters**: Console (debugging) or OTLP (production)
+
+### Basic Setup
+
+<Steps>
+  <Step title="Enable OpenTelemetry">
+    Set the enable flag:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    ```
+  </Step>
+  
+  <Step title="Configure Exporters">
+    Choose your export targets:
+    
+    ```bash
+    OTEL_LOGS_EXPORTER=console      # or "otlp"
+    OTEL_METRICS_EXPORTER=otlp      # or "console"
+    ```
+  </Step>
+  
+  <Step title="Set Protocol and Endpoint">
+    For OTLP export:
+    
+    ```bash
+    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+    ```
+  </Step>
+</Steps>
+
+### Exporter Options
+
+<Tabs>
+  <Tab title="Console Exporter">
+    ### Console Exporter
+    
+    For local debugging, output telemetry to console:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=console
+    TEL_DEBUG_DIAGNOSTICS=true
+    ```
+    
+    <Tip>
+    Console exporter is perfect for development and troubleshooting telemetry pipelines.
+    </Tip>
+  </Tab>
+  
+  <Tab title="OTLP gRPC">
+    ### OTLP with gRPC
+    
+    High-performance binary protocol for production:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+    OTEL_EXPORTER_OTLP_INSECURE=true  # For local testing only
+    ```
+    
+    <Note>
+    For gRPC endpoints, do **not** include `http://` prefix. Use `hostname:port` format.
+    </Note>
+    
+    #### With Authentication
+    
+    ```bash
+    OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer your-token
+    ```
+  </Tab>
+  
+  <Tab title="OTLP HTTP">
+    ### OTLP with HTTP
+    
+    RESTful protocol with JSON or Protobuf encoding:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+    ```
+    
+    <Note>
+    For HTTP endpoints, include the full URL with `http://` or `https://` prefix.
+    </Note>
+    
+    #### Protocol Variants
+    
+    - `http/json` - JSON encoding (human-readable)
+    - `http/protobuf` - Protobuf encoding (compact)
+  </Tab>
+</Tabs>
+
+### Configuration Parameters
+
+<ParamField path="OTEL_TELEMETRY_ENABLED" type="boolean" default="false">
+  Enable OpenTelemetry telemetry collection
+</ParamField>
+
+<ParamField path="OTEL_LOGS_EXPORTER" type="string" default="console">
+  Logs exporter: `console` or `otlp`
+</ParamField>
+
+<ParamField path="OTEL_METRICS_EXPORTER" type="string" default="otlp">
+  Metrics exporter: `console`, `otlp`, or `prometheus`
+</ParamField>
+
+<ParamField path="OTEL_EXPORTER_OTLP_PROTOCOL" type="string" default="grpc">
+  OTLP protocol: `grpc`, `http/json`, or `http/protobuf`
+</ParamField>
+
+<ParamField path="OTEL_EXPORTER_OTLP_ENDPOINT" type="string">
+  OTLP collector endpoint (without `/v1/logs` or `/v1/metrics` path)
+</ParamField>
+
+<ParamField path="OTEL_EXPORTER_OTLP_HEADERS" type="string">
+  Custom headers for OTLP requests (e.g., `authorization=Bearer token`)
+</ParamField>
+
+<ParamField path="OTEL_EXPORTER_OTLP_INSECURE" type="boolean" default="false">
+  Use insecure gRPC connections (local testing only)
+</ParamField>
+
+<ParamField path="OTEL_METRIC_EXPORT_INTERVAL" type="number" default="60000">
+  Metric export interval in milliseconds
+</ParamField>
+
+<ParamField path="TEL_DEBUG_DIAGNOSTICS" type="boolean" default="false">
+  Enable detailed export diagnostics for debugging
+</ParamField>
+
+### Batch Configuration
+
+Optimize log batching for performance:
+
+```bash
+OTEL_LOG_BATCH_SIZE=512          # Max logs per batch (default: 512)
+OTEL_LOG_BATCH_TIMEOUT=5000      # Max wait time in ms (default: 5000)
+OTEL_LOG_MAX_QUEUE_SIZE=2048     # Max queue size (default: 2048)
+```
+
+<ParamField path="OTEL_LOG_BATCH_SIZE" type="number" default="512">
+  Maximum number of logs per batch
+</ParamField>
+
+<ParamField path="OTEL_LOG_BATCH_TIMEOUT" type="number" default="5000">
+  Maximum wait time in milliseconds before exporting batch
+</ParamField>
+
+<ParamField path="OTEL_LOG_MAX_QUEUE_SIZE" type="number" default="2048">
+  Maximum size of the log queue
+</ParamField>
+
+### Advanced: Separate Endpoints
+
+Configure different endpoints for metrics and logs:
+
+```bash
+# Metrics to one collector
+OTEL_EXPORTER_OTLP_METRICS_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://metrics.example.com:4318
+
+# Logs to another collector
+OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
+OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=logs.example.com:4317
+```
+
+## Configuration Examples
+
+<AccordionGroup>
+  <Accordion title="Development: Console Debugging">
+    Perfect for local development and troubleshooting:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=console
+    TEL_DEBUG_DIAGNOSTICS=true
+    ```
+  </Accordion>
+  
+  <Accordion title="Production: OTLP with gRPC">
+    High-performance production setup:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector.example.com:4317
+    OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer prod-token
+    ```
+  </Accordion>
+  
+  <Accordion title="Production: OTLP with HTTP">
+    RESTful production setup with JSON:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+    OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.example.com
+    OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer prod-token
+    ```
+  </Accordion>
+  
+  <Accordion title="Local Testing: Insecure gRPC">
+    For local OTLP collector testing:
+    
+    ```bash
+    OTEL_TELEMETRY_ENABLED=1
+    OTEL_LOGS_EXPORTER=otlp
+    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+    OTEL_EXPORTER_OTLP_INSECURE=true
+    OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer dev-token
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Workspace-Level Configuration
+
+The `.hai.config` file enables workspace-specific telemetry settings that override global environment variables.
+
+### Configuration File Location
+
+Place `.hai.config` at the root of your workspace:
+
+```
+my-project/
+├── .hai.config
+├── .git/
+└── src/
+```
+
+### Supported Parameters
+
+```properties
+# Project name
+name=my-project
+
+# Langfuse Configuration
+langfuse.apiUrl=https://cloud.langfuse.com
+langfuse.apiKey=sk-lf-workspace-key
+langfuse.publicKey=pk-lf-workspace-key
+
+# PostHog Configuration
+posthog.url=https://app.posthog.com
+posthog.apiKey=phc_workspace_key
+
+# COR-Matrix Configuration
+cormatrix.baseURL=https://cormatrix.example.com
+cormatrix.token=workspace-token
+cormatrix.workspaceId=workspace-123
+```
+
+<Warning>
+The `.hai.config` file is **not** automatically git-ignored. Add it to `.gitignore` if it contains sensitive credentials, or use CI/CD to inject values dynamically.
+</Warning>
+
+### Dynamic Configuration via CI/CD
+
+You can generate `.hai.config` dynamically in your CI/CD pipeline:
+
+```bash
+# Example: GitHub Actions
+cat > .hai.config <<EOF
+langfuse.apiKey=${{ secrets.LANGFUSE_API_KEY }}
+langfuse.publicKey=${{ secrets.LANGFUSE_PUBLIC_KEY }}
+posthog.apiKey=${{ secrets.POSTHOG_API_KEY }}
+EOF
+```
+
+## COR-Matrix Integration
+
+HAI Build supports COR-Matrix for tracking AI code retention patterns and analyzing code origin.
+
+<ParamField path="cormatrix.baseURL" type="string">
+  COR-Matrix API endpoint
+</ParamField>
+
+<ParamField path="cormatrix.token" type="string">
+  Authentication token for COR-Matrix
+</ParamField>
+
+<ParamField path="cormatrix.workspaceId" type="string">
+  Workspace identifier in COR-Matrix
+</ParamField>
+
+### Configuration Example
+
+```properties
+cormatrix.baseURL=https://cormatrix.example.com
+cormatrix.token=cm-token-...
+cormatrix.workspaceId=ws-123
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Workspace Configs" icon="folder">
+    Keep telemetry settings per workspace in `.hai.config` for team consistency
+  </Card>
+  
+  <Card title="Secure Credentials" icon="lock">
+    Never commit API keys to git. Use CI/CD injection or environment variables
+  </Card>
+  
+  <Card title="Monitor Costs" icon="dollar-sign">
+    Track Langfuse usage to optimize LLM costs and token consumption
+  </Card>
+  
+  <Card title="Debug Locally" icon="bug">
+    Use console exporters and diagnostics during development
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Telemetry Not Working">
+    **Check**:
+    - Verify `OTEL_TELEMETRY_ENABLED=1` is set
+    - Check API keys are correctly configured
+    - Enable `TEL_DEBUG_DIAGNOSTICS=true` for detailed logs
+    - Restart VS Code after configuration changes
+  </Accordion>
+  
+  <Accordion title="OTLP Connection Failures">
+    **Solutions**:
+    - For gRPC: Use `hostname:port` (no `http://`)
+    - For HTTP: Include full URL (`http://` or `https://`)
+    - Verify firewall/network allows connections
+    - Check OTLP collector is running and accessible
+  </Accordion>
+  
+  <Accordion title="Langfuse Not Receiving Data">
+    **Check**:
+    - Verify API keys are correct (secret + public)
+    - Ensure `LANGFUSE_BASE_URL` is correct
+    - Check Langfuse dashboard for project setup
+    - Review HAI Build logs for connection errors
+  </Accordion>
+  
+  <Accordion title="Workspace Config Not Loading">
+    **Solutions**:
+    - Ensure `.hai.config` is at workspace root
+    - Check file format (key-value pairs, dot notation)
+    - Verify no syntax errors (proper `=` usage)
+    - Restart VS Code to reload configuration
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Settings" icon="gear" href="/configuration/settings">
+    Configure extension settings
+  </Card>
+  <Card title="LLM Providers" icon="brain" href="/configuration/llm-providers">
+    Set up AI model providers
+  </Card>
+</CardGroup>

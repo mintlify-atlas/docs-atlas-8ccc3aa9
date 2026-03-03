@@ -1,0 +1,191 @@
+---
+title: HAI Build Code Generator
+description: AI-powered VS Code extension that streamlines development through intelligent task execution, automated code generation, and seamless workflow integration
+---
+
+<div align="center">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" />
+  <img src="https://img.shields.io/github/stars/presidio-oss/hai-build-codegen" alt="Stars" />
+</div>
+
+## Welcome to HAI Build
+
+**HAI Build Code Generator** is a cutting-edge VS Code extension designed to simplify and automate task execution while enhancing your development workflow. Built on the powerful foundation of [Cline](https://github.com/cline/cline), it leverages AI to streamline processes like task execution, intelligent file identification, and automated code documentation.
+
+Unlike simple autocomplete tools, HAI Build thinks like a developer. It analyzes your requests, explores your codebase, and presents clear plans before making changes. You maintain full control with complete transparency into every action.
+
+## Quick Navigation
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Get started by installing the HAI Build extension in VS Code
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Jump right in with your first AI-powered task
+  </Card>
+  <Card
+    title="Features"
+    icon="sparkles"
+    href="#key-features"
+  >
+    Explore powerful capabilities that enhance your workflow
+  </Card>
+  <Card
+    title="GitHub"
+    icon="github"
+    href="https://github.com/presidio-oss/hai-build-codegen"
+  >
+    View source code and contribute to the project
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### AI-Powered Task Management
+
+Integrate seamlessly with [Specif AI](https://github.com/presidio-oss/specif-ai) to load AI-generated user stories and tasks directly into HAI Build. Review, execute, and manage all your development tasks in one centralized interface.
+
+<Steps>
+  <Step title="Review">
+    View AI-generated tasks within a dedicated interface with full context
+  </Step>
+  <Step title="Execute">
+    Launch tasks instantly with a single click
+  </Step>
+  <Step title="Manage">
+    Track progress and maintain clarity across all development activities
+  </Step>
+</Steps>
+
+### Context-Aware Code Generation with Experts
+
+HAI Build delivers tailored code generation through domain-specific experts:
+
+- **Built-in Experts**: Access predefined guidelines for .NET, Terraform, Node.js, and Go
+- **Custom Experts**: Create your own experts with custom guidelines and reference documentation
+- **Document Integration**: Attach up to three reference documents per expert for richer context
+
+<Note>
+Custom experts are stored in the `.hai-experts` folder with their own metadata and documentation, allowing you to extend HAI's knowledge with your team's standards and best practices.
+</Note>
+
+### Intelligent Development Workflows
+
+**Agentic Planning**: HAI analyzes your requests, explores your code, and presents clear plans before writing any code. You understand the 'why' before any changes are made.
+
+**Deep Codebase Intelligence**: HAI starts with broad context and performs targeted exploration to gain specific understanding. It doesn't operate in a vacuum—it understands your project structure and architecture.
+
+**Full Transparency & Control**: Review every file read and every proposed diff. Approve changes before they're applied. Use checkpoints to easily revert if needed.
+
+### Seamless VS Code Integration
+
+Access HAI Build directly from your editor with keyboard shortcuts and context menus:
+
+<CodeGroup>
+
+```bash Quick Access
+# Focus chat input
+Ctrl+' (Windows/Linux)
+Cmd+' (macOS)
+
+# Add selection to HAI
+Ctrl+' with text selected
+Cmd+' with text selected
+```
+
+```bash Context Menu
+# Right-click selected code
+Add to HAI
+Explain with HAI
+Improve with HAI
+
+# Git integration
+Generate Commit Message with HAI
+```
+
+</CodeGroup>
+
+### Advanced Capabilities
+
+- **MCP Integration**: Connect to databases, APIs, and discover new capabilities through the MCP Marketplace
+- **Git Commit Generation**: Let HAI analyze your staged changes and generate meaningful commit messages
+- **Jupyter Notebook Support**: Generate, explain, and improve Jupyter cells directly within notebooks
+- **Multi-LLM Support**: Work with state-of-the-art models from Anthropic, OpenAI, Google Gemini, and more
+- **Telemetry & Analytics**: Monitor and analyze AI-powered workflows with Langfuse and PostHog integration
+
+<Tip>
+Configure external telemetry settings using a `.hai.config` file at your workspace root for environment-specific customization through CI/CD pipelines.
+</Tip>
+
+### Inline Editing
+
+Make quick, AI-assisted edits without leaving your codebase. HAI understands context and suggests intelligent modifications in real-time.
+
+### File Identification & Management
+
+Discover and contextualize code files with intelligent indexing. HAI automatically identifies relevant files and builds understanding of your project structure.
+
+## What Makes HAI Build Different
+
+<CardGroup cols={2}>
+  <Card title="Thinks Like a Developer" icon="brain">
+    HAI analyzes requests, asks questions, and creates plans—not just suggestions
+  </Card>
+  <Card title="Built on Proven Technology" icon="check">
+    Extends Cline's powerful foundation with enterprise-grade features
+  </Card>
+  <Card title="Complete Control" icon="shield">
+    Review and approve every change before it's applied to your codebase
+  </Card>
+  <Card title="Open Source" icon="code">
+    Apache 2.0 licensed with an active community and transparent development
+  </Card>
+</CardGroup>
+
+## Who Should Use HAI Build
+
+HAI Build is perfect for:
+
+- **Development Teams** looking to streamline task execution and code generation
+- **Individual Developers** who want AI-powered assistance without losing control
+- **Organizations** that need customizable AI workflows with their own standards
+- **Projects** requiring integration with multiple LLM providers and tools
+
+<Warning>
+While HAI Build is powerful, always review AI-generated code before committing. The extension is designed to assist, not replace, developer judgment.
+</Warning>
+
+## Community & Support
+
+Join our growing community:
+
+- **GitHub**: [presidio-oss/hai-build-codegen](https://github.com/presidio-oss/hai-build-codegen)
+- **Issues**: Report bugs and request features on our [issues page](https://github.com/presidio-oss/hai-build-codegen/issues)
+- **Discussions**: Share ideas on our [feature requests board](https://github.com/presidio-oss/hai-build-codegen/discussions/categories/feature-requests)
+- **Email**: [hai-feedback@presidio.com](mailto:hai-feedback@presidio.com)
+
+## Ready to Get Started?
+
+Install HAI Build in minutes and start experiencing AI-powered development:
+
+<Card
+  title="Install HAI Build"
+  icon="download"
+  href="/installation"
+>
+  Follow our step-by-step installation guide to get up and running
+</Card>
+
+---
+
+<Note>
+**Version**: 3.13.4 | **Based on**: Cline 3.62.0 | **License**: Apache 2.0
+</Note>

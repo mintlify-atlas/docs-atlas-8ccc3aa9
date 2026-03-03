@@ -1,0 +1,584 @@
+---
+title: "Experts"
+description: "Context-aware code generation with built-in and custom domain experts for specialized development workflows."
+---
+
+Experts provide domain-specific knowledge and best practices to guide AI code generation. HAI Build comes with four built-in experts and supports custom experts for your unique tech stack.
+
+<Frame>
+  <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/gifs/experts.gif" alt="Experts feature demonstration" />
+  <p style={{textAlign: 'center', fontStyle: 'italic', marginTop: '8px'}}>Experts in Action</p>
+</Frame>
+
+## What are Experts?
+
+Experts are specialized AI assistants that:
+
+- **Provide guidelines** for specific technologies or domains
+- **Include best practices** from industry standards
+- **Reference documentation** for accurate code generation
+- **Maintain consistency** across your codebase
+- **Reduce errors** by following proven patterns
+
+<Info>
+Experts integrate directly into the AI's system prompt, influencing every decision it makes during code generation.
+</Info>
+
+## Built-In Experts
+
+HAI Build includes four production-ready experts:
+
+<CardGroup cols={2}>
+  <Card title=".NET Expert" icon="microsoft">
+    **Expertise**:
+    - ASP.NET Core web applications
+    - Entity Framework Core
+    - Dependency injection patterns
+    - C# best practices
+    - .NET ecosystem tools
+    
+    **Use for**:
+    - Web APIs and microservices
+    - Enterprise applications
+    - Azure cloud integrations
+  </Card>
+  <Card title="Terraform Expert" icon="cloud">
+    **Expertise**:
+    - Infrastructure as Code
+    - AWS, Azure, GCP providers
+    - Module design patterns
+    - State management
+    - Security best practices
+    
+    **Use for**:
+    - Cloud infrastructure provisioning
+    - Multi-cloud deployments
+    - Infrastructure automation
+  </Card>
+  <Card title="Node.js Expert" icon="node">
+    **Expertise**:
+    - Express.js and Fastify
+    - TypeScript for Node
+    - npm ecosystem
+    - Async patterns and promises
+    - Testing with Jest/Mocha
+    
+    **Use for**:
+    - Backend services
+    - REST and GraphQL APIs
+    - Serverless functions
+  </Card>
+  <Card title="Go Expert" icon="golang">
+    **Expertise**:
+    - Idiomatic Go patterns
+    - Concurrency with goroutines
+    - Standard library usage
+    - Error handling
+    - Testing and benchmarking
+    
+    **Use for**:
+    - High-performance services
+    - CLI tools
+    - Distributed systems
+  </Card>
+</CardGroup>
+
+<Note>
+Built-in experts are read-only and maintained by the HAI Build team. For customization, create a custom expert.
+</Note>
+
+## Custom Experts
+
+Create your own experts tailored to your team's needs:
+
+<Steps>
+  <Step title="Open Experts Panel">
+    Navigate to the Experts section in HAI Build sidebar.
+  </Step>
+  <Step title="Create New Expert">
+    Click "Create Custom Expert" and provide:
+    - **Name**: Descriptive identifier (e.g., "React with Redux")
+    - **Guidelines**: Markdown-formatted best practices
+    - **Document Links**: Up to 3 reference URLs (optional)
+  </Step>
+  <Step title="Configure Guidelines">
+    Write your expert's guidelines in Markdown:
+    
+    ```markdown
+    # React Component Best Practices
+    
+    ## Functional Components
+    - Always use functional components with hooks
+    - Prefer `const` for component declarations
+    - Use TypeScript for all components
+    
+    ## State Management
+    - Use Redux Toolkit for global state
+    - Keep component state local when possible
+    - Avoid prop drilling with Context API
+    
+    ## Performance
+    - Memoize expensive computations with `useMemo`
+    - Use `React.memo` for pure components
+    - Lazy load routes with `React.lazy`
+    ```
+  </Step>
+  <Step title="Add Documentation (Optional)">
+    Provide URLs to reference documentation:
+    - Official docs
+    - Internal wikis
+    - Best practice guides
+    
+    HAI Build will download and process these for the AI.
+  </Step>
+  <Step title="Save and Activate">
+    Your custom expert is now available for selection.
+  </Step>
+</Steps>
+
+## Expert Storage Structure
+
+Custom experts are stored in your workspace:
+
+```
+workspace/
+├── .hai-experts/
+│   ├── react-redux/
+│   │   ├── metadata.json
+│   │   ├── prompt.md
+│   │   └── docs/
+│   │       ├── react-docs.md
+│   │       ├── redux-toolkit.md
+│   │       └── status.json
+│   └── python-fastapi/
+│       ├── metadata.json
+│       └── prompt.md
+```
+
+<Tabs>
+  <Tab title="metadata.json">
+    Stores expert configuration:
+    
+    ```json
+    {
+      "name": "React with Redux",
+      "createdAt": "2026-03-03T10:30:00Z",
+      "documentLinks": [
+        "https://react.dev/learn",
+        "https://redux-toolkit.js.org/"
+      ]
+    }
+    ```
+  </Tab>
+  <Tab title="prompt.md">
+    Contains the expert's guidelines:
+    
+    ```markdown
+    # React Component Best Practices
+    
+    ## Component Structure
+    - Use functional components
+    - Apply TypeScript strictly
+    ...
+    ```
+    
+    **Required**: Every expert must have a `prompt.md` file.
+  </Tab>
+  <Tab title="docs/">
+    Processed documentation files:
+    
+    - Markdown versions of linked documentation
+    - Automatically updated when links change
+    - Used for reference during code generation
+    
+    **Optional**: Only created if document links are provided.
+  </Tab>
+  <Tab title="status.json">
+    Tracks documentation processing:
+    
+    ```json
+    {
+      "lastUpdate": "2026-03-03T10:35:00Z",
+      "documents": {
+        "react-docs.md": "processed",
+        "redux-toolkit.md": "processing"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+See README description: Lines 116-146
+
+## Using Experts
+
+### Selecting an Expert
+
+<Steps>
+  <Step title="Open Expert Selector">
+    Click the expert icon in the chat interface or settings.
+  </Step>
+  <Step title="Choose Expert">
+    Select from built-in or custom experts.
+  </Step>
+  <Step title="Confirm Selection">
+    The expert's guidelines are now active for all AI interactions.
+  </Step>
+</Steps>
+
+### Expert-Guided Code Generation
+
+Once an expert is active:
+
+1. **System Prompt Enhancement**: Expert guidelines are injected into the AI's system prompt
+2. **Context-Aware Responses**: AI follows expert's best practices
+3. **Consistent Patterns**: Code matches your defined standards
+4. **Documentation References**: AI can cite expert documentation
+
+**Example**:
+
+<Accordion title="Without Expert">
+User: "Create a React component for a user profile"
+
+AI generates:
+```jsx
+import React from 'react'
+
+class UserProfile extends React.Component {
+  render() {
+    return <div>{this.props.name}</div>
+  }
+}
+
+export default UserProfile
+```
+</Accordion>
+
+<Accordion title="With React Expert">
+User: "Create a React component for a user profile"
+
+AI generates (following expert guidelines):
+```typescript
+import React, { FC } from 'react'
+
+interface UserProfileProps {
+  name: string
+  email: string
+}
+
+export const UserProfile: FC<UserProfileProps> = ({ name, email }) => {
+  return (
+    <div className="user-profile">
+      <h2>{name}</h2>
+      <p>{email}</p>
+    </div>
+  )
+}
+```
+</Accordion>
+
+## Expert Guidelines Best Practices
+
+<AccordionGroup>
+  <Accordion title="Be Specific and Actionable">
+    ❌ "Write good code"
+    
+    ✅ "Use TypeScript strict mode. Always define return types for functions. Prefer `const` over `let`."
+  </Accordion>
+  <Accordion title="Include Examples">
+    ```markdown
+    ## Error Handling
+    
+    Always wrap async operations in try-catch:
+    
+    \`\`\`typescript
+    try {
+      const data = await fetchUser(id)
+      return data
+    } catch (error) {
+      logger.error('Failed to fetch user', error)
+      throw new UserFetchError(error)
+    }
+    \`\`\`
+    ```
+  </Accordion>
+  <Accordion title="Organize by Topic">
+    Structure guidelines hierarchically:
+    
+    ```markdown
+    # Python FastAPI Expert
+    
+    ## Project Structure
+    - Use `app/` directory for application code
+    - Separate routes, models, and services
+    
+    ## Dependency Injection
+    - Use FastAPI's `Depends` for services
+    - Define dependencies in `app/dependencies.py`
+    
+    ## Testing
+    - Use pytest for all tests
+    - Mock external services with `unittest.mock`
+    ```
+  </Accordion>
+  <Accordion title="Reference Authoritative Sources">
+    Link to official documentation:
+    
+    ```markdown
+    Follow the [Official TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
+    for advanced type patterns.
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Document Processing
+
+When you add document links to an expert:
+
+<Steps>
+  <Step title="URL Validation">
+    HAI Build validates the URLs and checks accessibility.
+  </Step>
+  <Step title="Content Fetching">
+    Downloads the documentation content.
+  </Step>
+  <Step title="Markdown Conversion">
+    Converts HTML/PDF to clean Markdown format.
+  </Step>
+  <Step title="Storage">
+    Saves processed docs in the expert's `docs/` folder.
+  </Step>
+  <Step title="Status Tracking">
+    Updates `status.json` with processing status.
+  </Step>
+</Steps>
+
+<Warning>
+Document processing happens asynchronously. Large documentation sites may take several minutes to process.
+</Warning>
+
+### Supported Document Types
+
+- **Web pages**: HTML documentation
+- **GitHub README**: Markdown from repositories
+- **API docs**: OpenAPI/Swagger specifications
+- **PDFs**: Technical guides (experimental)
+
+<Note>
+Documents are re-processed when links change or every 30 days to ensure freshness.
+</Note>
+
+## Expert Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Team Standards" icon="users">
+    Codify your team's conventions:
+    - Naming conventions
+    - File organization
+    - Comment styles
+    - Git commit formats
+  </Card>
+  <Card title="Framework Patterns" icon="puzzle-piece">
+    Enforce framework-specific patterns:
+    - Next.js app router conventions
+    - Django REST framework structure
+    - Spring Boot annotations
+    - Rails ActiveRecord patterns
+  </Card>
+  <Card title="Security Guidelines" icon="shield">
+    Embed security best practices:
+    - Input validation rules
+    - Authentication patterns
+    - Secret management
+    - SQL injection prevention
+  </Card>
+  <Card title="Testing Standards" icon="flask">
+    Define testing expectations:
+    - Unit test structure
+    - Integration test patterns
+    - Mocking strategies
+    - Coverage requirements
+  </Card>
+  <Card title="API Design" icon="code">
+    Standardize API development:
+    - RESTful conventions
+    - GraphQL schema design
+    - Error response formats
+    - Versioning strategies
+  </Card>
+  <Card title="Database Patterns" icon="database">
+    Guide database interactions:
+    - ORM usage
+    - Migration patterns
+    - Query optimization
+    - Transaction handling
+  </Card>
+</CardGroup>
+
+## Advanced Expert Features
+
+### Multi-Expert Scenarios
+
+**Scenario**: Full-stack application
+
+<Steps>
+  <Step title="Backend Expert">
+    Use Node.js expert for API development
+  </Step>
+  <Step title="Frontend Expert">
+    Switch to React expert for UI components
+  </Step>
+  <Step title="Infrastructure Expert">
+    Apply Terraform expert for deployment
+  </Step>
+</Steps>
+
+<Tip>
+Switch experts mid-task by selecting a different expert. The AI adapts immediately.
+</Tip>
+
+### Combining Experts with Other Features
+
+<Tabs>
+  <Tab title="+ HAI Tasks">
+    Apply experts to task execution:
+    
+    1. Load tasks from Specif AI
+    2. Select appropriate expert (e.g., .NET for backend tasks)
+    3. Execute tasks with expert guidance
+    4. Consistent code across all task outputs
+  </Tab>
+  <Tab title="+ Focus Chain">
+    Expert guidelines apply to each todo item:
+    
+    - Expert ensures consistency across multi-step features
+    - Best practices maintained throughout focus chain
+    - Reduces rework from inconsistent patterns
+  </Tab>
+  <Tab title="+ Custom Instructions">
+    Layer experts with `.clinerules`:
+    
+    1. Expert provides domain knowledge (e.g., React patterns)
+    2. `.clinerules` adds project-specific rules (e.g., component library usage)
+    3. Combined context for optimal results
+  </Tab>
+</Tabs>
+
+## Editing Experts
+
+<Steps>
+  <Step title="Locate Expert Files">
+    Navigate to `.hai-experts/<expert-name>/`
+  </Step>
+  <Step title="Edit prompt.md">
+    Modify guidelines in your preferred editor:
+    
+    ```bash
+    code .hai-experts/react-redux/prompt.md
+    ```
+  </Step>
+  <Step title="Update metadata.json (Optional)">
+    Change expert name or add/remove document links.
+  </Step>
+  <Step title="Reload Expert">
+    HAI Build automatically detects changes. If not, restart the task.
+  </Step>
+</Steps>
+
+<Warning>
+**Important**: Changes to built-in experts are not supported. Clone a built-in expert to create a customized version.
+</Warning>
+
+## Sharing Experts
+
+Share experts across teams:
+
+<Steps>
+  <Step title="Commit to Git">
+    Add `.hai-experts/` to version control:
+    
+    ```bash
+    git add .hai-experts/
+    git commit -m "Add React Redux expert"
+    ```
+  </Step>
+  <Step title="Team Members Pull">
+    Others clone the repository and get the expert automatically.
+  </Step>
+  <Step title="Centralized Updates">
+    Update expert guidelines in one place, everyone benefits.
+  </Step>
+</Steps>
+
+<Tip>
+Create a dedicated repository for organization-wide experts and reference it as a git submodule.
+</Tip>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Expert not appearing">
+    - Check `.hai-experts/` folder exists
+    - Verify `prompt.md` file is present
+    - Ensure `metadata.json` is valid JSON
+    - Restart HAI Build extension
+  </Accordion>
+  <Accordion title="Document processing failed">
+    - Verify URLs are accessible
+    - Check network connectivity
+    - Review `status.json` for error details
+    - Try removing and re-adding the link
+  </Accordion>
+  <Accordion title="AI not following expert guidelines">
+    - Verify expert is selected/active
+    - Check guidelines are clear and specific
+    - Ensure guidelines don't conflict with task requirements
+    - Try rephrasing guidelines with examples
+  </Accordion>
+  <Accordion title="Expert changes not reflected">
+    - Save all files in expert directory
+    - Restart current task
+    - Clear HAI Build cache
+    - Reload VS Code window
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices Summary
+
+<Steps>
+  <Step title="Start Simple">
+    Create basic experts with core guidelines before adding complexity.
+  </Step>
+  <Step title="Iterate Based on Output">
+    Review AI-generated code and refine expert guidelines accordingly.
+  </Step>
+  <Step title="Use Examples Liberally">
+    Code examples are more effective than abstract rules.
+  </Step>
+  <Step title="Keep Guidelines Focused">
+    One expert per domain/framework. Don't mix unrelated concerns.
+  </Step>
+  <Step title="Version Control Experts">
+    Treat expert files as code—commit, review, and version them.
+  </Step>
+  <Step title="Document Rationale">
+    Explain *why* certain patterns are preferred in comments.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AI-Powered Coding" icon="robot" href="/features/ai-powered-coding">
+    See how experts integrate with AI workflows
+  </Card>
+  <Card title="Task Management" icon="list-check" href="/features/task-management">
+    Use experts with HAI Tasks for consistent results
+  </Card>
+  <Card title="Custom Instructions" icon="file-code" href="/core-workflows/cline-rules">
+    Layer experts with .clinerules for maximum control
+  </Card>
+  <Card title="Focus Chain" icon="link" href="/features/focus-chain">
+    Apply experts across multi-step task execution
+  </Card>
+</CardGroup>

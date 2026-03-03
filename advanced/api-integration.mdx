@@ -1,0 +1,550 @@
+---
+title: 'API Integration'
+description: 'Use the HAI Build extension API to integrate Cline into your VS Code extensions'
+icon: 'plug'
+---
+
+# API Integration
+
+HAI Build Code Generator exposes a public API that allows other VS Code extensions to programmatically control Cline tasks. This enables powerful integrations and automation workflows.
+
+## Overview
+
+The HAI API provides methods to:
+- Start new coding tasks with optional images
+- Send messages to active tasks
+- Simulate button interactions
+- Control task lifecycle
+
+## Getting Started
+
+### 1. Install the Type Definitions
+
+Copy the type definition file from the HAI Build repository:
+
+```bash
+cp node_modules/hai-build/src/exports/hai.d.ts ./src/types/
+```
+
+Or create it manually:
+
+```typescript
+// src/types/hai.d.ts
+export interface HAIAPI {
+  /**
+   * Starts a new task with an optional initial message and images.
+   * @param task Optional initial task message.
+   * @param images Optional array of image data URIs (e.g., "data:image/webp;base64,...").
+   */
+  startNewTask(task?: string, images?: string[]): Promise<void>
+
+  /**
+   * Sends a message to the current task.
+   * @param message Optional message to send.
+   * @param images Optional array of image data URIs (e.g., "data:image/webp;base64,...").
+   */
+  sendMessage(message?: string, images?: string[]): Promise<void>
+
+  /**
+   * Simulates pressing the primary button in the chat interface.
+   */
+  pressPrimaryButton(): Promise<void>
+
+  /**
+   * Simulates pressing the secondary button in the chat interface.
+   */
+  pressSecondaryButton(): Promise<void>
+}
+```
+
+### 2. Add Extension Dependency
+
+Ensure HAI Build is activated before your extension by adding it to `package.json`:
+
+```json
+{
+  "name": "your-extension",
+  "extensionDependencies": [
+    "presidio-inc.hai-build-code-generator"
+  ]
+}
+```
+
+### 3. Access the API
+
+Get the API instance in your extension's `activate` function:
+
+```typescript
+import * as vscode from 'vscode'
+import type { HAIAPI } from './types/hai'
+
+export async function activate(context: vscode.ExtensionContext) {
+  const clineExtension = vscode.extensions.getExtension<HAIAPI>(
+    'presidio-inc.hai-build-code-generator'
+  )
+
+  if (!clineExtension?.isActive) {
+    throw new Error('HAI Build extension is not activated')
+  }
+
+  const cline = clineExtension.exports
+
+  if (!cline) {
+    throw new Error('HAI API is not available')
+  }
+
+  // Now you can use the API
+  await cline.startNewTask('Hello, HAI! Let\'s build something amazing...')
+}
+```
+
+## API Reference
+
+### startNewTask()
+
+Starts a new task with an optional initial message and images.
+
+**Signature:**
+
+```typescript
+startNewTask(task?: string, images?: string[]): Promise<void>
+```
+
+**Parameters:**
+
+- `task` (optional): Initial task description
+- `images` (optional): Array of image data URIs in base64 format
+
+**Example:**
+
+```typescript
+// Start a simple task
+await cline.startNewTask('Create a React component for a login form')
+
+// Start without a prompt (opens chat interface)
+await cline.startNewTask()
+
+// Start with images
+const imageData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...'
+await cline.startNewTask(
+  'Implement this design',
+  [imageData]
+)
+```
+
+**Behavior:**
+
+1. Clears any existing task
+2. Updates the webview state
+3. Initializes a new task with the provided prompt
+4. Opens the HAI Build sidebar if not already visible
+
+### sendMessage()
+
+Sends a message to the currently active task.
+
+**Signature:**
+
+```typescript
+sendMessage(message?: string, images?: string[]): Promise<void>
+```
+
+**Parameters:**
+
+- `message` (optional): Message text to send
+- `images` (optional): Array of image data URIs
+
+**Example:**
+
+```typescript
+// Send a follow-up message
+await cline.sendMessage('Can you add error handling?')
+
+// Send with images
+await cline.sendMessage(
+  'Update the UI to match this mockup',
+  [imageDataUri]
+)
+
+// Send empty message (continues conversation)
+await cline.sendMessage()
+```
+
+**Error Handling:**
+
+If no task is active, logs an error but does not throw:
+
+```typescript
+// Safe to call even without active task
+await cline.sendMessage('Hello') // Logs error if no task
+```
+
+### pressPrimaryButton()
+
+Simulates clicking the primary button in the chat interface (e.g., "Save", "Proceed").
+
+**Signature:**
+
+```typescript
+pressPrimaryButton(): Promise<void>
+```
+
+**Example:**
+
+```typescript
+// Auto-approve an action
+await cline.pressPrimaryButton()
+```
+
+**Use Cases:**
+
+- Auto-approve file changes in automation workflows
+- Proceed with task execution programmatically
+- Confirm user actions in headless scenarios
+
+### pressSecondaryButton()
+
+Simulates clicking the secondary button (e.g., "Reject", "Cancel").
+
+**Signature:**
+
+```typescript
+pressSecondaryButton(): Promise<void>
+```
+
+**Example:**
+
+```typescript
+// Reject a proposed change
+await cline.pressSecondaryButton()
+```
+
+## Usage Patterns
+
+### Pattern 1: Task Automation
+
+Create automated workflows that run Cline tasks:
+
+```typescript
+import * as vscode from 'vscode'
+import type { HAIAPI } from './types/hai'
+
+class TaskAutomation {
+  constructor(private cline: HAIAPI) {}
+
+  async runDailyTasks() {
+    // Update documentation
+    await this.cline.startNewTask(
+      'Update the CHANGELOG.md with recent commits'
+    )
+
+    // Wait for completion (implement your own logic)
+    await this.waitForCompletion()
+
+    // Run tests
+    await this.cline.startNewTask('Run the test suite and fix any failures')
+  }
+
+  private async waitForCompletion(): Promise<void> {
+    // Implement based on your needs
+    // Could watch file changes, listen to events, etc.
+  }
+}
+```
+
+### Pattern 2: Context-Aware Commands
+
+Create VS Code commands that pass context to Cline:
+
+```typescript
+vscode.commands.registerCommand('myext.fixProblems', async () => {
+  const editor = vscode.window.activeTextEditor
+  if (!editor) return
+
+  const diagnostics = vscode.languages.getDiagnostics(editor.document.uri)
+  const problems = diagnostics
+    .map(d => `${d.message} at line ${d.range.start.line + 1}`)
+    .join('\n')
+
+  await cline.startNewTask(
+    `Fix these problems in ${editor.document.fileName}:\n${problems}`
+  )
+})
+```
+
+### Pattern 3: Screenshot-Based Tasks
+
+Capture screenshots and send to Cline:
+
+```typescript
+import * as fs from 'fs'
+
+async function implementFromScreenshot(screenshotPath: string) {
+  const imageBuffer = fs.readFileSync(screenshotPath)
+  const base64 = imageBuffer.toString('base64')
+  const dataUri = `data:image/png;base64,${base64}`
+
+  await cline.startNewTask(
+    'Implement the UI shown in this screenshot',
+    [dataUri]
+  )
+}
+```
+
+### Pattern 4: Interactive Approval Flow
+
+Implement custom approval logic:
+
+```typescript
+class ApprovalHandler {
+  constructor(private cline: HAIAPI) {}
+
+  async processTaskWithApproval(task: string) {
+    await this.cline.startNewTask(task)
+
+    // Wait for user decision
+    const approved = await vscode.window.showQuickPick(
+      ['Approve', 'Reject'],
+      { placeHolder: 'Review the proposed changes' }
+    )
+
+    if (approved === 'Approve') {
+      await this.cline.pressPrimaryButton()
+    } else {
+      await this.cline.pressSecondaryButton()
+    }
+  }
+}
+```
+
+### Pattern 5: Git Integration
+
+Integrate with git workflows:
+
+```typescript
+import { execSync } from 'child_process'
+
+async function reviewCurrentBranch() {
+  const diff = execSync('git diff --staged').toString()
+  
+  await cline.startNewTask(
+    `Review these staged changes and suggest improvements:\n\n${diff}`
+  )
+}
+
+async function generateCommitMessage() {
+  const diff = execSync('git diff --cached').toString()
+  
+  await cline.startNewTask(
+    `Generate a conventional commit message for these changes:\n\n${diff}`
+  )
+}
+```
+
+## Complete Integration Example
+
+Here's a full extension that integrates with HAI Build:
+
+```typescript
+import * as vscode from 'vscode'
+import type { HAIAPI } from './types/hai'
+
+export async function activate(context: vscode.ExtensionContext) {
+  // Get HAI Build API
+  const clineExtension = vscode.extensions.getExtension<HAIAPI>(
+    'presidio-inc.hai-build-code-generator'
+  )
+
+  if (!clineExtension?.isActive) {
+    vscode.window.showErrorMessage('HAI Build extension not found')
+    return
+  }
+
+  const cline = clineExtension.exports
+
+  // Register commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand('myext.refactorFile', async () => {
+      const editor = vscode.window.activeTextEditor
+      if (!editor) return
+
+      await cline.startNewTask(
+        `Refactor ${editor.document.fileName} to improve code quality`
+      )
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('myext.addTests', async () => {
+      const editor = vscode.window.activeTextEditor
+      if (!editor) return
+
+      await cline.startNewTask(
+        `Add comprehensive unit tests for ${editor.document.fileName}`
+      )
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('myext.explainCode', async () => {
+      const editor = vscode.window.activeTextEditor
+      if (!editor) return
+
+      const selection = editor.document.getText(editor.selection)
+      if (!selection) return
+
+      await cline.sendMessage(
+        `Explain this code:\n\n\`\`\`\n${selection}\n\`\`\``
+      )
+    })
+  )
+
+  vscode.window.showInformationMessage('HAI Build integration active')
+}
+
+export function deactivate() {}
+```
+
+**package.json:**
+
+```json
+{
+  "name": "hai-build-integration",
+  "displayName": "HAI Build Integration",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "extensionDependencies": [
+    "presidio-inc.hai-build-code-generator"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "myext.refactorFile",
+        "title": "Refactor with HAI"
+      },
+      {
+        "command": "myext.addTests",
+        "title": "Add Tests with HAI"
+      },
+      {
+        "command": "myext.explainCode",
+        "title": "Explain with HAI"
+      }
+    ]
+  }
+}
+```
+
+## Best Practices
+
+### Error Handling
+
+Always check if the extension and API are available:
+
+```typescript
+const clineExt = vscode.extensions.getExtension<HAIAPI>(
+  'presidio-inc.hai-build-code-generator'
+)
+
+if (!clineExt) {
+  vscode.window.showErrorMessage('HAI Build not installed')
+  return
+}
+
+if (!clineExt.isActive) {
+  await clineExt.activate()
+}
+
+const cline = clineExt.exports
+if (!cline) {
+  vscode.window.showErrorMessage('HAI API not available')
+  return
+}
+```
+
+### Image Data URIs
+
+Ensure images are properly encoded:
+
+```typescript
+import * as fs from 'fs/promises'
+import * as path from 'path'
+
+async function loadImageAsDataUri(filePath: string): Promise<string> {
+  const buffer = await fs.readFile(filePath)
+  const ext = path.extname(filePath).slice(1)
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg'
+  const base64 = buffer.toString('base64')
+  return `data:${mimeType};base64,${base64}`
+}
+```
+
+### Task State Management
+
+Keep track of active tasks to avoid conflicts:
+
+```typescript
+class TaskManager {
+  private activeTask: boolean = false
+
+  async startTask(cline: HAIAPI, task: string) {
+    if (this.activeTask) {
+      const proceed = await vscode.window.showWarningMessage(
+        'A task is already active. Start a new one?',
+        'Yes', 'No'
+      )
+      if (proceed !== 'Yes') return
+    }
+
+    await cline.startNewTask(task)
+    this.activeTask = true
+  }
+}
+```
+
+## Troubleshooting
+
+### Extension Not Found
+
+```typescript
+if (!clineExtension) {
+  vscode.window.showErrorMessage(
+    'HAI Build not installed. Install from the marketplace.'
+  )
+}
+```
+
+### API Not Available
+
+```typescript
+if (!cline) {
+  console.error('HAI API exports are undefined')
+  // Check if extension activated correctly
+  await clineExtension.activate()
+}
+```
+
+### Task Not Responding
+
+If `sendMessage()` doesn't work, ensure a task is active:
+
+```typescript
+await cline.startNewTask() // Start task first
+await cline.sendMessage('Your message') // Then send message
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Usage" icon="terminal" href="/advanced/cli-usage">
+    Use Cline from the command line
+  </Card>
+  <Card title="Custom Experts" icon="user-gear" href="/advanced/custom-experts">
+    Create domain-specific experts
+  </Card>
+</CardGroup>

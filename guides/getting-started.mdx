@@ -1,0 +1,193 @@
+---
+title: "Getting Started with HAI Build"
+description: "Learn the essential first steps to start using HAI Build Code Generator effectively"
+icon: "rocket"
+---
+
+## Welcome to HAI Build
+
+HAI Build Code Generator is an AI-powered VS Code extension that streamlines development workflows through intelligent task execution, automated code generation, and seamless integration with various LLMs.
+
+## Installation
+
+Get HAI Build up and running in your VS Code environment.
+
+<Steps>
+  <Step title="Install from VS Code Marketplace">
+    1. Open Visual Studio Code
+    2. Press `⇧⌘X` (Mac) or `Ctrl+Shift+X` (Windows/Linux) to open Extensions
+    3. Search for **HAI Build**
+    4. Click **Install**
+
+    <Tip>The extension will appear in your sidebar after installation.</Tip>
+  </Step>
+
+  <Step title="Open the HAI Sidebar">
+    After installation, click the HAI Build icon in the Activity Bar, or use the keyboard shortcut:
+    - **Mac**: `Cmd+'`
+    - **Windows/Linux**: `Ctrl+'`
+
+    This opens the HAI Build sidebar where you'll interact with the AI assistant.
+  </Step>
+
+  <Step title="Configure Your AI Provider">
+    Before you can start using HAI Build, you need to configure an LLM provider:
+
+    1. Click the **Settings** icon (gear icon) in the HAI sidebar
+    2. Select your preferred AI provider:
+       - Anthropic (Claude)
+       - OpenAI (GPT)
+       - Google (Gemini)
+       - OpenRouter
+       - Other supported providers
+    3. Enter your API key
+    4. Select your preferred model
+
+    <Note>
+      HAI Build uses a bring-your-own-key (BYOK) model, giving you full control over costs and model selection.
+    </Note>
+  </Step>
+
+  <Step title="Start Your First Task">
+    Click the **+** (New Task) button or press `Cmd/'` / `Ctrl+'` and describe what you want to accomplish:
+
+    ```
+    Create a new React component for a user profile card
+    ```
+
+    HAI will analyze your request, explore your codebase, and present a plan before making changes.
+  </Step>
+</Steps>
+
+## Understanding the Interface
+
+The HAI Build sidebar provides several key controls:
+
+<CardGroup cols={2}>
+  <Card title="New Task" icon="plus">
+    Start a new conversation and task with HAI
+  </Card>
+  <Card title="HAI Tasks" icon="checklist">
+    View and execute AI-generated tasks from Specif AI integration
+  </Card>
+  <Card title="MCP Servers" icon="server">
+    Manage Model Context Protocol integrations for extended capabilities
+  </Card>
+  <Card title="History" icon="history">
+    Review previous tasks and conversations
+  </Card>
+  <Card title="Settings" icon="settings-gear">
+    Configure LLM providers, models, and extension preferences
+  </Card>
+</CardGroup>
+
+## Quick Actions with Keyboard Shortcuts
+
+HAI Build provides convenient keyboard shortcuts for common actions:
+
+| Action | Mac | Windows/Linux |
+|--------|-----|---------------|
+| Open HAI / Jump to Chat | `Cmd+'` | `Ctrl+'` |
+| Add Selection to HAI | `Cmd+'` (with text selected) | `Ctrl+'` (with text selected) |
+
+## Context Menu Actions
+
+Right-click on selected code to access HAI Build features:
+
+- **Add to HAI**: Send selected code to the chat for discussion or modification
+- **Explain with HAI**: Get an explanation of what the selected code does
+- **Improve with HAI**: Request suggestions to improve the selected code
+
+## Core Workflow
+
+Here's how HAI Build works through a typical development task:
+
+<Steps>
+  <Step title="Describe Your Goal">
+    Tell HAI what you want to achieve in natural language. Be specific about requirements and context.
+  </Step>
+
+  <Step title="Review the Plan">
+    HAI analyzes your codebase and presents a clear plan outlining:
+    - Files to be modified
+    - Changes to be made
+    - Reasoning behind decisions
+  </Step>
+
+  <Step title="Approve Changes">
+    Review proposed diffs and approve changes before they're applied. You have full visibility and control.
+  </Step>
+
+  <Step title="Iterate as Needed">
+    Provide feedback, request adjustments, or ask follow-up questions. HAI maintains context throughout the conversation.
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Be Specific with Instructions">
+    Instead of: "Make this better"
+    
+    Try: "Refactor this function to use async/await instead of promises and add error handling"
+  </Accordion>
+
+  <Accordion title="Provide Context">
+    Help HAI understand your architecture, coding standards, and constraints:
+    
+    "Following our REST API patterns, create an endpoint for user authentication using JWT tokens"
+  </Accordion>
+
+  <Accordion title="Review Before Accepting">
+    Always review the proposed changes in the diff view before accepting. HAI shows you exactly what will change.
+  </Accordion>
+
+  <Accordion title="Use Checkpoints">
+    HAI creates checkpoints that allow you to easily revert changes if needed. Don't hesitate to experiment.
+  </Accordion>
+</AccordionGroup>
+
+## Working with Files
+
+HAI Build has deep codebase intelligence:
+
+- **Automatic Discovery**: HAI explores your project structure to understand your architecture
+- **Context-Aware**: Changes are made with awareness of your existing code patterns
+- **Smart File Selection**: HAI identifies relevant files based on your request
+
+<Tip>
+  You can explicitly mention files in your requests: "Update the UserService in `src/services/user.service.ts`"
+</Tip>
+
+## Adding Content to Chat
+
+Multiple ways to provide context to HAI:
+
+1. **Selected Code**: Select code in the editor and press `Cmd/'` / `Ctrl+'`
+2. **Context Menu**: Right-click selected code → **Add to HAI**
+3. **Terminal Output**: Right-click in terminal → **Add to HAI**
+4. **Files**: Drag and drop files into the chat
+5. **Screenshots**: Paste images directly into the chat
+
+## Next Steps
+
+Now that you're set up, explore these powerful features:
+
+<CardGroup cols={2}>
+  <Card title="Execute HAI Tasks" icon="list-check" href="/guides/task-execution">
+    Learn how to work with AI-generated tasks from Specif AI
+  </Card>
+  <Card title="Code Generation" icon="code" href="/guides/code-generation">
+    Master AI-powered code generation workflows
+  </Card>
+  <Card title="Git Integration" icon="git" href="/guides/git-integration">
+    Generate commit messages and manage version control
+  </Card>
+  <Card title="Jupyter Notebooks" icon="book" href="/guides/jupyter-notebooks">
+    AI assistance for Jupyter notebook development
+  </Card>
+</CardGroup>
+
+<Note>
+  **Need Help?** Visit our [GitHub repository](https://github.com/presidio-oss/hai-build-codegen) or reach out at [hai-feedback@presidio.com](mailto:hai-feedback@presidio.com)
+</Note>

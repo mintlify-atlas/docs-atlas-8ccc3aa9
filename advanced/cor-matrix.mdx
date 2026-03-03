@@ -1,0 +1,536 @@
+---
+title: 'COR-Matrix Integration'
+description: 'Track AI-generated code retention patterns and analyze code origin over time'
+icon: 'chart-line'
+---
+
+# COR-Matrix Integration
+
+COR-Matrix (Code Origin Retention Matrix) is an advanced analytics feature that tracks AI-generated code retention patterns in your codebase. It helps you understand how much AI-generated code persists over time and analyze the quality and utility of AI contributions.
+
+## Overview
+
+COR-Matrix provides:
+- **Code Origin Tracking**: Identify which code was AI-generated vs human-written
+- **Retention Analysis**: Track how long AI-generated code remains in the codebase
+- **Quality Metrics**: Analyze patterns in code modifications and refactoring
+- **Team Insights**: Understand AI adoption and effectiveness across your team
+
+## How It Works
+
+### Code Origin Tagging
+
+When HAI Build generates or modifies code:
+1. Each change is tagged with metadata (timestamp, task ID, file path)
+2. Tags are sent to the COR-Matrix service
+3. The service tracks the code's lifecycle
+4. Analytics are generated on retention patterns
+
+### Retention Tracking
+
+COR-Matrix monitors:
+- **Initial Generation**: When AI creates new code
+- **Modifications**: When humans edit AI-generated code
+- **Deletions**: When AI-generated code is removed
+- **Persistence**: How long code remains unchanged
+
+### Analytics Dashboard
+
+Visualize:
+- Retention rates over time
+- Most stable AI-generated components
+- Frequently modified sections
+- Team adoption metrics
+
+## Configuration
+
+### Setup via .hai.config
+
+Create or edit `.hai.config` in your workspace root:
+
+```bash
+touch .hai.config
+```
+
+Add COR-Matrix configuration:
+
+```ini
+# COR-Matrix Configuration
+cormatrix.baseURL=https://cormatrix.example.com
+cormatrix.token=your-api-token-here
+cormatrix.workspaceId=your-workspace-id
+```
+
+### Configuration Parameters
+
+| Parameter | Description | Required |
+|-----------|-------------|-----------|
+| `cormatrix.baseURL` | COR-Matrix service endpoint | Yes |
+| `cormatrix.token` | Authentication token | Yes |
+| `cormatrix.workspaceId` | Unique workspace identifier | Yes |
+
+### Example Configuration
+
+```ini
+# .hai.config
+
+# HAI Build Configuration
+name=MyProject
+
+# Telemetry (optional)
+langfuse.apiUrl=https://langfuse.example.com
+langfuse.apiKey=lf_key_xxx
+langfuse.publicKey=lf_pub_xxx
+
+posthog.url=https://posthog.example.com
+posthog.apiKey=phc_xxx
+
+# COR-Matrix Integration
+cormatrix.baseURL=https://cormatrix.example.com/api
+cormatrix.token=cm_token_xxx
+cormatrix.workspaceId=workspace-123
+```
+
+## Security Considerations
+
+### Protecting Sensitive Data
+
+<Warning>
+The `.hai.config` file is **not** git-ignored by default. Ensure you don't commit sensitive tokens to version control.
+</Warning>
+
+Add to `.gitignore`:
+
+```bash
+echo ".hai.config" >> .gitignore
+```
+
+### Environment-Specific Configuration
+
+Use different configs for different environments:
+
+**Local Development (.hai.config):**
+```ini
+cormatrix.baseURL=http://localhost:8080
+cormatrix.token=dev-token
+cormatrix.workspaceId=dev-workspace
+```
+
+**CI/CD Pipeline:**
+Inject via environment variables or CI secrets:
+
+```bash
+# .github/workflows/ci.yml
+- name: Configure COR-Matrix
+  run: |
+    cat > .hai.config << EOF
+    cormatrix.baseURL=${{ secrets.CORMATRIX_URL }}
+    cormatrix.token=${{ secrets.CORMATRIX_TOKEN }}
+    cormatrix.workspaceId=${{ secrets.CORMATRIX_WORKSPACE }}
+    EOF
+```
+
+### Token Management
+
+Rotate tokens regularly:
+1. Generate new token in COR-Matrix dashboard
+2. Update `.hai.config` locally
+3. Update secrets in CI/CD platform
+4. Revoke old token
+
+## Data Collected
+
+### Code Change Events
+
+For each AI-generated change:
+
+```json
+{
+  "eventType": "code_generated",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "taskId": "task-abc123",
+  "file": "src/components/Button.tsx",
+  "linesAdded": 45,
+  "linesModified": 0,
+  "linesDeleted": 0,
+  "aiModel": "claude-sonnet-4-5-20250929",
+  "userId": "user-xyz",
+  "workspaceId": "workspace-123"
+}
+```
+
+### Modification Events
+
+When AI-generated code is modified:
+
+```json
+{
+  "eventType": "code_modified",
+  "timestamp": "2024-01-16T14:20:00Z",
+  "originalTaskId": "task-abc123",
+  "file": "src/components/Button.tsx",
+  "linesModified": 5,
+  "modifiedBy": "human",
+  "retentionTime": 97200,
+  "workspaceId": "workspace-123"
+}
+```
+
+### Privacy
+
+COR-Matrix collects:
+- ✅ File paths and names
+- ✅ Line counts (additions, deletions, modifications)
+- ✅ Timestamps
+- ✅ Task IDs
+- ✅ User IDs (hashed)
+- ❌ **Actual code content** (NOT collected)
+- ❌ **Sensitive data** (NOT collected)
+
+## Analyzing Results
+
+### Retention Metrics
+
+**High Retention (Good)**
+- AI-generated code remains unchanged for extended periods
+- Indicates high-quality, production-ready output
+- Less rework needed
+
+**Low Retention (Needs Attention)**
+- Frequent modifications to AI-generated code
+- May indicate prompt engineering improvements needed
+- Could suggest expert guidelines need refinement
+
+### Example Insights
+
+**Strong Performance:**
+```
+File: src/utils/validation.ts
+Retention: 98% (unchanged for 30 days)
+Implication: AI successfully generated production-ready utility functions
+```
+
+**Needs Improvement:**
+```
+File: src/components/ComplexForm.tsx
+Retention: 45% (heavily modified within 2 days)
+Implication: Complex UI components may need better expert guidelines or examples
+```
+
+## Dashboard Access
+
+Access your COR-Matrix analytics:
+
+1. Navigate to your COR-Matrix instance
+2. Log in with your credentials
+3. Select your workspace
+4. View dashboards:
+   - **Retention Overview**: High-level metrics
+   - **File Analysis**: Per-file retention rates
+   - **Team Performance**: User-level insights
+   - **Model Comparison**: AI model effectiveness
+
+### Key Metrics
+
+- **Overall Retention Rate**: % of AI code unchanged after N days
+- **Average Modification Time**: How quickly AI code is edited
+- **Top Retained Files**: Most stable AI contributions
+- **Refactor Hotspots**: Frequently modified files
+- **AI vs Human Code Ratio**: Codebase composition
+
+## Use Cases
+
+### 1. Quality Assurance
+
+Identify which types of code generation work well:
+
+```
+High Retention:
+- Utility functions (95%)
+- Type definitions (92%)
+- Test cases (88%)
+
+Low Retention:
+- Complex business logic (52%)
+- UI components (63%)
+- Database queries (58%)
+```
+
+**Action**: Focus AI on high-retention tasks, provide better guidance for low-retention areas.
+
+### 2. Expert Refinement
+
+Use retention data to improve custom experts:
+
+```
+Observation: React components have 60% retention
+Analysis: Missing accessibility guidelines
+Action: Update React expert with a11y best practices
+Result: Retention improved to 85%
+```
+
+### 3. Team Adoption
+
+Track how teams use AI assistance:
+
+```
+Team A: 75% of commits include AI-generated code (high adoption)
+Team B: 30% of commits include AI-generated code (low adoption)
+
+Retention rates similar across both teams
+→ AI quality is consistent, adoption varies
+→ Provide Team B with training/examples
+```
+
+### 4. Model Comparison
+
+Compare effectiveness of different AI models:
+
+```
+Model: claude-sonnet-4-5
+Retention: 82%
+Average Mod Time: 5.2 days
+
+Model: gpt-4o
+Retention: 78%
+Average Mod Time: 3.8 days
+
+→ Claude generates slightly more stable code
+→ GPT-4o code is modified faster (may indicate faster iteration)
+```
+
+### 5. Continuous Improvement
+
+Iterative enhancement workflow:
+
+```
+1. Generate code with HAI Build
+2. Monitor retention in COR-Matrix
+3. Identify low-retention patterns
+4. Update expert guidelines
+5. Re-generate similar code
+6. Measure retention improvement
+7. Repeat
+```
+
+## Integration with CI/CD
+
+### Pre-Commit Hooks
+
+Track retention before commits:
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# Send modified AI-generated files to COR-Matrix
+curl -X POST https://cormatrix.example.com/api/events \
+  -H "Authorization: Bearer $CORMATRIX_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "eventType": "pre_commit_check",
+    "files": '$(git diff --cached --name-only | jq -R -s -c 'split("\n")[:-1]')'
+  }'
+```
+
+### GitHub Actions
+
+Automate tracking in CI:
+
+```yaml
+name: COR-Matrix Tracking
+
+on: [push, pull_request]
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Report to COR-Matrix
+        env:
+          CORMATRIX_TOKEN: ${{ secrets.CORMATRIX_TOKEN }}
+        run: |
+          curl -X POST ${{ secrets.CORMATRIX_URL }}/api/events \
+            -H "Authorization: Bearer $CORMATRIX_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "eventType": "ci_build",
+              "commit": "${{ github.sha }}",
+              "branch": "${{ github.ref }}",
+              "workspaceId": "${{ secrets.CORMATRIX_WORKSPACE }}"
+            }'
+```
+
+## Advanced Configuration
+
+### Custom Event Types
+
+Extend tracking with custom events:
+
+```typescript
+import { corMatrixClient } from '@/services/cormatrix'
+
+async function trackCustomEvent() {
+  await corMatrixClient.sendEvent({
+    eventType: 'expert_loaded',
+    expertName: 'React Best Practices',
+    taskId: 'task-abc123',
+    timestamp: new Date().toISOString()
+  })
+}
+```
+
+### Filtering
+
+Exclude files from tracking:
+
+```typescript
+// In HAI Build configuration
+const config = {
+  cormatrix: {
+    excludePatterns: [
+      'node_modules/**',
+      '*.test.ts',
+      'dist/**',
+      '.git/**'
+    ]
+  }
+}
+```
+
+### Batching
+
+Batch events for performance:
+
+```typescript
+const events = [
+  { eventType: 'code_generated', file: 'a.ts', ... },
+  { eventType: 'code_generated', file: 'b.ts', ... },
+  { eventType: 'code_modified', file: 'c.ts', ... }
+]
+
+await corMatrixClient.sendBatch(events)
+```
+
+## Troubleshooting
+
+### Events Not Appearing
+
+1. **Check Configuration**:
+```bash
+cat .hai.config | grep cormatrix
+```
+
+2. **Verify Token**:
+```bash
+curl -H "Authorization: Bearer $CORMATRIX_TOKEN" \
+  https://cormatrix.example.com/api/health
+```
+
+3. **Check Logs**:
+```bash
+code ~/.cline/log/
+# Look for COR-Matrix errors
+```
+
+### Authentication Errors
+
+```
+Error: 401 Unauthorized
+```
+
+**Solution**: Regenerate token in COR-Matrix dashboard and update `.hai.config`
+
+### Network Issues
+
+```
+Error: ECONNREFUSED
+```
+
+**Solution**: Verify `baseURL` is correct and service is accessible
+
+## Best Practices
+
+### 1. Regular Review
+
+Schedule weekly/monthly reviews of retention metrics:
+- Identify trends
+- Spot areas for improvement
+- Celebrate wins
+
+### 2. Team Training
+
+Use retention data to train team:
+- Share high-retention examples
+- Discuss low-retention patterns
+- Refine prompting strategies
+
+### 3. Iterative Refinement
+
+Continuously improve:
+1. Generate code
+2. Measure retention
+3. Identify gaps
+4. Update experts/prompts
+5. Repeat
+
+### 4. Privacy First
+
+Never send:
+- Proprietary code
+- Customer data
+- Credentials
+- PII
+
+Only metadata (file paths, line counts, timestamps).
+
+### 5. Version Control
+
+Track config changes:
+```bash
+git add .hai.config.example
+git commit -m "Add COR-Matrix config template"
+```
+
+Provide a template without secrets:
+```ini
+# .hai.config.example
+cormatrix.baseURL=https://your-instance.com
+cormatrix.token=YOUR_TOKEN_HERE
+cormatrix.workspaceId=YOUR_WORKSPACE_ID
+```
+
+## FAQ
+
+### What data is sent to COR-Matrix?
+
+Only metadata: file paths, line counts, timestamps, task IDs. **No actual code content is transmitted.**
+
+### Can I self-host COR-Matrix?
+
+Yes, COR-Matrix can be deployed on-premises. Contact your organization's platform team for setup.
+
+### How long is data retained?
+
+Configurable per instance. Default is 1 year of retention history.
+
+### Does this slow down HAI Build?
+
+No. Events are sent asynchronously and don't block code generation.
+
+### Can I disable COR-Matrix?
+
+Yes. Simply remove or comment out the `cormatrix.*` configuration in `.hai.config`.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Experts" icon="user-gear" href="/advanced/custom-experts">
+    Use retention data to refine your experts
+  </Card>
+  <Card title="CLI Usage" icon="terminal" href="/advanced/cli-usage">
+    Automate tracking with CLI workflows
+  </Card>
+</CardGroup>

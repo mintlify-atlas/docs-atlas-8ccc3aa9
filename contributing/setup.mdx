@@ -1,0 +1,177 @@
+---
+title: 'Development Setup'
+description: 'Set up your development environment for HAI Build Code Generator'
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (20.x or later)
+- **npm** (comes with Node.js)
+- **Visual Studio Code**
+- **git-lfs** - Required for cloning the repository
+
+## Initial Setup
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the repository with git-lfs support:
+    ```bash
+    git clone https://github.com/presidio-oss/hai-build-codegen.git
+    ```
+  </Step>
+
+  <Step title="Open in VS Code">
+    Open the project in Visual Studio Code:
+    ```bash
+    code hai-build-codegen
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install the necessary dependencies for the extension and webview-gui:
+    ```bash
+    npm run install:all
+    ```
+  </Step>
+
+  <Step title="Generate Protocol Buffers">
+    Generate Protocol Buffer files (required before first build):
+    ```bash
+    npm run protos
+    ```
+  </Step>
+
+  <Step title="Launch the Extension">
+    Launch by pressing `F5` (or `Run` → `Start Debugging`) to open a new VS Code window with the extension loaded.
+    
+    <Note>
+    You may need to install the [esbuild problem matchers extension](https://marketplace.visualstudio.com/items?itemName=connor4312.esbuild-problem-matchers) if you run into issues building the project.
+    </Note>
+  </Step>
+</Steps>
+
+## VS Code Extensions
+
+When opening the project, VS Code will prompt you to install recommended extensions. These extensions are required for development - please accept all installation prompts.
+
+If you dismissed the prompts, you can install them manually from the Extensions panel.
+
+## Development Workflow
+
+### Watch Mode
+
+For an efficient development workflow, use one of these commands:
+
+```bash
+# Generate protos and run watch mode
+npm run dev
+
+# Run watch mode (if protos already generated)
+npm run watch
+```
+
+This will automatically rebuild the extension when you make changes to the source code.
+
+### Running Tests
+
+Run tests locally:
+```bash
+npm run test
+```
+
+### Code Formatting
+
+Before submitting a PR, format your code:
+```bash
+npm run format:fix
+```
+
+## Linux-Specific Setup
+
+VS Code extension tests on Linux require the following system libraries:
+
+- `dbus`
+- `libasound2`
+- `libatk-bridge2.0-0`
+- `libatk1.0-0`
+- `libdrm2`
+- `libgbm1`
+- `libgtk-3-0`
+- `libnss3`
+- `libx11-xcb1`
+- `libxcomposite1`
+- `libxdamage1`
+- `libxfixes3`
+- `libxkbfile1`
+- `libxrandr2`
+- `xvfb`
+
+These libraries provide necessary GUI components and system services for the test environment.
+
+### Installing on Debian-based distributions
+
+For Debian-based distributions (e.g., Ubuntu), install these libraries using apt:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  dbus \
+  libasound2 \
+  libatk-bridge2.0-0 \
+  libatk1.0-0 \
+  libdrm2 \
+  libgbm1 \
+  libgtk-3-0 \
+  libnss3 \
+  libx11-xcb1 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxkbfile1 \
+  libxrandr2 \
+  xvfb
+```
+
+## Webview Development
+
+The project includes a separate webview UI component. To work on the webview:
+
+```bash
+# Run webview in development mode
+npm run dev:webview
+
+# Build webview for production
+npm run build:webview
+
+# Run webview tests
+npm run test:webview
+```
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Build errors related to esbuild">
+    Install the [esbuild problem matchers extension](https://marketplace.visualstudio.com/items?itemName=connor4312.esbuild-problem-matchers) and restart VS Code.
+  </Accordion>
+
+  <Accordion title="Protocol Buffer errors">
+    Make sure you've run `npm run protos` before building the project.
+  </Accordion>
+
+  <Accordion title="Extension not loading in debug mode">
+    Try closing the debug VS Code window and pressing `F5` again. If the issue persists, run `npm run clean:build` and rebuild.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/contributing/architecture">
+    Learn about the project structure
+  </Card>
+  <Card title="Contributing Guidelines" icon="book" href="/contributing/guidelines">
+    Read the contributing guidelines
+  </Card>
+</CardGroup>

@@ -1,0 +1,410 @@
+---
+title: 'Slash Commands'
+description: 'In-chat slash commands for AI-assisted development workflows'
+---
+
+## Overview
+
+Slash commands are special in-chat commands that modify how HAI Build processes your request. They can be used to trigger specific workflows, load custom instructions, or invoke MCP prompts.
+
+<Note>
+  Slash commands must appear within XML tags like `<task>`, `<feedback>`, `<answer>`, or `<user_message>` to be processed.
+</Note>
+
+## How Slash Commands Work
+
+Slash commands are processed **after** @ mentions and transform the user's message by:
+
+1. Detecting the slash command pattern: `/(^|\s)\/([a-zA-Z0-9_.:@-]+)(?=\s|$)/`
+2. Removing the command from the message
+3. Prepending appropriate instructions or content to the message
+
+**Only one slash command per message** is processed (the first match found).
+
+## Built-in Slash Commands
+
+### /newtask
+
+Creates a detailed summary of the current conversation for starting a new task with preloaded context.
+
+**Usage:**
+```
+<task>
+/newtask Please summarize our work on the authentication system
+</task>
+```
+
+**What it does:**
+- Invokes the `new_task` tool
+- Generates context including:
+  - Current work description
+  - Key technical concepts
+  - Relevant files and code
+  - Problem solving approaches
+  - Pending tasks and next steps
+
+**Output:** Presents a preview that the user can use to create a new task or continue in the current conversation.
+
+---
+
+### /smol
+
+Compacts the current context window while retaining key information.
+
+**Alias:** `/compact`
+
+**Usage:**
+```
+<task>
+/smol Condense the conversation so far
+</task>
+```
+
+**What it does:**
+- Invokes the `condense` tool
+- Creates a detailed summary including:
+  - Previous conversation overview
+  - Current work details
+  - Key technical concepts
+  - Relevant files and code
+  - Problem solving history
+  - Pending tasks and next steps
+  - Task progress (if focus chain is enabled)
+
+**Output:** Presents a summary preview that can be used to compact the context window.
+
+---
+
+### /compact
+
+Alias for `/smol`. See above for details.
+
+---
+
+### /newrule
+
+Creates a new Cline rule file in the `.clinerules` directory based on the current conversation.
+
+**Usage:**
+```
+<task>
+/newrule Create a rule for our React component conventions
+</task>
+```
+
+**What it does:**
+- Invokes the `new_rule` tool
+- Creates a markdown file in `.clinerules/`
+- Generates guidelines covering:
+  - Communication style preferences
+  - Development workflow
+  - Coding best practices
+  - Project-specific context
+  - Other custom guidelines
+
+**Rules for rule creation:**
+- File must be in `.clinerules/` directory
+- Filename must be succinct and descriptive (e.g., `react-conventions.md`)
+- Cannot be named `default-clineignore.md`
+- Use hyphens (`-`) instead of underscores (`_`) in filenames
+- Format as markdown with distinct sections
+
+<Warning>
+  After using /newrule, you may need to check for and enable the new rule file in settings.
+</Warning>
+
+---
+
+### /reportbug
+
+Helps submit a bug report to the HAI Build GitHub repository.
+
+**Usage:**
+```
+<task>
+/reportbug I found an issue with code completion
+</task>
+```
+
+**What it does:**
+- Invokes the `report_bug` tool
+- Guides you through collecting required information:
+  - Issue title
+  - What happened vs. what was expected
+  - Steps to reproduce
+  - API request output (optional)
+  - Additional context (optional)
+
+**Process:**
+1. Command initiates the bug report workflow
+2. HAI Build asks for any missing required information
+3. Once all details are collected, generates the bug report
+
+---
+
+### /deep-planning
+
+Enables deep planning mode with enhanced architectural thinking.
+
+**Usage:**
+```
+<task>
+/deep-planning Design a scalable microservices architecture
+</task>
+```
+
+**What it does:**
+- Activates model-family-aware planning prompts
+- Provides detailed architectural guidance
+- Considers focus chain settings if enabled
+- Adapts to the current LLM provider and model
+
+**Best for:**
+- Complex architectural decisions
+- Multi-step implementation planning
+- System design tasks
+- Refactoring large codebases
+
+<Info>
+  The planning approach adapts based on the LLM model being used (GPT-5, generic, etc.)
+</Info>
+
+---
+
+### /explain-changes
+
+Explains code changes between git references with AI-generated inline comments.
+
+**Usage:**
+```
+<task>
+/explain-changes Show me what changed in the last commit
+</task>
+```
+
+**What it does:**
+- Opens a multi-file diff view
+- Generates AI explanations for code changes
+- Supports various git reference comparisons:
+  - Commits: `HEAD~1` to `HEAD`
+  - Branches: `main` to `feature-branch`
+  - Pull requests: base branch to PR branch
+  - Staged/unstaged changes
+
+**Process:**
+1. Gathers information about changes using git commands
+2. Builds context by reading relevant files
+3. Determines appropriate git references
+4. Calls `generate_explanation` tool
+
+**Parameters for generate_explanation:**
+
+<ParamField path="title" type="string" required>
+  Descriptive title for the diff view (e.g., "Changes in commit abc123")
+</ParamField>
+
+<ParamField path="from_ref" type="string" required>
+  Git reference for the "before" state (commit hash, branch, tag, etc.)
+</ParamField>
+
+<ParamField path="to_ref" type="string" optional>
+  Git reference for the "after" state. Defaults to working directory if omitted.
+</ParamField>
+
+---
+
+## Workflow Slash Commands
+
+You can create custom slash commands by adding workflow files to:
+
+- **Local workflows:** `.clinerules/` in your workspace (project-specific)
+- **Global workflows:** Global HAI Build configuration directory (cross-project)
+- **Remote workflows:** Configured via remote config settings
+
+### Creating Custom Workflows
+
+**File format:** Any filename (e.g., `deploy.md`, `test-suite`, `code-review.txt`)
+
+**Usage:**
+```
+<task>
+/deploy Run the deployment workflow
+</task>
+```
+
+**Precedence:**
+1. Local workflows (highest priority)
+2. Global workflows
+3. Remote workflows (lowest priority)
+
+**How it works:**
+- The slash command name must match the workflow filename exactly
+- File contents are wrapped in `<explicit_instructions>` tags
+- Instructions are prepended to your message
+
+**Example workflow file (`.clinerules/code-review`):**
+```markdown
+Perform a thorough code review focusing on:
+- Code quality and best practices
+- Security vulnerabilities
+- Performance implications
+- Test coverage
+- Documentation completeness
+
+Provide specific, actionable feedback.
+```
+
+---
+
+## MCP Prompt Slash Commands
+
+If you have MCP (Model Context Protocol) servers configured, you can invoke their prompts using the format:
+
+**Format:** `/mcp:<server>:<prompt>`
+
+**Usage:**
+```
+<task>
+/mcp:my-server:code-review Review this pull request
+</task>
+```
+
+<ParamField path="server" type="string" required>
+  Name of the MCP server
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  Name of the prompt to invoke (can contain colons)
+</ParamField>
+
+**What it does:**
+- Fetches the prompt from the specified MCP server
+- Formats the prompt response (supports text, images, audio, resources)
+- Wraps content in `<mcp_prompt>` tags
+- Prepends to your message
+
+**Supported content types:**
+- Text messages
+- Images (with MIME type notation)
+- Audio (with MIME type notation)
+- Resources (with URI and optional text content)
+
+---
+
+## Slash Command Patterns
+
+### Valid Command Names
+
+Command names can include:
+- Letters (a-z, A-Z)
+- Numbers (0-9)
+- Underscore (`_`)
+- Hyphen (`-`)
+- Colon (`:`)
+- At sign (`@`)
+
+**Pattern:** `/(^|\s)\/([a-zA-Z0-9_.:@-]+)(?=\s|$)/`
+
+### Where Commands Are Recognized
+
+Slash commands are only processed within these XML tags:
+- `<task>`
+- `<feedback>`
+- `<answer>`
+- `<user_message>`
+
+### What's NOT Recognized
+
+The following are **not** treated as slash commands:
+- URLs: `http://example.com/newtask`
+- File paths: `some/path/newtask`
+- Partial words: `foo/bar`
+
+These are ignored because the slash is not preceded by whitespace or start-of-string.
+
+---
+
+## Enabling/Disabling Workflows
+
+Workflows can be toggled on/off in the HAI Build settings:
+
+**Local workflows:**
+- Managed per workspace
+- Stored in workspace state
+
+**Global workflows:**
+- Managed globally across all workspaces
+- Stored in global state
+
+**Remote workflows:**
+- Can be marked as `alwaysEnabled`
+- Otherwise controlled by remote workflow toggles in global state
+
+---
+
+## Command Priority
+
+When a slash command name conflicts, HAI Build uses this priority order:
+
+1. **Built-in commands** (newtask, smol, compact, newrule, reportbug, deep-planning, explain-changes)
+2. **MCP prompts** (format: `/mcp:server:prompt`)
+3. **Local workflows** (from workspace `.clinerules/`)
+4. **Global workflows** (from global config)
+5. **Remote workflows** (from remote config)
+
+<Tip>
+  Built-in commands always take precedence, so avoid naming workflow files with built-in command names.
+</Tip>
+
+---
+
+## Telemetry
+
+Slash command usage is tracked with the following categories:
+- `builtin` - Built-in commands
+- `mcp_prompt` - MCP server prompts
+- `workflow` - Custom workflow files
+
+This helps improve the extension by understanding which features are most useful.
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Choose descriptive workflow names">
+    Use clear, action-oriented names that describe what the workflow does:
+    - Good: `deploy`, `code-review`, `test-suite`
+    - Avoid: `misc`, `stuff`, `workflow1`
+  </Accordion>
+
+  <Accordion title="Keep workflows focused">
+    Each workflow should have a single, clear purpose. Create multiple workflows instead of one that tries to do everything.
+  </Accordion>
+
+  <Accordion title="Document your workflows">
+    Include comments in workflow files explaining when and how to use them.
+  </Accordion>
+
+  <Accordion title="Use local vs global appropriately">
+    - **Local workflows:** Project-specific conventions, deployment procedures
+    - **Global workflows:** Personal coding style, general best practices
+  </Accordion>
+
+  <Accordion title="Test new workflows">
+    Try new slash commands in a test conversation before using them in important work.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/api/commands">
+    VS Code commands reference
+  </Card>
+  <Card title="MCP Integration" icon="plug" href="/features/mcp-integration">
+    Learn more about MCP servers
+  </Card>
+</CardGroup>

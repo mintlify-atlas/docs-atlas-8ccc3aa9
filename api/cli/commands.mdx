@@ -1,0 +1,447 @@
+---
+title: 'CLI Commands'
+description: 'Complete reference for all Cline CLI commands'
+---
+
+## Default Command
+
+Running `cline` without a subcommand starts an interactive session or executes a task directly.
+
+### Syntax
+
+```bash
+cline [prompt] [options]
+```
+
+### Arguments
+
+<ParamField path="prompt" type="string" optional>
+  Task prompt to execute. If omitted, launches interactive mode.
+</ParamField>
+
+### Options
+
+<ParamField path="-a, --act" type="boolean">
+  Run in act mode (default)
+</ParamField>
+
+<ParamField path="-p, --plan" type="boolean">
+  Run in plan mode
+</ParamField>
+
+<ParamField path="-y, --yolo" type="boolean">
+  Enable yolo mode (auto-approve all actions). Forces plain text output.
+</ParamField>
+
+<ParamField path="-t, --timeout" type="number">
+  Timeout in seconds for yolo mode (default: 600)
+</ParamField>
+
+<ParamField path="-m, --model" type="string">
+  Model to use for the task (e.g., `claude-sonnet-4-5-20250929`, `gpt-4o`)
+</ParamField>
+
+<ParamField path="-v, --verbose" type="boolean">
+  Show verbose output including reasoning
+</ParamField>
+
+<ParamField path="-c, --cwd" type="string">
+  Working directory for the task
+</ParamField>
+
+<ParamField path="--config" type="string">
+  Path to Cline configuration directory
+</ParamField>
+
+<ParamField path="--thinking" type="boolean | number">
+  Enable extended thinking. Default: 1024 tokens. Can specify custom token budget.
+</ParamField>
+
+<ParamField path="--reasoning-effort" type="string">
+  Reasoning effort level: `none`, `low`, `medium`, `high`, `xhigh`
+</ParamField>
+
+<ParamField path="--max-consecutive-mistakes" type="number">
+  Maximum consecutive mistakes before halting in yolo mode
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  Output messages as JSON instead of styled text. Forces plain text mode.
+</ParamField>
+
+<ParamField path="--double-check-completion" type="boolean">
+  Reject first completion attempt to force re-verification
+</ParamField>
+
+<ParamField path="-T, --taskId" type="string">
+  Resume an existing task by ID. Get task IDs from `cline history`.
+</ParamField>
+
+### Examples
+
+```bash
+# Launch interactive mode
+cline
+
+# Run a direct task
+cline "Create a hello world function in Python"
+
+# Run with verbose output and extended thinking
+cline -v --thinking "Analyze this codebase architecture"
+
+# Plan mode with specific model
+cline -p -m claude-sonnet-4-5-20250929 "Design a REST API"
+
+# Yolo mode for automation (auto-approves all actions)
+cline -y "Run the test suite and fix any failures"
+
+# Resume a previous task
+cline -T abc123def "Continue implementing the feature"
+
+# Piped input
+cat README.md | cline "Summarize this document"
+```
+
+---
+
+## task (alias: t)
+
+Run a new task with a prompt. This is equivalent to the default command but more explicit.
+
+### Syntax
+
+```bash
+cline task <prompt> [options]
+cline t <prompt> [options]
+```
+
+### Arguments
+
+<ParamField path="prompt" type="string" required>
+  The task prompt describing what you want Cline to do
+</ParamField>
+
+### Options
+
+Same as the default command (see above).
+
+### Examples
+
+```bash
+# Basic task
+cline task "Add TypeScript types to this module"
+cline t "Add TypeScript types to this module"
+
+# With options
+cline task -p -v "Refactor the authentication system"
+
+# Include images with inline references
+cline task "Fix the layout shown in @./screenshot.png"
+
+# Enable extended thinking for complex tasks
+cline task --thinking "Architect a microservices system"
+
+# Specify working directory
+cline task -c /path/to/project "Add unit tests"
+
+# Custom reasoning effort
+cline task --reasoning-effort high "Optimize database queries"
+```
+
+---
+
+## history (alias: h)
+
+List task history with pagination support.
+
+### Syntax
+
+```bash
+cline history [options]
+cline h [options]
+```
+
+### Options
+
+<ParamField path="-n, --limit" type="number">
+  Number of tasks to show per page (default: 10)
+</ParamField>
+
+<ParamField path="-p, --page" type="number">
+  Page number, 1-based (default: 1)
+</ParamField>
+
+<ParamField path="--config" type="string">
+  Path to Cline configuration directory
+</ParamField>
+
+### Examples
+
+```bash
+# Show last 10 tasks (default)
+cline history
+cline h
+
+# Show 20 tasks
+cline history -n 20
+
+# Show page 2 with 5 tasks per page
+cline history -n 5 -p 2
+
+# Use custom config directory
+cline history --config ~/.config/cline
+```
+
+---
+
+## config
+
+Show current configuration including global and workspace state.
+
+### Syntax
+
+```bash
+cline config [options]
+```
+
+### Options
+
+<ParamField path="--config" type="string">
+  Path to Cline configuration directory
+</ParamField>
+
+### Examples
+
+```bash
+# Show current configuration
+cline config
+
+# Show configuration from custom directory
+cline config --config ~/.config/cline
+```
+
+---
+
+## auth
+
+Authenticate a provider and configure the model to use.
+
+### Syntax
+
+```bash
+cline auth [options]
+```
+
+### Options
+
+<ParamField path="-p, --provider" type="string">
+  Provider ID for quick setup. Supported providers:
+  - `anthropic` - Anthropic Claude
+  - `openai-native` - OpenAI
+  - `openai` - OpenAI-compatible
+  - `openrouter` - OpenRouter
+  - `moonshot` - Moonshot AI (Kimi)
+  - `gemini` - Google Gemini
+  - `vertex` - GCP Vertex AI
+  - `bedrock` - AWS Bedrock
+  - `azure` - Azure OpenAI
+  - `ollama` - Ollama (local)
+  - `lmstudio` - LM Studio (local)
+</ParamField>
+
+<ParamField path="-k, --apikey" type="string">
+  API key for the provider
+</ParamField>
+
+<ParamField path="-m, --modelid" type="string">
+  Model ID to configure. Examples:
+  - `claude-sonnet-4-5-20250929` (Anthropic)
+  - `gpt-4o` (OpenAI)
+  - `kimi-k2.5` (Moonshot)
+  - `gemini-2.0-flash-exp` (Google)
+</ParamField>
+
+<ParamField path="-b, --baseurl" type="string">
+  Base URL for OpenAI-compatible providers (optional)
+</ParamField>
+
+<ParamField path="-v, --verbose" type="boolean">
+  Show verbose output
+</ParamField>
+
+<ParamField path="-c, --cwd" type="string">
+  Working directory
+</ParamField>
+
+<ParamField path="--config" type="string">
+  Path to Cline configuration directory
+</ParamField>
+
+### Examples
+
+```bash
+# Interactive authentication wizard
+cline auth
+
+# Quick setup for Anthropic
+cline auth -p anthropic -k sk-ant-xxxxx -m claude-sonnet-4-5-20250929
+
+# Quick setup for OpenAI
+cline auth -p openai-native -k sk-xxxxx -m gpt-4o
+
+# Quick setup for Moonshot (Kimi)
+cline auth -p moonshot -k sk-xxxxx -m kimi-k2.5
+
+# OpenAI-compatible provider with custom base URL
+cline auth -p openai -k your-api-key -b https://api.example.com/v1 -m gpt-4o
+
+# Quick setup without model (will prompt)
+cline auth -p anthropic -k sk-ant-xxxxx
+```
+
+<Note>
+  Bedrock provider requires complex IAM authentication and is not supported for quick setup. Use interactive mode instead.
+</Note>
+
+---
+
+## version
+
+Show the Cline CLI version number.
+
+### Syntax
+
+```bash
+cline version
+```
+
+### Examples
+
+```bash
+cline version
+# Output: Cline CLI version: 2.2.3
+```
+
+---
+
+## update
+
+Check for updates and install if available.
+
+### Syntax
+
+```bash
+cline update [options]
+```
+
+### Options
+
+<ParamField path="-v, --verbose" type="boolean">
+  Show verbose output
+</ParamField>
+
+### Examples
+
+```bash
+# Check for updates
+cline update
+
+# Check with verbose output
+cline update -v
+```
+
+---
+
+## dev
+
+Developer tools and utilities.
+
+### Subcommands
+
+#### dev log
+
+Open the log file for debugging.
+
+```bash
+cline dev log
+```
+
+---
+
+## Advanced Usage
+
+### Piped Input
+
+Cline automatically detects piped input and switches to plain text mode:
+
+```bash
+# Pipe file contents
+cat README.md | cline "Summarize this document"
+
+# Pipe with additional prompt
+echo "function add(a, b) { return a + b }" | cline "Add TypeScript types"
+
+# Combine piped input with prompt
+git diff | cline "Review these changes and suggest improvements"
+
+# Pipe from command output
+ls -la | cline "Explain what these files do"
+```
+
+### Image Support
+
+Include images in your prompts using inline references:
+
+```bash
+# Inline image reference
+cline "Fix the layout shown in @./screenshot.png"
+
+# Multiple images
+cline "Compare the designs in @./design-v1.png and @./design-v2.png"
+```
+
+### Resuming Tasks
+
+Resume previous tasks by ID (get IDs from `cline history`):
+
+```bash
+# Resume a task
+cline -T abc123def
+
+# Resume with a follow-up message
+cline -T abc123def "Now add unit tests for the changes"
+
+# Resume in plan mode to review
+cline -T abc123def -p "What's left to do?"
+
+# Resume with yolo mode for automated continuation
+cline -T abc123def -y "Continue with the implementation"
+```
+
+### JSON Output for Scripting
+
+```bash
+# Get JSON output
+cline --json "What files are in this directory?" | jq '.text'
+
+# Process streaming JSON
+cline --json "Analyze the codebase" | while read line; do
+  echo "$line" | jq -r '.text'
+done
+
+# Filter by message type
+cline --json "Run tests" | jq 'select(.type == "say")'
+```
+
+### CI/CD Integration
+
+```bash
+# Automated testing and fixes in CI
+cline -y --timeout 300 "Run the test suite and fix any failures"
+
+# Code review in pull requests
+git diff origin/main | cline -y "Review these changes for potential issues"
+
+# Automated documentation updates
+cline -y "Update the README.md with the latest changes"
+```

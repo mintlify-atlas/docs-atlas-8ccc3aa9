@@ -1,0 +1,445 @@
+---
+title: "OpenAI Provider"
+description: "Configure OpenAI GPT models including reasoning models and Azure OpenAI"
+icon: "openai"
+---
+
+The OpenAI provider supports GPT models, reasoning models (o1/o3/o4), and Azure OpenAI deployments.
+
+## Configuration
+
+<ParamField path="openAiApiKey" type="string" required>
+  Your OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+  
+  Not required if using Azure Identity authentication
+</ParamField>
+
+<ParamField path="openAiBaseUrl" type="string" optional>
+  Custom base URL for API requests
+  
+  - OpenAI: `https://api.openai.com/v1` (default)
+  - Azure: `https://<resource>.openai.azure.com`
+</ParamField>
+
+<ParamField path="openAiModelId" type="string" required>
+  Model identifier. Examples:
+  - `gpt-4.5-turbo`
+  - `gpt-4o`
+  - `o1-preview`
+  - `o3-mini`
+  - `deepseek-reasoner`
+</ParamField>
+
+<ParamField path="openAiModelInfo" type="OpenAiCompatibleModelInfo" optional>
+  Model metadata including:
+  - `maxTokens` - Maximum output tokens
+  - `temperature` - Sampling temperature (0-2)
+  - `isR1FormatRequired` - Enable R1 message format
+</ParamField>
+
+<ParamField path="reasoningEffort" type="string" optional>
+  For reasoning models (o1/o3/o4). Options:
+  - `low` - Faster, less thorough
+  - `medium` - Balanced
+  - `high` - Slower, more thorough
+</ParamField>
+
+<ParamField path="azureApiVersion" type="string" optional>
+  Azure OpenAI API version. Defaults to `2024-10-01-preview`
+</ParamField>
+
+<ParamField path="azureIdentity" type="boolean" optional default="false">
+  Use Azure Active Directory authentication instead of API key
+</ParamField>
+
+<ParamField path="openAiHeaders" type="Record<string, string>" optional>
+  Additional HTTP headers for requests
+</ParamField>
+
+## Basic Setup
+
+### OpenAI Standard
+
+```typescript
+import { OpenAiHandler } from "./providers/openai"
+
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4.5-turbo",
+  openAiModelInfo: {
+    maxTokens: 16384,
+    temperature: 0
+  }
+})
+```
+
+### Azure OpenAI
+
+<CodeGroup>
+```typescript API Key
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.AZURE_OPENAI_API_KEY,
+  openAiBaseUrl: "https://my-resource.openai.azure.com",
+  openAiModelId: "gpt-4o",
+  azureApiVersion: "2024-10-01-preview"
+})
+```
+
+```typescript Azure Identity
+import { DefaultAzureCredential } from "@azure/identity"
+
+const handler = new OpenAiHandler({
+  openAiBaseUrl: "https://my-resource.openai.azure.com",
+  openAiModelId: "gpt-4o",
+  azureApiVersion: "2024-10-01-preview",
+  azureIdentity: true // Use Azure AD authentication
+})
+```
+</CodeGroup>
+
+### DeepSeek Reasoner on Azure
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.AZURE_OPENAI_API_KEY,
+  openAiBaseUrl: "https://my-resource.openai.azure.com",
+  openAiModelId: "deepseek-reasoner", // Note: contains "deepseek"
+  // Handler detects "deepseek" and skips Azure client,
+  // uses standard OpenAI client instead
+})
+```
+
+## Reasoning Models
+
+OpenAI's o1, o3, and o4 models support reasoning effort control:
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "o3-mini",
+  reasoningEffort: "high" // low | medium | high
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "reasoning") {
+    // Reasoning models output thinking traces
+    console.log("Reasoning:", chunk.reasoning)
+  }
+  
+  if (chunk.type === "text") {
+    console.log("Response:", chunk.text)
+  }
+}
+```
+
+### Reasoning Model Behavior
+
+From `openai.ts:129-134`:
+
+<Info>
+  **Reasoning models use `developer` role**
+  
+  When using o1/o3/o4 models:
+  - System prompt sent as `developer` role instead of `system`
+  - Temperature is automatically set to `undefined` (not supported)
+  - Messages use special reasoning format
+</Info>
+
+```typescript
+// Standard models
+openAiMessages = [
+  { role: "system", content: systemPrompt },
+  ...convertToOpenAiMessages(messages)
+]
+
+// Reasoning models (o1/o3/o4)
+openAiMessages = [
+  { role: "developer", content: systemPrompt },
+  ...convertToOpenAiMessages(messages)
+]
+```
+
+## R1 Format Models
+
+Some models (like DeepSeek Reasoner) require R1 message format:
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "deepseek-reasoner",
+  openAiModelInfo: {
+    isR1FormatRequired: true // Enable R1 format
+  }
+})
+
+// Messages automatically converted using convertToR1Format()
+```
+
+## Temperature Control
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4o",
+  openAiModelInfo: {
+    temperature: 0.7 // 0 = deterministic, 2 = very creative
+  }
+})
+```
+
+<Note>
+  **Temperature defaults to 0** for deterministic output unless specified.
+  
+  Reasoning models (o1/o3/o4) ignore temperature - it's automatically set to `undefined`.
+</Note>
+
+## Token Limits
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4o",
+  openAiModelInfo: {
+    maxTokens: 8192 // Maximum output tokens
+  }
+})
+```
+
+If not specified, `maxTokens` is `undefined` (uses model's default).
+
+## Tool Calling
+
+```typescript
+import type { ChatCompletionTool } from "openai/resources/chat/completions"
+
+const tools: ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "read_file",
+      description: "Read file contents",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "File path"
+          }
+        },
+        required: ["path"]
+      }
+    }
+  }
+]
+
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4o"
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "tool_calls") {
+    const toolCall = chunk.tool_call
+    console.log("Function:", toolCall.function.name)
+    console.log("Arguments:", JSON.parse(toolCall.function.arguments))
+  }
+}
+```
+
+## Streaming Response
+
+The handler processes streaming chunks:
+
+### Text Delta
+```typescript
+{
+  type: "text",
+  text: string // Incremental text
+}
+```
+
+### Reasoning Content
+```typescript
+{
+  type: "reasoning",
+  reasoning: string // For o1/o3/o4 models
+}
+```
+
+### Tool Calls
+```typescript
+{
+  type: "tool_calls",
+  tool_call: {
+    function: {
+      name: string,
+      arguments: string // Incremental JSON
+    }
+  }
+}
+```
+
+### Usage Statistics
+```typescript
+{
+  type: "usage",
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens: number,
+  cacheWriteTokens: number
+}
+```
+
+## Prompt Caching
+
+OpenAI supports prompt caching (reported in usage stats):
+
+```typescript
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "usage") {
+    console.log("Cached tokens:", chunk.cacheReadTokens)
+    console.log("Cache writes:", chunk.cacheWriteTokens)
+    console.log("New input tokens:", chunk.inputTokens)
+    console.log("Output tokens:", chunk.outputTokens)
+  }
+}
+```
+
+## Custom Headers
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4o",
+  openAiHeaders: {
+    "OpenAI-Organization": "org-123456",
+    "OpenAI-Project": "proj-abc123"
+  }
+})
+```
+
+## Azure Regional Endpoints
+
+The handler auto-detects Azure regions for authentication:
+
+```typescript
+// Azure US Government
+const handler = new OpenAiHandler({
+  openAiBaseUrl: "https://my-resource.openai.azure.us",
+  azureIdentity: true
+  // Uses scope: "https://cognitiveservices.azure.us/.default"
+})
+
+// Azure Commercial (default)
+const handler2 = new OpenAiHandler({
+  openAiBaseUrl: "https://my-resource.openai.azure.com",
+  azureIdentity: true
+  // Uses scope: "https://cognitiveservices.azure.com/.default"
+})
+```
+
+## Error Handling
+
+```typescript
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: "gpt-4o",
+  onRetryAttempt: (error, attempt, maxRetries) => {
+    console.log(`Retry ${attempt}/${maxRetries}:`, error.message)
+  }
+})
+
+try {
+  for await (const chunk of handler.createMessage(...)) {
+    // Process chunks
+  }
+} catch (error) {
+  console.error("OpenAI API error:", error.message)
+}
+```
+
+## Model Information
+
+```typescript
+const { id, info } = handler.getModel()
+
+console.log("Model ID:", id)
+console.log("Max tokens:", info.maxTokens)
+console.log("Temperature:", info.temperature)
+console.log("Context window:", info.contextWindow)
+```
+
+## Implementation Reference
+
+Source: `~/workspace/source/src/core/api/providers/openai.ts`
+
+Key features:
+- Auto-detects Azure vs standard OpenAI
+- Handles reasoning models (o1/o3/o4) with `developer` role
+- Supports R1 format for DeepSeek Reasoner
+- Azure Identity authentication
+- Regional Azure endpoints
+- Streaming with tool calls
+
+## Common Patterns
+
+### Switch Between Models
+
+```typescript
+const models = {
+  fast: "gpt-4o-mini",
+  balanced: "gpt-4o",
+  reasoning: "o3-mini"
+}
+
+const handler = new OpenAiHandler({
+  openAiApiKey: process.env.OPENAI_API_KEY,
+  openAiModelId: models.reasoning,
+  reasoningEffort: "high"
+})
+```
+
+### Cost Tracking
+
+```typescript
+let totalInputTokens = 0
+let totalOutputTokens = 0
+let totalCachedTokens = 0
+
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "usage") {
+    totalInputTokens += chunk.inputTokens
+    totalOutputTokens += chunk.outputTokens
+    totalCachedTokens += chunk.cacheReadTokens || 0
+  }
+}
+
+console.log("Input tokens:", totalInputTokens)
+console.log("Output tokens:", totalOutputTokens)
+console.log("Cached tokens:", totalCachedTokens)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Anthropic Provider" icon="brain" href="/api/providers/anthropic">
+    Configure Claude models
+  </Card>
+  <Card title="OpenRouter Provider" icon="route" href="/api/providers/openrouter">
+    Access multiple providers
+  </Card>
+  <Card title="Provider Overview" icon="cloud" href="/api/providers/overview">
+    View all providers
+  </Card>
+  <Card title="Custom Provider" icon="code" href="/api/providers/custom">
+    Build your own
+  </Card>
+</CardGroup>

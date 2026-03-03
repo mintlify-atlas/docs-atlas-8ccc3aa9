@@ -1,0 +1,544 @@
+---
+title: 'LLM Providers'
+description: 'Configure AI model providers including Anthropic, OpenAI, OpenRouter, and more'
+icon: 'brain'
+---
+
+## Overview
+
+HAI Build Code Generator supports multiple LLM providers, giving you flexibility to use the best models for your workflow. Configure API keys, base URLs, and model-specific settings for each provider.
+
+## Supported Providers
+
+HAI Build integrates with the following LLM providers:
+
+<CardGroup cols={3}>
+  <Card title="Anthropic" icon="a">
+    Claude models with prompt caching
+  </Card>
+  <Card title="OpenAI" icon="o">
+    GPT models including GPT-4 and reasoning models
+  </Card>
+  <Card title="OpenRouter" icon="route">
+    Access multiple providers through one API
+  </Card>
+  <Card title="Google Gemini" icon="google">
+    Gemini models with native API
+  </Card>
+  <Card title="AWS Bedrock" icon="aws">
+    Claude and other models via AWS
+  </Card>
+  <Card title="Vertex AI" icon="cloud">
+    Google Cloud AI models
+  </Card>
+  <Card title="Azure OpenAI" icon="microsoft">
+    OpenAI models via Azure
+  </Card>
+  <Card title="Ollama" icon="server">
+    Local model execution
+  </Card>
+  <Card title="Groq" icon="bolt">
+    Ultra-fast inference
+  </Card>
+  <Card title="Mistral" icon="m">
+    Mistral AI models
+  </Card>
+  <Card title="DeepSeek" icon="magnifying-glass">
+    DeepSeek reasoning models
+  </Card>
+  <Card title="Cerebras" icon="chip">
+    High-performance inference
+  </Card>
+</CardGroup>
+
+<Note>
+Additional providers: Together AI, Fireworks, Hugging Face, LiteLLM, LM Studio, SambaNova, xAI, Qwen, Moonshot, Nebius, SAP AI Core, and more.
+</Note>
+
+## Provider Configuration
+
+<Tabs>
+  <Tab title="Anthropic">
+    ### Anthropic (Claude)
+
+    Configure Claude models with support for prompt caching and extended thinking.
+
+    <ParamField path="apiKey" type="string" required>
+      Your Anthropic API key from [console.anthropic.com](https://console.anthropic.com)
+    </ParamField>
+
+    <ParamField path="baseUrl" type="string" default="https://api.anthropic.com">
+      Custom base URL for Anthropic API (optional)
+    </ParamField>
+
+    <ParamField path="thinkingBudgetTokens" type="number" default="0">
+      Token budget for extended thinking mode (reasoning models)
+    </ParamField>
+
+    #### Supported Models
+
+    - `claude-3-5-sonnet-20241022` - Latest Claude 3.5 Sonnet
+    - `claude-3-5-haiku-20241022` - Fast and efficient
+    - `claude-3-opus-20240229` - Most capable model
+    - `claude-sonnet-4-20250514` - Claude 4 Sonnet
+
+    #### Features
+
+    <AccordionGroup>
+      <Accordion title="Prompt Caching">
+        Anthropic models support prompt caching to reduce costs on repeated context:
+        
+        ```typescript
+        // System prompts are automatically cached
+        system: [{
+          text: systemPrompt,
+          type: "text",
+          cache_control: { type: "ephemeral" }
+        }]
+        ```
+      </Accordion>
+
+      <Accordion title="Extended Thinking">
+        Enable reasoning capabilities with thinking budget:
+        
+        ```typescript
+        thinking: {
+          type: "enabled",
+          budget_tokens: 10000
+        }
+        ```
+        
+        <Note>Thinking is not compatible with temperature, top_p, or top_k modifications.</Note>
+      </Accordion>
+
+      <Accordion title="1M Context Window">
+        Some models support extended context windows:
+        
+        - Add `-1m` suffix to model ID
+        - Requires beta header: `anthropic-beta: context-1m-2025-08-07`
+      </Accordion>
+    </AccordionGroup>
+
+    #### Example Configuration
+
+    ```json
+    {
+      "provider": "anthropic",
+      "apiKey": "sk-ant-...",
+      "modelId": "claude-3-5-sonnet-20241022",
+      "thinkingBudgetTokens": 5000
+    }
+    ```
+  </Tab>
+
+  <Tab title="OpenAI">
+    ### OpenAI
+
+    Configure GPT models including reasoning models like o1 and o3.
+
+    <ParamField path="apiKey" type="string" required>
+      Your OpenAI API key from [platform.openai.com](https://platform.openai.com)
+    </ParamField>
+
+    <ParamField path="baseUrl" type="string" default="https://api.openai.com/v1">
+      Custom base URL for OpenAI-compatible APIs
+    </ParamField>
+
+    <ParamField path="reasoningEffort" type="string" default="medium">
+      Reasoning effort for o1/o3 models: `none`, `low`, `medium`, `high`, `xhigh`
+    </ParamField>
+
+    #### Supported Models
+
+    - `gpt-4o` - GPT-4 Omni
+    - `gpt-4-turbo` - Fast GPT-4
+    - `gpt-3.5-turbo` - Cost-effective
+    - `o1-preview` - Reasoning model
+    - `o3-mini` - Compact reasoning
+
+    #### Reasoning Models
+
+    OpenAI's o1 and o3 models support reasoning effort configuration:
+
+    ```typescript
+    {
+      model: "o1-preview",
+      reasoning_effort: "high" // low, medium, high, xhigh
+    }
+    ```
+
+    <Tip>
+    Use `xhigh` reasoning effort for complex problems requiring deep analysis.
+    </Tip>
+
+    #### Example Configuration
+
+    ```json
+    {
+      "provider": "openai",
+      "apiKey": "sk-...",
+      "modelId": "gpt-4o",
+      "reasoningEffort": "medium"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Azure OpenAI">
+    ### Azure OpenAI
+
+    Use OpenAI models deployed on Azure.
+
+    <ParamField path="apiKey" type="string">
+      Azure OpenAI API key (or use Azure Identity)
+    </ParamField>
+
+    <ParamField path="baseUrl" type="string" required>
+      Your Azure OpenAI endpoint (e.g., `https://your-resource.openai.azure.com`)
+    </ParamField>
+
+    <ParamField path="azureApiVersion" type="string" default="2024-10-21">
+      Azure API version
+    </ParamField>
+
+    <ParamField path="azureIdentity" type="boolean" default="false">
+      Use Azure Active Directory authentication instead of API key
+    </ParamField>
+
+    #### Azure Identity Authentication
+
+    Enable passwordless authentication with Azure AD:
+
+    ```typescript
+    {
+      azureIdentity: true,
+      baseUrl: "https://your-resource.openai.azure.com",
+      // API key not required when using Azure Identity
+    }
+    ```
+
+    The handler automatically detects the Azure environment:
+    - `azure.com` → `https://cognitiveservices.azure.com/.default`
+    - `azure.us` → `https://cognitiveservices.azure.us/.default`
+
+    #### Example Configuration
+
+    ```json
+    {
+      "provider": "openai",
+      "baseUrl": "https://your-resource.openai.azure.com",
+      "apiKey": "your-azure-key",
+      "azureApiVersion": "2024-10-21",
+      "modelId": "gpt-4o"
+    }
+    ```
+  </Tab>
+
+  <Tab title="OpenRouter">
+    ### OpenRouter
+
+    Access multiple LLM providers through a single API.
+
+    <ParamField path="apiKey" type="string" required>
+      Your OpenRouter API key from [openrouter.ai](https://openrouter.ai)
+    </ParamField>
+
+    <ParamField path="modelId" type="string" required>
+      Model identifier (e.g., `anthropic/claude-3.5-sonnet`)
+    </ParamField>
+
+    <ParamField path="providerSorting" type="string">
+      Provider preference order for routing
+    </ParamField>
+
+    #### Available Models
+
+    OpenRouter provides access to models from:
+    - Anthropic (Claude)
+    - OpenAI (GPT)
+    - Google (Gemini)
+    - Meta (Llama)
+    - Mistral AI
+    - And many more
+
+    #### Provider Routing
+
+    Control which providers serve your requests:
+
+    ```typescript
+    {
+      model: "anthropic/claude-3.5-sonnet",
+      provider: {
+        order: ["Anthropic", "AWS"],  // Prefer Anthropic, fallback to AWS
+        require_parameters: true
+      }
+    }
+    ```
+
+    #### Error Handling
+
+    OpenRouter returns detailed error information:
+
+    ```json
+    {
+      "error": {
+        "code": 429,
+        "message": "Rate limit exceeded",
+        "metadata": {
+          "provider_name": "Anthropic",
+          "raw": {...}
+        }
+      }
+    }
+    ```
+
+    #### Example Configuration
+
+    ```json
+    {
+      "provider": "openrouter",
+      "apiKey": "sk-or-...",
+      "modelId": "anthropic/claude-3.5-sonnet",
+      "providerSorting": "Anthropic,AWS"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Google Gemini">
+    ### Google Gemini
+
+    Use Google's Gemini models via native API or Vertex AI.
+
+    <ParamField path="apiKey" type="string">
+      Google AI API key (for non-Vertex)
+    </ParamField>
+
+    <ParamField path="baseUrl" type="string">
+      Custom base URL (optional)
+    </ParamField>
+
+    <ParamField path="isVertex" type="boolean" default="false">
+      Use Vertex AI instead of native API
+    </ParamField>
+
+    <ParamField path="vertexProjectId" type="string">
+      Google Cloud project ID (Vertex only)
+    </ParamField>
+
+    <ParamField path="vertexRegion" type="string">
+      Vertex AI region (e.g., `us-central1`)
+    </ParamField>
+
+    #### Native API Configuration
+
+    ```json
+    {
+      "provider": "gemini",
+      "apiKey": "your-api-key",
+      "modelId": "gemini-2.0-flash-exp"
+    }
+    ```
+
+    #### Vertex AI Configuration
+
+    ```json
+    {
+      "provider": "gemini",
+      "isVertex": true,
+      "vertexProjectId": "your-project-id",
+      "vertexRegion": "us-central1",
+      "modelId": "gemini-2.0-flash-exp"
+    }
+    ```
+
+    #### Thinking Modes
+
+    Gemini supports reasoning with thinking levels:
+
+    ```typescript
+    thinking: {
+      level: ThinkingLevel.HIGH,  // LOW or HIGH
+      budget_tokens: 10000
+    }
+    ```
+
+    <Tip>
+    Gemini's caching system charges for holding tokens by the hour. HAI Build optimizes cache usage to minimize costs.
+    </Tip>
+  </Tab>
+
+  <Tab title="Ollama">
+    ### Ollama (Local Models)
+
+    Run models locally on your machine.
+
+    <ParamField path="baseUrl" type="string" default="http://localhost:11434">
+      Ollama server URL
+    </ParamField>
+
+    <ParamField path="modelId" type="string" required>
+      Local model name (e.g., `llama3.1`, `codellama`)
+    </ParamField>
+
+    #### Setup
+
+    1. Install Ollama: [ollama.ai](https://ollama.ai)
+    2. Pull a model: `ollama pull llama3.1`
+    3. Configure HAI Build to use the model
+
+    #### Popular Models
+
+    - `llama3.1` - Meta's latest Llama
+    - `codellama` - Code-specialized Llama
+    - `mistral` - Mistral 7B
+    - `phi3` - Microsoft Phi-3
+
+    #### Example Configuration
+
+    ```json
+    {
+      "provider": "ollama",
+      "baseUrl": "http://localhost:11434",
+      "modelId": "llama3.1"
+    }
+    ```
+
+    <Note>
+    Local models don't require an API key and keep your code completely private.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Advanced Provider Settings
+
+### Custom Headers
+
+Add custom HTTP headers for API requests:
+
+```typescript
+{
+  openAiHeaders: {
+    "X-Custom-Header": "value",
+    "Authorization": "Bearer custom-token"
+  }
+}
+```
+
+### Proxy Support
+
+HAI Build respects system proxy settings. All providers use a configured fetch implementation with proxy support:
+
+```typescript
+import { fetch } from "@/shared/net"
+
+const client = new Anthropic({
+  apiKey: apiKey,
+  fetch, // Proxy-aware fetch
+})
+```
+
+### Retry Logic
+
+All providers implement automatic retry with exponential backoff:
+
+```typescript
+@withRetry()
+async *createMessage(...) {
+  // API call with automatic retry on transient failures
+}
+```
+
+## Model Information
+
+Each provider exposes model metadata:
+
+```typescript
+interface ModelInfo {
+  maxTokens: number              // Maximum output tokens
+  contextWindow: number          // Input context size
+  supportsPromptCache: boolean   // Prompt caching support
+  supportsReasoning: boolean     // Reasoning capabilities
+  inputPrice: number             // Price per 1M input tokens
+  outputPrice: number            // Price per 1M output tokens
+  cacheWritesPrice?: number      // Cache write cost
+  cacheReadsPrice?: number       // Cache read cost
+}
+```
+
+## Cost Optimization
+
+### Prompt Caching
+
+Providers that support prompt caching (Anthropic, Gemini) can significantly reduce costs:
+
+- System prompts are automatically cached
+- Cache breakpoints minimize redundant processing
+- Costs are split between immediate and ongoing storage
+
+### Reasoning Budgets
+
+Control reasoning token usage:
+
+```typescript
+// Anthropic
+thinkingBudgetTokens: 5000
+
+// OpenAI
+reasoningEffort: "medium"  // or "low", "high", "xhigh"
+
+// Gemini
+thinking: {
+  level: ThinkingLevel.LOW,
+  budget_tokens: 3000
+}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="API Key Errors">
+    **Error**: `API key is required`
+    
+    **Solution**: Ensure your API key is correctly set:
+    - Check for typos
+    - Verify the key is active
+    - Confirm it has the necessary permissions
+  </Accordion>
+
+  <Accordion title="Rate Limiting">
+    **Error**: `429 Too Many Requests`
+    
+    **Solution**: Automatic retry handles most rate limits. For persistent issues:
+    - Upgrade your provider tier
+    - Implement request throttling
+    - Consider using OpenRouter for automatic fallback
+  </Accordion>
+
+  <Accordion title="Azure Connection Issues">
+    **Error**: Connection fails to Azure endpoint
+    
+    **Solution**: Verify your configuration:
+    - Ensure baseUrl includes full Azure domain
+    - Check azureApiVersion is current
+    - For Azure Identity, verify permissions in Azure Portal
+  </Accordion>
+
+  <Accordion title="Model Not Found">
+    **Error**: Model ID not recognized
+    
+    **Solution**:
+    - Check model ID spelling and format
+    - Verify model is available in your region
+    - Ensure you have access to the model tier
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Settings" icon="gear" href="/configuration/settings">
+    Configure extension settings
+  </Card>
+  <Card title="Telemetry" icon="chart-line" href="/configuration/telemetry">
+    Set up monitoring and analytics
+  </Card>
+</CardGroup>

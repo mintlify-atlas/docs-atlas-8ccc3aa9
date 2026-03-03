@@ -1,0 +1,379 @@
+---
+title: 'VS Code Commands'
+description: 'Complete reference for HAI Build Code Generator VS Code commands'
+---
+
+## Overview
+
+The HAI Build Code Generator extension registers multiple VS Code commands that can be triggered through the command palette, keyboard shortcuts, or context menus.
+
+## Navigation Commands
+
+### hai.plusButtonClicked
+
+Creates a new task and clears the current chat.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.plusButtonClicked');
+```
+
+**Trigger:** Click the **+** button in the sidebar
+
+**Icon:** `$(add)`
+
+---
+
+### hai.mcpButtonClicked
+
+Opens the MCP Servers management panel.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.mcpButtonClicked');
+```
+
+**Trigger:** Click the **MCP Servers** button in the sidebar
+
+**Icon:** `$(server)`
+
+---
+
+### hai.historyButtonClicked
+
+Opens the task history panel.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.historyButtonClicked');
+```
+
+**Trigger:** Click the **History** button in the sidebar
+
+**Icon:** `$(history)`
+
+---
+
+### hai.settingsButtonClicked
+
+Opens the extension settings panel.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.settingsButtonClicked');
+```
+
+**Trigger:** Click the **Settings** button in the sidebar
+
+**Icon:** `$(settings-gear)`
+
+---
+
+### hai.haiBuildTaskListClicked
+
+Opens the HAI Build task list.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.haiBuildTaskListClicked');
+```
+
+**Trigger:** Click the **HAI Tasks** button in the sidebar
+
+**Icon:** `$(checklist)`
+
+---
+
+### hai.focusChatInput
+
+Jumps to the HAI Build chat input field.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.focusChatInput');
+```
+
+<ParamField path="preserveEditorFocus" type="boolean" default={false}>
+  When true, shows the webview without forcing focus away from the editor
+</ParamField>
+
+**Keyboard Shortcut:** `Ctrl/Cmd+'` (when no text is selected)
+
+---
+
+## Code Interaction Commands
+
+### hai.addToChat
+
+Adds selected code or diagnostics to the HAI Build chat.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.addToChat', range?, diagnostics?);
+```
+
+<ParamField path="range" type="vscode.Range" optional>
+  The text range to add to chat. If not provided, uses current selection.
+</ParamField>
+
+<ParamField path="diagnostics" type="vscode.Diagnostic[]" optional>
+  Array of diagnostics (errors/warnings) to include with the code
+</ParamField>
+
+**Keyboard Shortcut:** `Ctrl/Cmd+'` (when text is selected)
+
+**Context Menu:** Right-click in editor > **Add to HAI**
+
+---
+
+### hai.explainCode
+
+Requests an explanation of selected code.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.explainCode', range?);
+```
+
+<ParamField path="range" type="vscode.Range" optional>
+  The text range to explain. If not provided, uses current selection.
+</ParamField>
+
+**Quick Fix:** Right-click on code > **Explain with Cline**
+
+---
+
+### hai.improveCode
+
+Requests AI suggestions to improve selected code.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.improveCode', range?);
+```
+
+<ParamField path="range" type="vscode.Range" optional>
+  The text range to improve. If not provided, uses current selection.
+</ParamField>
+
+**Quick Fix:** Right-click on code > **Improve with Cline**
+
+---
+
+### hai.addTerminalOutputToChat
+
+Adds selected terminal output to the HAI Build chat.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.addTerminalOutputToChat');
+```
+
+**Context Menu:** Right-click in terminal > **Add to HAI**
+
+<Note>
+  This command copies the current terminal selection to chat. Make sure to select the relevant terminal output before running this command.
+</Note>
+
+---
+
+## Git Integration Commands
+
+### hai.generateGitCommitMessage
+
+Generates an AI-powered commit message based on staged changes.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.generateGitCommitMessage', scm?);
+```
+
+<ParamField path="scm" type="SourceControl" optional>
+  The SCM instance to use. If not provided, uses the default Git SCM.
+</ParamField>
+
+**Trigger:** Click the HAI icon in the Source Control panel
+
+**When Available:** `config.git.enabled && scmProvider == git && !hai.isGeneratingCommit`
+
+---
+
+### hai.abortGitCommitMessage
+
+Stops the current commit message generation.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.abortGitCommitMessage');
+```
+
+**Trigger:** Click the stop icon in the Source Control panel
+
+**Icon:** `$(debug-stop)`
+
+**When Available:** `config.git.enabled && scmProvider == git && hai.isGeneratingCommit`
+
+---
+
+## Jupyter Notebook Commands
+
+### hai.jupyterGenerateCell
+
+Generates a new Jupyter notebook cell using AI.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.jupyterGenerateCell');
+```
+
+**Trigger:** Click the sparkle icon in notebook toolbar
+
+**Icon:** `$(sparkle)`
+
+**When Available:** `notebookType == 'jupyter-notebook'`
+
+---
+
+### hai.jupyterExplainCell
+
+Explains the current Jupyter notebook cell.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.jupyterExplainCell');
+```
+
+**Trigger:** Click the question icon on a notebook cell
+
+**Icon:** `$(question)`
+
+**When Available:** `notebookType == 'jupyter-notebook'`
+
+---
+
+### hai.jupyterImproveCell
+
+Suggests improvements for the current Jupyter notebook cell.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.jupyterImproveCell');
+```
+
+**Trigger:** Click the lightbulb icon on a notebook cell
+
+**Icon:** `$(lightbulb)`
+
+**When Available:** `notebookType == 'jupyter-notebook'`
+
+---
+
+## Utility Commands
+
+### hai.openWalkthrough
+
+Opens the HAI Build getting started walkthrough.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.openWalkthrough');
+```
+
+---
+
+### hai.reconstructTaskHistory
+
+Reconstructs the task history from available data.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.reconstructTaskHistory');
+```
+
+<Warning>
+  This is a utility command for recovering task history. Use with caution as it may modify stored data.
+</Warning>
+
+---
+
+## Review Comment Commands
+
+### hai.reviewComment.reply
+
+Replies to a review comment thread.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.reviewComment.reply');
+```
+
+**When Available:** `commentController == hai-ai-review && !commentIsEmpty`
+
+---
+
+### hai.reviewComment.addToChat
+
+Adds a review comment to the HAI Build chat.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.reviewComment.addToChat');
+```
+
+**Icon:** `$(link-external)`
+
+**When Available:** `commentController == hai-ai-review`
+
+---
+
+## Development Commands
+
+<Info>
+  The following commands are only available when the extension is running in development mode.
+</Info>
+
+### hai.dev.createTestTasks
+
+Creates test tasks for development and testing.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.dev.createTestTasks');
+```
+
+**When Available:** `hai.isDevMode`
+
+---
+
+### hai.dev.expireMcpOAuthTokens
+
+Expires MCP OAuth tokens for testing authentication flows.
+
+**Usage:**
+```typescript
+await vscode.commands.executeCommand('hai.dev.expireMcpOAuthTokens');
+```
+
+**When Available:** `hai.isDevMode`
+
+---
+
+## Command Registry
+
+All commands are registered in the internal extension registry before being registered with VS Code. The command identifiers follow the pattern:
+
+- `hai.*` - Main extension commands
+- `hai.dev.*` - Development-only commands
+- `hai.reviewComment.*` - Review and comment-related commands
+- `hai.jupyter*` - Jupyter notebook-specific commands
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Slash Commands" icon="slash" href="/api/slash-commands">
+    In-chat slash commands for workflows
+  </Card>
+  <Card title="Events" icon="bolt" href="/api/events">
+    Extension events and hooks
+  </Card>
+</CardGroup>

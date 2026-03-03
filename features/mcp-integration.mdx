@@ -1,0 +1,812 @@
+---
+title: "MCP Integration"
+description: "Extend AI capabilities with Model Context Protocol (MCP) servers for external tools, data sources, and specialized workflows."
+---
+
+Model Context Protocol (MCP) integration allows HAI Build to connect with external tools, databases, APIs, and services through standardized MCP servers. Think of MCP as a USB-C port for AI—a universal interface for extending capabilities.
+
+<Frame>
+  <img src="https://storage.googleapis.com/cline_public_images/docs/assets/mcp-diagram.png" alt="MCP architecture diagram" />
+</Frame>
+
+## What is MCP?
+
+MCP is an open protocol that standardizes how AI applications interact with external systems:
+
+- **Tools**: Functions the AI can execute (e.g., query database, send email)
+- **Resources**: Read-only data sources (e.g., file contents, API responses)
+- **Prompts**: Predefined templates for specific tasks
+- **Security**: Isolated credentials with user approval required
+
+<Info>
+MCP is developed by Anthropic and maintained as an open standard. Learn more at the [MCP SDK](https://github.com/modelcontextprotocol/).
+</Info>
+
+## How MCP Works in HAI Build
+
+When you connect an MCP server to HAI Build:
+
+<Steps>
+  <Step title="Server Discovery">
+    HAI Build loads the MCP server and discovers its capabilities:
+    - Available tools and their parameters
+    - Resource endpoints and templates
+    - Prompt definitions
+  </Step>
+  <Step title="System Prompt Injection">
+    MCP server capabilities are added to the AI's system prompt:
+    
+    ```typescript
+    // From src/core/prompts/system-prompt/components/mcp.ts:23
+    const MCP_TEMPLATE_TEXT = `MCP SERVERS
+    
+    The Model Context Protocol (MCP) enables communication between
+    the system and locally running MCP servers that provide additional
+    tools, resources, and prompts to extend your capabilities.
+    
+    # Connected MCP Servers
+    {{MCP_SERVERS_LIST}}
+    `
+    ```
+  </Step>
+  <Step title="Tool Execution">
+    When the AI needs to use an MCP tool:
+    - AI calls `use_mcp_tool` with server name and tool name
+    - HAI Build forwards the request to the MCP server
+    - Server executes the tool and returns results
+    - Results are added to conversation context
+  </Step>
+  <Step title="User Approval">
+    Potentially dangerous operations require explicit user approval before execution.
+  </Step>
+</Steps>
+
+See: `src/shared/mcp.ts:1`
+
+## MCP Server Types
+
+MCP servers come in various forms:
+
+<Tabs>
+  <Tab title="API Integrations">
+    Connect to external services:
+    
+    <CardGroup cols={2}>
+      <Card title="GitHub" icon="github">
+        - Create issues and PRs
+        - Search repositories
+        - Manage branches
+        - Read file contents
+      </Card>
+      <Card title="Slack" icon="slack">
+        - Send messages
+        - Create channels
+        - Upload files
+        - Search conversations
+      </Card>
+      <Card title="Jira" icon="jira">
+        - Create/update tickets
+        - Query issues
+        - Manage sprints
+        - Track progress
+      </Card>
+      <Card title="Google Drive" icon="google-drive">
+        - Upload/download files
+        - Search documents
+        - Share links
+        - Manage permissions
+      </Card>
+    </CardGroup>
+  </Tab>
+  <Tab title="Data Sources">
+    Access databases and data stores:
+    
+    - **PostgreSQL**: Execute queries, manage schema
+    - **MongoDB**: CRUD operations, aggregations
+    - **Redis**: Cache operations, pub/sub
+    - **Elasticsearch**: Search and analytics
+  </Tab>
+  <Tab title="Development Tools">
+    Enhance coding workflows:
+    
+    - **Browser Automation**: Puppeteer/Playwright control
+    - **Docker**: Container management
+    - **AWS/Azure**: Cloud resource provisioning
+    - **Git**: Advanced version control operations
+  </Tab>
+  <Tab title="Custom Servers">
+    Build specialized servers for:
+    
+    - Internal APIs
+    - Company databases
+    - Legacy systems
+    - Proprietary tools
+  </Tab>
+</Tabs>
+
+## Installing MCP Servers
+
+### From MCP Marketplace
+
+HAI Build includes a built-in MCP marketplace:
+
+<Steps>
+  <Step title="Open MCP Settings">
+    Navigate to Settings → MCP Integration
+  </Step>
+  <Step title="Browse Marketplace">
+    Explore available MCP servers by category:
+    - Web Services
+    - Databases
+    - Development Tools
+    - AI/ML Services
+  </Step>
+  <Step title="Install Server">
+    Click "Install" on the desired server. HAI Build automatically:
+    - Downloads the server
+    - Installs dependencies
+    - Configures default settings
+  </Step>
+  <Step title="Configure Credentials">
+    Add required API keys or credentials in the server settings.
+  </Step>
+  <Step title="Enable Server">
+    Toggle the server on to make it available to the AI.
+  </Step>
+</Steps>
+
+### Manual Installation
+
+Install from GitHub or npm:
+
+<Tabs>
+  <Tab title="NPM Package">
+    ```bash
+    # Install globally
+    npm install -g @modelcontextprotocol/server-github
+    
+    # Or locally in your project
+    npm install @modelcontextprotocol/server-github
+    ```
+    
+    Then add to HAI Build MCP settings:
+    
+    ```json
+    {
+      "mcpServers": {
+        "github": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-github"],
+          "env": {
+            "GITHUB_TOKEN": "your_token_here"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="GitHub Clone">
+    ```bash
+    # Clone repository
+    git clone https://github.com/user/custom-mcp-server
+    cd custom-mcp-server
+    
+    # Install dependencies
+    npm install
+    
+    # Build
+    npm run build
+    ```
+    
+    Configure in HAI Build:
+    
+    ```json
+    {
+      "mcpServers": {
+        "custom-server": {
+          "command": "node",
+          "args": ["/path/to/custom-mcp-server/dist/index.js"],
+          "env": {
+            "API_KEY": "your_key"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Python Server">
+    ```bash
+    # Install Python MCP SDK
+    pip install mcp
+    
+    # Clone server
+    git clone https://github.com/user/python-mcp-server
+    cd python-mcp-server
+    pip install -r requirements.txt
+    ```
+    
+    Configure:
+    
+    ```json
+    {
+      "mcpServers": {
+        "python-server": {
+          "command": "python",
+          "args": ["/path/to/python-mcp-server/main.py"],
+          "env": {
+            "DATABASE_URL": "postgresql://..."
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+MCP servers are configured in your VS Code settings under `mcp.servers`. You can add servers from the marketplace or configure them manually.
+</Tip>
+
+## MCP Server Configuration
+
+### Server Definition
+
+Each MCP server is defined by:
+
+```typescript
+// From src/shared/mcp.ts:11
+export type McpServer = {
+  name: string                    // Unique identifier
+  config: string                  // JSON configuration
+  status: "connected" | "connecting" | "disconnected"
+  error?: string                  // Error message if failed
+  tools?: McpTool[]              // Available tools
+  resources?: McpResource[]      // Available resources
+  resourceTemplates?: McpResourceTemplate[]
+  prompts?: McpPrompt[]          // Available prompts
+  disabled?: boolean             // Enable/disable toggle
+  timeout?: number               // Execution timeout (seconds)
+  uid?: string                   // Unique instance ID
+  oauthRequired?: boolean        // Requires OAuth
+  oauthAuthStatus?: McpOAuthAuthStatus
+}
+```
+
+### Configuration Examples
+
+<AccordionGroup>
+  <Accordion title="GitHub Server">
+    ```json
+    {
+      "name": "github",
+      "config": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_TOKEN": "ghp_xxxxxxxxxxxx"
+        }
+      },
+      "timeout": 60,
+      "disabled": false
+    }
+    ```
+  </Accordion>
+  <Accordion title="PostgreSQL Server">
+    ```json
+    {
+      "name": "postgres",
+      "config": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-postgres"],
+        "env": {
+          "DATABASE_URL": "postgresql://user:pass@localhost/dbname"
+        }
+      },
+      "timeout": 30
+    }
+    ```
+  </Accordion>
+  <Accordion title="Custom API Server">
+    ```json
+    {
+      "name": "internal-api",
+      "config": {
+        "command": "node",
+        "args": ["/opt/mcp-servers/internal-api/index.js"],
+        "env": {
+          "API_ENDPOINT": "https://api.internal.company.com",
+          "API_KEY": "xxxxxxxx"
+        }
+      },
+      "timeout": 120
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Timeout Configuration
+
+Control how long HAI Build waits for MCP responses:
+
+```typescript
+// From src/shared/mcp.ts:7
+export const DEFAULT_MCP_TIMEOUT_SECONDS = 60
+export const MIN_MCP_TIMEOUT_SECONDS = 1
+```
+
+<Warning>
+Set appropriate timeouts for your servers. Database queries might need 30s, while API calls might need 120s.
+</Warning>
+
+## Using MCP Tools
+
+### Tool Discovery
+
+When an MCP server connects, its tools are listed in the system prompt:
+
+```typescript
+// From src/core/prompts/system-prompt/components/mcp.ts:53
+function formatMcpServersList(servers: McpServer[]): string {
+  return servers
+    .filter((server) => server.status === "connected")
+    .map((server) => {
+      const tools = server.tools
+        ?.map((tool) => {
+          const schemaStr = tool.inputSchema
+            ? `Input Schema: ${JSON.stringify(tool.inputSchema, null, 2)}`
+            : ""
+          return `- ${tool.name}: ${tool.description}\n${schemaStr}`
+        })
+        .join("\n\n")
+      
+      return `## ${server.name}\n### Available Tools\n${tools}`
+    })
+    .join("\n\n")
+}
+```
+
+### Tool Execution
+
+The AI uses tools through the `use_mcp_tool` function:
+
+**Example**: GitHub issue creation
+
+```typescript
+// AI's tool call
+use_mcp_tool({
+  server_name: "github",
+  tool_name: "create_issue",
+  arguments: {
+    owner: "myorg",
+    repo: "myrepo",
+    title: "Bug: Login button not working",
+    body: "Steps to reproduce:\n1. Navigate to login page\n2. Click login button\n3. Nothing happens",
+    labels: ["bug", "ui"]
+  }
+})
+```
+
+**Tool Response**:
+
+```typescript
+// From src/shared/mcp.ts:108
+export type McpToolCallResponse = {
+  _meta?: Record<string, any>
+  content: Array<
+    | { type: "text"; text: string }
+    | { type: "image"; data: string; mimeType: string }
+    | { type: "resource"; resource: { uri: string; text?: string } }
+  >
+  isError?: boolean
+}
+
+// Example response
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Created issue #123: https://github.com/myorg/myrepo/issues/123"
+    }
+  ]
+}
+```
+
+### Auto-Approval for MCP Tools
+
+Configure which MCP tools can execute without approval:
+
+<Steps>
+  <Step title="Navigate to MCP Settings">
+    Settings → MCP Integration → [Server Name]
+  </Step>
+  <Step title="Configure Tool Auto-Approval">
+    Toggle auto-approval for specific tools:
+    - Read-only tools (safe): Auto-approve
+    - Write operations: Require approval
+    - Destructive operations: Always require approval
+  </Step>
+  <Step title="Save Configuration">
+    Changes apply immediately to active tasks.
+  </Step>
+</Steps>
+
+<Warning>
+Be cautious with auto-approving tools that modify data, send messages, or incur costs.
+</Warning>
+
+## MCP Resources
+
+Resources provide read-only data to the AI:
+
+### Resource Types
+
+<Tabs>
+  <Tab title="Direct Resources">
+    Fixed URI resources:
+    
+    ```typescript
+    // From src/shared/mcp.ts:36
+    export type McpResource = {
+      uri: string              // Resource identifier
+      name: string             // Display name
+      mimeType?: string        // Content type
+      description?: string     // What this resource provides
+    }
+    ```
+    
+    **Example**: Database schema
+    
+    ```json
+    {
+      "uri": "postgres://schema/public",
+      "name": "Public Schema",
+      "description": "Current database schema for public tables"
+    }
+    ```
+  </Tab>
+  <Tab title="Resource Templates">
+    Parameterized resources:
+    
+    ```typescript
+    // From src/shared/mcp.ts:42
+    export type McpResourceTemplate = {
+      uriTemplate: string      // Template with placeholders
+      name: string
+      description?: string
+      mimeType?: string
+    }
+    ```
+    
+    **Example**: User profile
+    
+    ```json
+    {
+      "uriTemplate": "users://{userId}/profile",
+      "name": "User Profile",
+      "description": "Fetch user profile by ID"
+    }
+    ```
+    
+    The AI can request: `users://12345/profile`
+  </Tab>
+</Tabs>
+
+### Accessing Resources
+
+AI uses `access_mcp_resource` tool:
+
+```typescript
+access_mcp_resource({
+  server_name: "postgres",
+  uri: "postgres://schema/public"
+})
+
+// Returns
+{
+  "contents": [
+    {
+      "uri": "postgres://schema/public",
+      "mimeType": "application/json",
+      "text": "{\"tables\":[{\"name\":\"users\",\"columns\":[...]}]}"
+    }
+  ]
+}
+```
+
+## MCP Prompts
+
+Prompts are reusable templates provided by MCP servers:
+
+```typescript
+// From src/shared/mcp.ts:56
+export type McpPrompt = {
+  name: string
+  title?: string
+  description?: string
+  arguments?: McpPromptArgument[]
+}
+
+export type McpPromptArgument = {
+  name: string
+  description?: string
+  required?: boolean
+}
+```
+
+**Example**: Code review prompt
+
+```json
+{
+  "name": "code_review",
+  "title": "Code Review Assistant",
+  "description": "Review code for best practices and potential issues",
+  "arguments": [
+    {
+      "name": "language",
+      "description": "Programming language",
+      "required": true
+    },
+    {
+      "name": "focus_areas",
+      "description": "Specific areas to focus on (security, performance, etc.)",
+      "required": false
+    }
+  ]
+}
+```
+
+Invoke with: `/mcp-prompt code_review language=typescript focus_areas=security`
+
+## Building Custom MCP Servers
+
+Create MCP servers for internal tools and APIs:
+
+<Steps>
+  <Step title="Initialize Server">
+    Use the MCP SDK:
+    
+    ```bash
+    npm create @modelcontextprotocol/server my-server
+    cd my-server
+    npm install
+    ```
+  </Step>
+  <Step title="Define Tools">
+    ```typescript
+    import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+    import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+    
+    const server = new Server(
+      {
+        name: 'my-internal-api',
+        version: '1.0.0',
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    )
+    
+    server.setRequestHandler('tools/list', async () => ({
+      tools: [
+        {
+          name: 'query_user',
+          description: 'Query user information from internal database',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              userId: {
+                type: 'string',
+                description: 'User ID to query'
+              }
+            },
+            required: ['userId']
+          }
+        }
+      ]
+    }))
+    ```
+  </Step>
+  <Step title="Implement Tool Logic">
+    ```typescript
+    server.setRequestHandler('tools/call', async (request) => {
+      if (request.params.name === 'query_user') {
+        const { userId } = request.params.arguments
+        
+        // Your business logic
+        const userData = await fetchUserFromDatabase(userId)
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(userData, null, 2)
+            }
+          ]
+        }
+      }
+      
+      throw new Error(`Unknown tool: ${request.params.name}`)
+    })
+    ```
+  </Step>
+  <Step title="Start Server">
+    ```typescript
+    async function main() {
+      const transport = new StdioServerTransport()
+      await server.connect(transport)
+    }
+    
+    main().catch(console.error)
+    ```
+  </Step>
+</Steps>
+
+<Info>
+For more details on the MCP protocol specification, visit the [MCP documentation](https://modelcontextprotocol.io/introduction).
+</Info>
+
+## Security and Permissions
+
+### Credential Isolation
+
+MCP servers isolate credentials from the AI:
+
+- **Environment Variables**: Credentials in `env` block
+- **No AI Access**: AI never sees API keys or passwords
+- **Server-Side Storage**: Tokens stored in server process
+
+### User Approval
+
+Critical operations require explicit approval:
+
+<CardGroup cols={2}>
+  <Card title="Always Require Approval" icon="lock">
+    - Data deletion
+    - Financial transactions
+    - External communications
+    - System modifications
+  </Card>
+  <Card title="Can Auto-Approve" icon="check">
+    - Read operations
+    - Search queries
+    - Data fetching
+    - Report generation
+  </Card>
+</CardGroup>
+
+Configure per-tool approval in MCP settings.
+
+### OAuth Support
+
+Some MCP servers support OAuth authentication:
+
+```typescript
+// From src/shared/mcp.ts:23
+oauthRequired?: boolean
+oauthAuthStatus?: McpOAuthAuthStatus  // "authenticated" | "unauthenticated" | "pending"
+```
+
+<Steps>
+  <Step title="Server Requests OAuth">
+    MCP server marks itself as requiring OAuth.
+  </Step>
+  <Step title="User Initiates Flow">
+    Click "Authenticate" in MCP settings.
+  </Step>
+  <Step title="OAuth Browser Flow">
+    Complete authentication in browser.
+  </Step>
+  <Step title="Token Storage">
+    HAI Build stores OAuth token securely.
+  </Step>
+</Steps>
+
+## MCP Marketplace
+
+HAI Build's MCP Marketplace provides curated servers:
+
+```typescript
+// From src/shared/mcp.ts:145
+export interface McpMarketplaceItem {
+  mcpId: string                    // Unique marketplace ID
+  githubUrl: string                // Source repository
+  name: string
+  author: string
+  description: string
+  codiconIcon: string              // Icon identifier
+  logoUrl: string
+  category: string                 // Web, Database, DevTools, etc.
+  tags: string[]                   // Searchable tags
+  requiresApiKey: boolean
+  readmeContent?: string
+  llmsInstallationContent?: string
+  isRecommended: boolean
+  githubStars: number
+  downloadCount: number
+  createdAt: string
+  updatedAt: string
+  lastGithubSync: string
+  isLocal?: boolean                // Installed locally
+}
+```
+
+### Marketplace Features
+
+- **Search**: Find servers by name, tag, or category
+- **Recommendations**: Popular and trusted servers highlighted
+- **Documentation**: README and installation guides included
+- **Ratings**: GitHub stars and download counts
+- **Updates**: Automatic sync with GitHub repositories
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Server not connecting">
+    - Check command and args in configuration
+    - Verify server executable exists
+    - Review HAI Build logs for errors
+    - Test server standalone: `node server.js`
+    - Check environment variables are set
+  </Accordion>
+  <Accordion title="Tool calls failing">
+    - Verify tool name spelling
+    - Check required parameters provided
+    - Review input schema requirements
+    - Increase timeout if operations are slow
+    - Check server logs for errors
+  </Accordion>
+  <Accordion title="OAuth authentication issues">
+    - Clear OAuth tokens and re-authenticate
+    - Check redirect URLs in OAuth app settings
+    - Verify scopes match server requirements
+    - Review browser console for OAuth errors
+  </Accordion>
+  <Accordion title="Timeout errors">
+    - Increase server timeout in settings
+    - Optimize slow operations in custom servers
+    - Use pagination for large data requests
+    - Check network connectivity
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Start with Read-Only Servers">
+    Test with safe, read-only operations before enabling write access.
+  </Step>
+  <Step title="Use Descriptive Tool Names">
+    Name tools clearly: `create_github_issue` not `create_issue`
+  </Step>
+  <Step title="Provide Detailed Schemas">
+    Include descriptions and examples in input schemas for better AI understanding.
+  </Step>
+  <Step title="Set Appropriate Timeouts">
+    Match timeouts to operation complexity: quick APIs 30s, complex queries 120s.
+  </Step>
+  <Step title="Version Control Configs">
+    Store MCP configurations in `.vscode/settings.json` and commit to git.
+  </Step>
+  <Step title="Document Custom Servers">
+    Maintain README files for team-built MCP servers.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Adding MCP Servers" icon="plus" href="/mcp/adding-and-configuring-servers">
+    Detailed guide on installing and configuring MCP servers
+  </Card>
+  <Card title="Building Custom Servers" icon="code" href="/mcp/mcp-server-development-protocol">
+    Create your own MCP servers from scratch
+  </Card>
+  <Card title="Auto Approve" icon="check-circle" href="/features/auto-approve">
+    Configure auto-approval for MCP tools
+  </Card>
+  <Card title="AI-Powered Coding" icon="robot" href="/features/ai-powered-coding">
+    See how MCP integrates with AI workflows
+  </Card>
+</CardGroup>

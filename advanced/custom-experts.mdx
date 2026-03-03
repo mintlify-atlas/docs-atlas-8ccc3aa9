@@ -1,0 +1,748 @@
+---
+title: 'Custom Experts'
+description: 'Create domain-specific AI coding experts with custom guidelines and documentation'
+icon: 'user-gear'
+---
+
+# Custom Experts
+
+Experts enable HAI Build Code Generator to deliver context-aware code generation tailored to specific technologies, frameworks, or domains. Create custom experts to encode your team's best practices, coding standards, and institutional knowledge.
+
+## Overview
+
+Experts provide:
+- **Domain-specific guidelines**: Tailored coding standards and best practices
+- **Reference documentation**: Up to 3 external documentation links
+- **Context injection**: Automatically loaded when relevant to the task
+- **Reusable knowledge**: Shared across team members
+
+## Built-in Experts
+
+HAI Build includes four ready-to-use experts:
+
+- **.NET**: C# and .NET ecosystem best practices
+- **Terraform**: Infrastructure as Code guidelines
+- **Node.js**: JavaScript/TypeScript development standards
+- **Go**: Golang idioms and patterns
+
+These are read-only and provide quick reference for common technologies.
+
+## Custom Expert Structure
+
+Custom experts are stored in the `.hai-experts` folder:
+
+```
+.hai-experts/
+└── my-expert-name/
+    ├── metadata.json          # Expert configuration
+    ├── prompt.md              # Guidelines (required)
+    └── docs/                  # Reference documentation (optional)
+        ├── doc-1.md
+        ├── doc-2.md
+        ├── doc-3.md
+        └── status.json        # Processing status
+```
+
+### metadata.json
+
+Contains expert configuration:
+
+```json
+{
+  "name": "React Best Practices",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "documentLinks": [
+    "https://react.dev/learn",
+    "https://react.dev/reference/react",
+    "https://react-typescript-cheatsheet.netlify.app"
+  ]
+}
+```
+
+**Fields:**
+
+- `name` (required): Expert display name
+- `createdAt` (required): ISO timestamp
+- `documentLinks` (optional): Array of up to 3 URLs
+
+### prompt.md
+
+Contains the expert's guidelines (required):
+
+```markdown
+# React Best Practices Expert
+
+You are an expert in React and modern frontend development.
+
+## Core Principles
+
+1. **Functional Components**: Always use function components with hooks
+2. **TypeScript**: Provide proper type definitions for all props and state
+3. **Performance**: Optimize re-renders with useMemo, useCallback, and React.memo
+
+## Code Structure
+
+- Use named exports for components
+- Keep components small and focused (< 200 lines)
+- Extract custom hooks for reusable logic
+- Use composition over inheritance
+
+## Naming Conventions
+
+- Components: PascalCase (e.g., UserProfile)
+- Hooks: camelCase with 'use' prefix (e.g., useAuth)
+- Props interfaces: ComponentNameProps (e.g., UserProfileProps)
+- Event handlers: handle + EventName (e.g., handleClick)
+
+## File Organization
+
+```
+components/
+├── Button/
+│   ├── Button.tsx
+│   ├── Button.test.tsx
+│   ├── Button.styles.ts
+│   └── index.ts
+```
+
+## Example Component
+
+```typescript
+import React, { useState, useCallback } from 'react'
+
+interface ButtonProps {
+  label: string
+  onClick: () => void
+  variant?: 'primary' | 'secondary'
+  disabled?: boolean
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  label,
+  onClick,
+  variant = 'primary',
+  disabled = false
+}) => {
+  const handleClick = useCallback(() => {
+    if (!disabled) {
+      onClick()
+    }
+  }, [disabled, onClick])
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={disabled}
+      className={`btn btn-${variant}`}
+    >
+      {label}
+    </button>
+  )
+}
+```
+
+## State Management
+
+- Use useState for local component state
+- Use useContext for shared state across few components
+- Use Redux Toolkit or Zustand for complex global state
+- Avoid prop drilling - use composition or context
+
+## Testing
+
+- Write tests using React Testing Library
+- Focus on user behavior, not implementation details
+- Aim for > 80% coverage
+- Test accessibility with jest-axe
+
+## Accessibility
+
+- Use semantic HTML elements
+- Include ARIA labels where needed
+- Ensure keyboard navigation works
+- Test with screen readers
+```
+
+### docs/ (Optional)
+
+When document links are provided, HAI processes them into markdown files:
+
+- **doc-1.md, doc-2.md, doc-3.md**: Processed documentation content
+- **status.json**: Tracks processing status
+
+```json
+{
+  "status": "completed",
+  "processedAt": "2024-01-15T10:35:00Z",
+  "documents": [
+    { "url": "https://react.dev/learn", "processed": true },
+    { "url": "https://react.dev/reference/react", "processed": true },
+    { "url": "https://react-typescript-cheatsheet.netlify.app", "processed": true }
+  ]
+}
+```
+
+## Creating a Custom Expert
+
+### Via VS Code Extension
+
+1. Open the HAI Build sidebar
+2. Navigate to the Experts section
+3. Click "Create New Expert"
+4. Fill in the required fields:
+   - **Name**: Expert display name (e.g., "FastAPI Best Practices")
+   - **Guidelines**: Detailed coding standards and examples
+   - **Document Links** (optional): Up to 3 reference URLs
+5. Click "Create"
+
+HAI Build automatically:
+- Creates the folder structure in `.hai-experts`
+- Generates `metadata.json` and `prompt.md`
+- Processes document links (if provided)
+- Syncs the expert across workspace
+
+### Manual Creation
+
+1. Create expert folder:
+
+```bash
+mkdir -p .hai-experts/fastapi-expert
+```
+
+2. Create `metadata.json`:
+
+```json
+{
+  "name": "FastAPI Best Practices",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "documentLinks": [
+    "https://fastapi.tiangolo.com/tutorial/"
+  ]
+}
+```
+
+3. Create `prompt.md`:
+
+```markdown
+# FastAPI Expert
+
+You are an expert in FastAPI and modern Python API development.
+
+## Core Guidelines
+
+1. Use Pydantic models for request/response validation
+2. Implement proper dependency injection
+3. Use async/await for I/O operations
+4. Add comprehensive type hints
+
+## Example Endpoint
+
+```python
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+from typing import List
+
+app = FastAPI()
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+@app.get("/users/{user_id}", response_model=User)
+async def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = await db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+```
+
+4. HAI Build automatically detects and processes the expert on next startup
+
+## Expert Guidelines Best Practices
+
+### Structure
+
+Organize guidelines into clear sections:
+
+```markdown
+# [Technology] Expert
+
+## Overview
+Brief description of the expert's domain
+
+## Core Principles
+Fundamental guidelines (3-5 key points)
+
+## Code Structure
+File organization and architecture patterns
+
+## Naming Conventions
+Consistent naming across the codebase
+
+## Examples
+Real code examples demonstrating best practices
+
+## Common Patterns
+Frequently used design patterns
+
+## Anti-Patterns
+What to avoid and why
+
+## Testing
+Testing strategies and examples
+
+## Performance
+Optimization guidelines
+
+## Security
+Security considerations and best practices
+```
+
+### Content Guidelines
+
+1. **Be Specific**: Provide concrete examples, not abstract advice
+2. **Show Code**: Include real code snippets demonstrating patterns
+3. **Explain Why**: Don't just say what to do, explain the reasoning
+4. **Cover Edge Cases**: Address common pitfalls and edge cases
+5. **Keep Updated**: Review and update guidelines as frameworks evolve
+
+### Effective Examples
+
+**Good Example:**
+
+```markdown
+## Error Handling
+
+Always use custom error classes for domain-specific errors:
+
+```typescript
+// Define custom error
+export class ValidationError extends Error {
+  constructor(public field: string, message: string) {
+    super(`Validation failed for ${field}: ${message}`)
+    this.name = 'ValidationError'
+  }
+}
+
+// Use in code
+function validateEmail(email: string): void {
+  if (!email.includes('@')) {
+    throw new ValidationError('email', 'Must contain @ symbol')
+  }
+}
+
+// Handle in caller
+try {
+  validateEmail(userInput)
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error(`Field error: ${error.field}`)
+  }
+}
+```
+```
+
+**Poor Example:**
+
+```markdown
+## Error Handling
+
+Use try-catch blocks to handle errors properly.
+```
+
+## Reference Documentation
+
+### Adding Document Links
+
+Provide up to 3 URLs to external documentation:
+
+```json
+{
+  "documentLinks": [
+    "https://docs.framework.com/guide",
+    "https://docs.framework.com/api",
+    "https://github.com/framework/awesome-resources"
+  ]
+}
+```
+
+### Best Link Types
+
+1. **Official Documentation**: Framework guides and API references
+2. **Style Guides**: Community-accepted coding standards
+3. **Best Practices**: Curated resources and patterns
+
+### Processing Behavior
+
+When links are provided:
+1. HAI crawls each URL (up to 3 levels deep)
+2. Extracts and converts content to markdown
+3. Stores in `docs/` folder
+4. Updates `status.json` with progress
+
+Processing runs asynchronously and doesn't block expert creation.
+
+## Using Custom Experts
+
+### Automatic Context Loading
+
+HAI automatically loads expert context when:
+- Files match the expert's domain (e.g., `.tsx` files for React expert)
+- Task description mentions relevant keywords
+- Explicitly requested by the user
+
+### Manual Selection
+
+Select an expert explicitly in the HAI interface:
+
+1. Open HAI Build sidebar
+2. Start a new task
+3. Click "Select Expert"
+4. Choose from available experts
+
+### Example Workflow
+
+```
+User: "Create a new React component for user authentication"
+
+HAI: [Loads React Best Practices expert]
+     [Applies guidelines from prompt.md]
+     [References documentation from docs/]
+     
+     Creates component following:
+     - TypeScript interfaces
+     - Functional component pattern
+     - Custom hooks for auth logic
+     - Accessibility attributes
+     - Comprehensive tests
+```
+
+## Managing Experts
+
+### Updating Experts
+
+Edit expert files directly:
+
+```bash
+# Edit guidelines
+code .hai-experts/my-expert/prompt.md
+
+# Update configuration
+code .hai-experts/my-expert/metadata.json
+```
+
+HAI automatically syncs changes across the workspace.
+
+### Deleting Experts
+
+Remove the expert folder:
+
+```bash
+rm -rf .hai-experts/my-expert
+```
+
+Or use the HAI interface:
+1. Navigate to Experts section
+2. Click delete icon on the expert
+3. Confirm deletion
+
+### Sharing Experts
+
+Commit `.hai-experts` to version control:
+
+```bash
+git add .hai-experts/
+git commit -m "Add team coding experts"
+git push
+```
+
+Team members automatically receive experts when they pull the repository.
+
+## Advanced Use Cases
+
+### Multi-Framework Experts
+
+Create experts for full-stack scenarios:
+
+```markdown
+# Full-Stack TypeScript Expert
+
+## Frontend (React)
+- Component patterns
+- State management
+- API integration
+
+## Backend (Node.js + Express)
+- Route structure
+- Middleware patterns
+- Error handling
+
+## Database (PostgreSQL)
+- Query optimization
+- Migration patterns
+- Type-safe queries with Prisma
+
+## Integration Examples
+
+[Include end-to-end examples]
+```
+
+### Team-Specific Standards
+
+Encode institutional knowledge:
+
+```markdown
+# Company Backend Expert
+
+## Internal Libraries
+
+Always use our custom logger:
+
+```typescript
+import { Logger } from '@company/logger'
+
+const logger = Logger.create('service-name')
+logger.info('Operation started', { userId, action })
+```
+
+## Deployment
+
+Follow company CI/CD patterns:
+1. Use `.company.yaml` for configuration
+2. Run `npm run build:prod` before deploy
+3. Tag releases with semantic versioning
+
+## Security
+
+- Use company SSO library for authentication
+- Encrypt sensitive data with @company/crypto
+- Log all security events to audit trail
+```
+
+### Migration Guides
+
+Help with framework upgrades:
+
+```markdown
+# React 17 to 18 Migration Expert
+
+## Automatic Batching
+
+React 18 batches all state updates automatically.
+
+**Before (React 17):**
+```typescript
+setTimeout(() => {
+  setCount(c => c + 1)
+  setFlag(f => !f)
+  // Re-renders twice
+}, 1000)
+```
+
+**After (React 18):**
+```typescript
+setTimeout(() => {
+  setCount(c => c + 1)
+  setFlag(f => !f)
+  // Re-renders once
+}, 1000)
+```
+
+## New Root API
+
+**Before:**
+```typescript
+import ReactDOM from 'react-dom'
+ReactDOM.render(<App />, document.getElementById('root'))
+```
+
+**After:**
+```typescript
+import { createRoot } from 'react-dom/client'
+const root = createRoot(document.getElementById('root')!)
+root.render(<App />)
+```
+```
+
+## Examples
+
+### Python/Django Expert
+
+```markdown
+# Django Best Practices Expert
+
+## Project Structure
+
+```
+project/
+├── apps/
+│   ├── users/
+│   ├── posts/
+│   └── common/
+├── config/
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── dev.py
+│   │   └── prod.py
+│   └── urls.py
+└── manage.py
+```
+
+## Models
+
+Use abstract base models for common fields:
+
+```python
+from django.db import models
+from django.utils import timezone
+
+class TimestampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class Post(TimestampedModel):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+        ]
+```
+
+## Views
+
+Use class-based views for CRUD operations:
+
+```python
+from django.views.generic import ListView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class PostListView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'posts/list.html'
+    context_object_name = 'posts'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return Post.objects.select_related('author').all()
+```
+```
+
+### Kubernetes Expert
+
+```markdown
+# Kubernetes Deployment Expert
+
+## Deployment Best Practices
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  labels:
+    app: api-server
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: myregistry/api:v1.0.0
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+```
+```
+
+## Troubleshooting
+
+### Expert Not Loading
+
+1. Check folder structure:
+```bash
+ls -la .hai-experts/my-expert/
+# Should show metadata.json and prompt.md
+```
+
+2. Validate JSON syntax:
+```bash
+cat .hai-experts/my-expert/metadata.json | jq .
+```
+
+3. Restart HAI Build extension
+
+### Document Processing Failed
+
+Check `status.json` for errors:
+
+```json
+{
+  "status": "failed",
+  "error": "Network timeout",
+  "documents": [
+    { "url": "https://...", "processed": false, "error": "Timeout" }
+  ]
+}
+```
+
+Retry processing:
+1. Delete `docs/` folder
+2. HAI will re-process on next usage
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Usage" icon="terminal" href="/advanced/cli-usage">
+    Use HAI from the command line
+  </Card>
+  <Card title="COR-Matrix" icon="chart-line" href="/advanced/cor-matrix">
+    Track AI code retention patterns
+  </Card>
+</CardGroup>

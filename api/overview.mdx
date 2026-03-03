@@ -1,0 +1,109 @@
+---
+title: 'Extension API Overview'
+description: 'HAI Build Code Generator VS Code Extension API documentation'
+---
+
+## Overview
+
+The HAI Build Code Generator provides a rich extension API that allows you to programmatically interact with the AI-powered development assistant. This API is available when the extension is activated and can be accessed from other VS Code extensions.
+
+## Getting Started
+
+To use the HAI Build API in your VS Code extension:
+
+```typescript
+import * as vscode from 'vscode';
+
+const haiExtension = vscode.extensions.getExtension('presidio-inc.hai-build-code-generator');
+if (haiExtension) {
+  const api = await haiExtension.activate();
+  // Use the API
+}
+```
+
+## API Structure
+
+The HAI Build extension API provides access to:
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/api/commands">
+    VS Code commands for triggering extension functionality
+  </Card>
+  <Card title="Slash Commands" icon="slash" href="/api/slash-commands">
+    In-chat commands for AI-assisted workflows
+  </Card>
+  <Card title="Events" icon="bolt" href="/api/events">
+    Extension events and hooks for integration
+  </Card>
+</CardGroup>
+
+## Extension Information
+
+<ParamField path="Extension ID" type="string">
+  `presidio-inc.hai-build-code-generator`
+</ParamField>
+
+<ParamField path="Display Name" type="string">
+  HAI Build Code Generator
+</ParamField>
+
+<ParamField path="Version" type="string">
+  3.13.4
+</ParamField>
+
+<ParamField path="Activation Events" type="string[]">
+  - `onLanguage` - Activates on any language file
+  - `onStartupFinished` - Activates when VS Code finishes startup
+  - `workspaceContains:evals.env` - Activates when workspace contains evals.env
+</ParamField>
+
+## Key Features
+
+### AI-Powered Development
+
+The extension integrates with multiple LLM providers (Anthropic Claude, OpenAI, Google Gemini, etc.) to provide intelligent code generation, refactoring, and debugging assistance.
+
+### Task Management
+
+Manage development tasks with built-in task tracking, history, and state management capabilities.
+
+### File Operations
+
+Automated file identification, inline editing, and diff viewing for code changes.
+
+### MCP Integration
+
+Model Context Protocol (MCP) support for extending functionality with custom tools and prompts.
+
+## Extension Configuration
+
+The extension can be configured through VS Code settings. Configuration is managed through the extension's settings UI and state management system.
+
+<Note>
+  For detailed configuration options, see the Configuration section in the main documentation.
+</Note>
+
+## API Exports
+
+The extension exports an API object when activated that provides programmatic access to the core controller and functionality:
+
+```typescript
+interface ClineAPI {
+  controller: ClineController;
+  // Additional API methods
+}
+```
+
+## Next Steps
+
+<Steps>
+  <Step title="Explore Commands">
+    Learn about available VS Code commands in the [Commands reference](/api/commands)
+  </Step>
+  <Step title="Use Slash Commands">
+    Discover in-chat slash commands in the [Slash Commands reference](/api/slash-commands)
+  </Step>
+  <Step title="Integrate Events">
+    Hook into extension events in the [Events reference](/api/events)
+  </Step>
+</Steps>

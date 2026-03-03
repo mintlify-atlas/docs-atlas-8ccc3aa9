@@ -1,0 +1,472 @@
+---
+title: "OpenRouter Provider"
+description: "Access multiple LLM providers through OpenRouter's unified API"
+icon: "route"
+---
+
+OpenRouter provides access to multiple LLM providers through a single API, with automatic fallback, cost tracking, and model routing.
+
+## Configuration
+
+<ParamField path="openRouterApiKey" type="string" required>
+  Your OpenRouter API key from [OpenRouter Dashboard](https://openrouter.ai/keys)
+</ParamField>
+
+<ParamField path="openRouterModelId" type="string" required>
+  Model identifier in OpenRouter format. Examples:
+  - `anthropic/claude-4.5-sonnet`
+  - `openai/gpt-4o`
+  - `google/gemini-3.0-flash-thinking`
+  - `deepseek/deepseek-reasoner`
+  - `xai/grok-4`
+</ParamField>
+
+<ParamField path="openRouterModelInfo" type="ModelInfo" optional>
+  Model metadata. OpenRouter fetches this automatically if not provided.
+</ParamField>
+
+<ParamField path="openRouterProviderSorting" type="string" optional>
+  Provider preference order. Examples:
+  - `"anthropic,openai"` - Prefer Anthropic, fallback to OpenAI
+  - `"google"` - Use only Google
+</ParamField>
+
+<ParamField path="reasoningEffort" type="string" optional>
+  For reasoning models. Options: `low`, `medium`, `high`, `xhigh`
+</ParamField>
+
+<ParamField path="thinkingBudgetTokens" type="number" optional>
+  Token budget for extended thinking (model-dependent)
+</ParamField>
+
+## Basic Setup
+
+```typescript
+import { OpenRouterHandler } from "./providers/openrouter"
+
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet"
+})
+```
+
+## Provider Routing
+
+Control which providers handle your requests:
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-sonnet-4",
+  openRouterProviderSorting: "anthropic,openrouter"
+  // Try Anthropic first, fallback to OpenRouter's default
+})
+```
+
+## Reasoning Models
+
+OpenRouter supports various reasoning models:
+
+### DeepSeek Reasoner
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "deepseek/deepseek-reasoner"
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "reasoning") {
+    console.log("Reasoning:", chunk.reasoning)
+    
+    // OpenRouter preserves reasoning_details for model
+    if (chunk.details) {
+      console.log("Details:", chunk.details)
+    }
+  }
+}
+```
+
+### Gemini with Thinking
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "google/gemini-3.0-flash-thinking",
+  reasoningEffort: "high", // or "medium"
+  thinkingBudgetTokens: 15000
+})
+```
+
+### Anthropic Extended Thinking
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-sonnet-4",
+  thinkingBudgetTokens: 10000
+})
+```
+
+## Reasoning Details Preservation
+
+OpenRouter passes `reasoning_details` for models to preserve reasoning traces:
+
+```typescript
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "reasoning" && chunk.details) {
+    // These details can be sent back to the API
+    // to preserve reasoning context
+    console.log("Reasoning details:", chunk.details)
+  }
+}
+```
+
+From `openrouter.ts:133-146`:
+
+<Info>
+  **Reasoning block preservation**
+  
+  OpenRouter returns `reasoning_details` in delta responses that should be preserved and sent back in subsequent API requests to maintain reasoning traces. See [OpenRouter docs](https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks).
+</Info>
+
+## Tool Calling
+
+```typescript
+import type { ChatCompletionTool } from "openai/resources/chat/completions"
+
+const tools: ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Get current weather",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "City name"
+          }
+        },
+        required: ["location"]
+      }
+    }
+  }
+]
+
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet"
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "tool_calls") {
+    console.log("Tool:", chunk.tool_call.function.name)
+    console.log("Args:", chunk.tool_call.function.arguments)
+  }
+}
+```
+
+## Cost Tracking
+
+OpenRouter provides detailed cost information:
+
+```typescript
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "usage") {
+    console.log("Input tokens:", chunk.inputTokens)
+    console.log("Output tokens:", chunk.outputTokens)
+    console.log("Cached tokens:", chunk.cacheReadTokens)
+    console.log("Total cost:", chunk.totalCost) // In USD
+  }
+}
+```
+
+### Generation Endpoint Fallback
+
+If usage data isn't in the stream, the handler fetches it from the generation endpoint:
+
+```typescript
+// From openrouter.ts:163-168
+if (!didOutputUsage) {
+  const apiStreamUsage = await handler.getApiStreamUsage()
+  if (apiStreamUsage) {
+    console.log("Cost from generation endpoint:", apiStreamUsage.totalCost)
+  }
+}
+```
+
+## Error Handling
+
+OpenRouter returns errors in two ways:
+
+### Direct Error Response
+
+```typescript
+// From openrouter.ts:78-85
+if ("error" in chunk) {
+  const error = chunk.error
+  console.error(`OpenRouter Error ${error.code}: ${error.message}`)
+  if (error.metadata) {
+    console.error("Metadata:", error.metadata)
+  }
+}
+```
+
+### Mid-Stream Error
+
+```typescript
+// From openrouter.ts:91-105
+if (choice?.finish_reason === "error") {
+  const error = choice.error
+  throw new Error(`OpenRouter Mid-Stream Error: ${error}`)
+}
+```
+
+### Error Types
+
+```typescript
+type OpenRouterErrorResponse = {
+  error: {
+    message: string
+    code: number
+    metadata?: {
+      provider_name?: string
+      raw?: unknown
+      reasons?: string[] // For moderation errors
+      flagged_input?: string
+    }
+  }
+}
+```
+
+## Streaming Response
+
+### Text Chunks
+```typescript
+{
+  type: "text",
+  text: string
+}
+```
+
+### Reasoning Chunks
+```typescript
+{
+  type: "reasoning",
+  reasoning: string,
+  details?: any // Reasoning details to preserve
+}
+```
+
+### Tool Calls
+```typescript
+{
+  type: "tool_calls",
+  tool_call: {
+    function: {
+      name: string,
+      arguments: string
+    }
+  }
+}
+```
+
+### Usage Data
+```typescript
+{
+  type: "usage",
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens: number,
+  cacheWriteTokens: 0,
+  totalCost: number // USD
+}
+```
+
+## Model Information
+
+OpenRouter caches model info:
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet"
+})
+
+const { id, info } = handler.getModel()
+
+console.log("Model ID:", id)
+console.log("Context window:", info.contextWindow)
+console.log("Max tokens:", info.maxTokens)
+console.log("Input price:", info.inputPrice)
+console.log("Output price:", info.outputPrice)
+```
+
+Model info is cached in `StateManager` to avoid repeated API calls.
+
+## Skipping Reasoning for Specific Models
+
+Some models (like Grok 4) output placeholder reasoning:
+
+```typescript
+// From openrouter.ts:125
+if (delta.reasoning && !shouldSkipReasoningForModel(modelId)) {
+  yield {
+    type: "reasoning",
+    reasoning: delta.reasoning
+  }
+}
+```
+
+## Advanced Usage
+
+### Multiple Provider Fallback
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet",
+  openRouterProviderSorting: "anthropic,openai,google"
+  // Try Anthropic -> OpenAI -> Google
+})
+```
+
+### Custom Model Info
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "custom/model",
+  openRouterModelInfo: {
+    maxTokens: 16384,
+    contextWindow: 200000,
+    supportsPromptCache: true,
+    inputPrice: 3.0,
+    outputPrice: 15.0
+  }
+})
+```
+
+### Retry Configuration
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet",
+  onRetryAttempt: (error, attempt, maxRetries) => {
+    console.log(`Retry ${attempt}/${maxRetries}:`, error.message)
+  }
+})
+```
+
+## Generation Details API
+
+Access detailed generation info:
+
+```typescript
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet"
+})
+
+// Stream a message
+for await (const chunk of handler.createMessage(...)) {
+  // ...
+}
+
+// Get detailed usage after streaming
+const usage = await handler.getApiStreamUsage()
+if (usage) {
+  console.log("Native prompt tokens:", usage.inputTokens)
+  console.log("Native completion tokens:", usage.outputTokens)
+  console.log("Cached tokens:", usage.cacheReadTokens)
+  console.log("Total cost:", usage.totalCost)
+}
+```
+
+From `openrouter.ts:171-193`, the generation endpoint:
+- Returns native token counts
+- Includes cache statistics
+- Provides exact cost calculations
+- Has built-in retry logic (4 attempts)
+
+## Implementation Reference
+
+Source: `~/workspace/source/src/core/api/providers/openrouter.ts`
+
+Key features:
+- Unified access to 100+ models
+- Automatic provider fallback
+- Cost tracking with generation endpoint
+- Reasoning details preservation
+- Error handling for stream and response
+- Model info caching
+
+## Common Patterns
+
+### Cost Monitoring
+
+```typescript
+let totalCost = 0
+
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "usage" && chunk.totalCost) {
+    totalCost += chunk.totalCost
+  }
+}
+
+console.log(`Total cost: $${totalCost.toFixed(4)}`)
+```
+
+### Provider Preference
+
+```typescript
+// Always use official Anthropic
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: "anthropic/claude-4.5-sonnet",
+  openRouterProviderSorting: "anthropic"
+})
+```
+
+### Multi-Model Strategy
+
+```typescript
+const models = {
+  planning: "openai/o3-mini",
+  coding: "anthropic/claude-4.5-sonnet",
+  fast: "google/gemini-3.0-flash-thinking"
+}
+
+const handler = new OpenRouterHandler({
+  openRouterApiKey: process.env.OPENROUTER_API_KEY,
+  openRouterModelId: models.coding
+})
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Anthropic Provider" icon="brain" href="/api/providers/anthropic">
+    Direct Anthropic integration
+  </Card>
+  <Card title="OpenAI Provider" icon="openai" href="/api/providers/openai">
+    Direct OpenAI integration
+  </Card>
+  <Card title="Provider Overview" icon="cloud" href="/api/providers/overview">
+    View all providers
+  </Card>
+  <Card title="Custom Provider" icon="code" href="/api/providers/custom">
+    Build your own
+  </Card>
+</CardGroup>

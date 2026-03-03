@@ -1,0 +1,365 @@
+---
+title: "Anthropic Provider"
+description: "Configure Anthropic Claude models with extended thinking and prompt caching"
+icon: "brain"
+---
+
+The Anthropic provider enables Claude models with support for extended thinking, prompt caching, and tool calling.
+
+## Configuration
+
+The `AnthropicHandler` accepts the following options:
+
+<ParamField path="apiKey" type="string" required>
+  Your Anthropic API key. Get one from [Anthropic Console](https://console.anthropic.com/)
+</ParamField>
+
+<ParamField path="anthropicBaseUrl" type="string" optional>
+  Custom base URL for API requests. Defaults to Anthropic's production API
+</ParamField>
+
+<ParamField path="apiModelId" type="string" required>
+  Claude model to use. Examples:
+  - `claude-4.5-sonnet-20250514`
+  - `claude-sonnet-4-20250514`
+  - `claude-opus-4-20250514`
+  - `claude-3-5-sonnet-20241022`
+</ParamField>
+
+<ParamField path="thinkingBudgetTokens" type="number" optional default="0">
+  Token budget for extended thinking. Set to `0` to disable thinking.
+  
+  Recommended values:
+  - **Light tasks**: 2000-5000 tokens
+  - **Medium tasks**: 5000-10000 tokens  
+  - **Complex tasks**: 10000-24000 tokens
+</ParamField>
+
+<ParamField path="onRetryAttempt" type="function" optional>
+  Callback invoked when retrying failed requests
+</ParamField>
+
+## Basic Setup
+
+```typescript
+import { AnthropicHandler } from "./providers/anthropic"
+
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-4.5-sonnet-20250514",
+  thinkingBudgetTokens: 10000
+})
+```
+
+## Extended Thinking
+
+Claude models support extended thinking for complex reasoning tasks:
+
+```typescript
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514",
+  thinkingBudgetTokens: 15000 // Enable thinking with 15K token budget
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "reasoning") {
+    console.log("Thinking:", chunk.reasoning)
+    // Access signature if available
+    if (chunk.signature) {
+      console.log("Signature:", chunk.signature)
+    }
+  }
+  
+  if (chunk.type === "text") {
+    console.log("Response:", chunk.text)
+  }
+}
+```
+
+### Thinking Modes
+
+<CodeGroup>
+```typescript Disabled (Default)
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514",
+  thinkingBudgetTokens: 0 // No thinking
+})
+```
+
+```typescript Fixed Budget
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514",
+  thinkingBudgetTokens: 10000 // Use up to 10K tokens
+})
+```
+</CodeGroup>
+
+### Redacted Thinking
+
+Some thinking blocks may be redacted (encrypted):
+
+```typescript
+for await (const chunk of handler.createMessage(...)) {
+  if (chunk.type === "reasoning") {
+    if (chunk.redacted_data) {
+      console.log("[Redacted thinking block]")
+      // Content is encrypted, store redacted_data for later API calls
+    } else {
+      console.log("Thinking:", chunk.reasoning)
+    }
+  }
+}
+```
+
+## Prompt Caching
+
+The handler automatically enables prompt caching for supported models:
+
+```typescript
+// Automatic caching (if model supports it)
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-4.5-sonnet-20250514"
+})
+
+// System prompt gets cached automatically
+for await (const chunk of handler.createMessage(
+  systemPrompt, // Cached with ephemeral cache control
+  messages,
+  tools
+)) {
+  if (chunk.type === "usage") {
+    console.log("Cache write tokens:", chunk.cacheWriteTokens)
+    console.log("Cache read tokens:", chunk.cacheReadTokens)
+  }
+}
+```
+
+### Cache Strategy
+
+The handler implements this caching strategy from `anthropic.ts:74-80`:
+
+1. System prompt marked with `cache_control: { type: "ephemeral" }`
+2. New tasks can reuse cached system prompt
+3. Cache breakpoints set at end of system prompt
+4. Reduces token usage on subsequent requests
+
+## Tool Calling
+
+```typescript
+import type { Tool as AnthropicTool } from "@anthropic-ai/sdk/resources/index"
+
+const tools: AnthropicTool[] = [
+  {
+    name: "read_file",
+    description: "Read contents of a file",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "File path to read"
+        }
+      },
+      required: ["path"]
+    }
+  }
+]
+
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514",
+  thinkingBudgetTokens: 0 // Required when forcing tool use
+})
+
+for await (const chunk of handler.createMessage(
+  systemPrompt,
+  messages,
+  tools
+)) {
+  if (chunk.type === "tool_calls") {
+    const toolCall = chunk.tool_call
+    console.log("Tool:", toolCall.function.name)
+    console.log("Args:", JSON.parse(toolCall.function.arguments))
+  }
+}
+```
+
+### Tool Use Constraints
+
+From `anthropic.ts:84-90`:
+
+<Warning>
+  **Tool forcing is incompatible with thinking**
+  
+  When `thinkingBudgetTokens > 0`, tools cannot be forced with `tool_choice: { type: "any" }`. The handler automatically handles this:
+  - Thinking disabled: `tool_choice: { type: "any" }` (forces tool use)
+  - Thinking enabled: `tool_choice: undefined` (auto mode)
+</Warning>
+
+## 1M Context Window
+
+Enable the experimental 1M context window:
+
+```typescript
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514-1m" // Note the -1m suffix
+})
+
+// Handler automatically adds beta header:
+// "anthropic-beta": "context-1m-2025-08-07"
+```
+
+## Streaming Response
+
+The handler processes these Anthropic stream events:
+
+### message_start
+```typescript
+{
+  type: "usage",
+  inputTokens: number,
+  outputTokens: number,
+  cacheWriteTokens?: number,
+  cacheReadTokens?: number
+}
+```
+
+### content_block_start
+```typescript
+// Thinking block
+{
+  type: "reasoning",
+  reasoning: string,
+  signature?: string
+}
+
+// Text block
+{
+  type: "text",
+  text: string
+}
+
+// Tool use block
+{
+  type: "tool_calls",
+  tool_call: { ... }
+}
+```
+
+### content_block_delta
+```typescript
+// Incremental thinking
+{
+  type: "reasoning",
+  reasoning: string // Delta
+}
+
+// Incremental text
+{
+  type: "text",
+  text: string // Delta
+}
+
+// Tool arguments
+{
+  type: "tool_calls",
+  tool_call: {
+    function: {
+      arguments: string // Partial JSON
+    }
+  }
+}
+```
+
+## Error Handling
+
+The handler includes automatic retry logic:
+
+```typescript
+@withRetry()
+async *createMessage(...) {
+  // Automatically retries on:
+  // - Network errors
+  // - 429 rate limits
+  // - 5xx server errors
+}
+```
+
+### Custom Error Handling
+
+```typescript
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514",
+  onRetryAttempt: (error, attempt, maxRetries) => {
+    console.log(`Retry ${attempt}/${maxRetries}:`, error.message)
+  }
+})
+
+try {
+  for await (const chunk of handler.createMessage(...)) {
+    // Process chunks
+  }
+} catch (error) {
+  if (error.message.includes("API key")) {
+    console.error("Invalid API key")
+  } else {
+    console.error("API error:", error)
+  }
+}
+```
+
+## Model Information
+
+```typescript
+const handler = new AnthropicHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiModelId: "claude-sonnet-4-20250514"
+})
+
+const { id, info } = handler.getModel()
+
+console.log("Model ID:", id)
+console.log("Max tokens:", info.maxTokens)
+console.log("Context window:", info.contextWindow)
+console.log("Supports caching:", info.supportsPromptCache)
+console.log("Supports reasoning:", info.supportsReasoning)
+console.log("Input price:", info.inputPrice, "per 1M tokens")
+console.log("Output price:", info.outputPrice, "per 1M tokens")
+```
+
+## Implementation Reference
+
+Source: `~/workspace/source/src/core/api/providers/anthropic.ts`
+
+Key methods:
+
+- `ensureClient()` - Creates Anthropic SDK client with proxy support
+- `createMessage()` - Streams responses with thinking/caching/tools
+- `getModel()` - Returns model ID and metadata
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="OpenAI Provider" icon="openai" href="/api/providers/openai">
+    Configure OpenAI models
+  </Card>
+  <Card title="OpenRouter Provider" icon="route" href="/api/providers/openrouter">
+    Access multiple providers
+  </Card>
+  <Card title="Provider Overview" icon="cloud" href="/api/providers/overview">
+    View all providers
+  </Card>
+  <Card title="Custom Provider" icon="code" href="/api/providers/custom">
+    Build your own
+  </Card>
+</CardGroup>

@@ -1,0 +1,610 @@
+---
+title: "Inline Editing"
+description: "Make quick, AI-assisted edits to your code without leaving your editor with intelligent search and replace operations."
+---
+
+Inline Editing provides surgical, AI-powered code modifications using the `replace_in_file` tool. Make targeted changes to specific functions, variables, or code sections without rewriting entire files.
+
+<Frame>
+  <img src="/images/inline-edit-demo.gif" alt="Inline editing in action" />
+</Frame>
+
+## How It Works
+
+Inline Editing uses a SEARCH/REPLACE block pattern for precise modifications:
+
+```typescript
+// SEARCH
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0)
+}
+
+// REPLACE
+function calculateTotal(items: Item[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0)
+}
+```
+
+The AI:
+1. **Searches** for the exact code block in the file
+2. **Replaces** it with the modified version
+3. **Preserves** surrounding code untouched
+4. **Handles** auto-formatting automatically
+
+<Info>
+Inline Editing is powered by the `replace_in_file` tool, designed for efficiency and precision.
+</Info>
+
+## When to Use Inline Editing
+
+Inline Editing excels at:
+
+<CardGroup cols={2}>
+  <Card title="Function Updates" icon="function">
+    Modify function implementations, signatures, or logic
+  </Card>
+  <Card title="Variable Renames" icon="pen">
+    Change variable names throughout a file
+  </Card>
+  <Card title="Import Statements" icon="file-import">
+    Add, remove, or modify imports
+  </Card>
+  <Card title="Type Annotations" icon="code">
+    Add TypeScript types to existing code
+  </Card>
+  <Card title="Bug Fixes" icon="bug">
+    Fix specific issues without touching working code
+  </Card>
+  <Card title="Refactoring" icon="arrows-rotate">
+    Update patterns across a file
+  </Card>
+</CardGroup>
+
+<Warning>
+For major restructuring or creating new files, use `write_to_file` instead. See [Choosing the Right Tool](#choosing-the-right-tool).
+</Warning>
+
+## SEARCH/REPLACE Syntax
+
+### Single Block
+
+Modify one section of code:
+
+```
+<SEARCH>
+existing code to find
+</SEARCH>
+<REPLACE>
+new code to insert
+</REPLACE>
+```
+
+### Multiple Blocks
+
+Make several changes in one operation:
+
+```
+<SEARCH>
+import { useState } from 'react'
+</SEARCH>
+<REPLACE>
+import { useState, useEffect } from 'react'
+</REPLACE>
+
+<SEARCH>
+const [count, setCount] = useState(0)
+</SEARCH>
+<REPLACE>
+const [count, setCount] = useState(0)
+
+useEffect(() => {
+  console.log('Count changed:', count)
+}, [count])
+</REPLACE>
+```
+
+<Tip>
+**Best Practice**: Use a single `replace_in_file` call with multiple SEARCH/REPLACE blocks rather than multiple separate calls.
+</Tip>
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:75`
+
+## Inline Editing vs write_to_file
+
+<Tabs>
+  <Tab title="replace_in_file (Inline)">
+    **Use when**:
+    - Making small, localized changes
+    - Updating specific functions or sections
+    - File content is mostly unchanged
+    - You need surgical precision
+    
+    **Advantages**:
+    - More efficient (no need to send full file)
+    - Lower chance of errors
+    - Preserves unchanged sections perfectly
+    - Safer for large files
+    
+    **Example use cases**:
+    - Fix a bug in one function
+    - Add a new import
+    - Update variable names
+    - Modify configuration values
+  </Tab>
+  <Tab title="write_to_file (Full Rewrite)">
+    **Use when**:
+    - Creating new files
+    - Extensive changes affecting most of file
+    - Complete restructuring needed
+    - Generating boilerplate
+    
+    **Advantages**:
+    - Simpler for major overhauls
+    - Good for scaffolding
+    - Can restructure entire file
+    
+    **Example use cases**:
+    - Create new component
+    - Generate configuration file
+    - Scaffold test file
+    - Restructure class hierarchy
+  </Tab>
+</Tabs>
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:59`
+
+## Auto-Formatting Handling
+
+Inline Editing intelligently handles editor auto-formatting:
+
+<Steps>
+  <Step title="Initial Edit">
+    AI makes the change using `replace_in_file`.
+  </Step>
+  <Step title="Editor Formats">
+    Your editor (Prettier, ESLint, etc.) auto-formats the file:
+    - Adjusts indentation
+    - Converts quotes
+    - Organizes imports
+    - Adds/removes semicolons
+  </Step>
+  <Step title="AI Receives Updated State">
+    The tool response includes the final formatted content:
+    
+    ```json
+    {
+      "success": true,
+      "finalContent": "// File after auto-formatting"
+    }
+    ```
+  </Step>
+  <Step title="Subsequent Edits Adapt">
+    Future edits use the formatted version as reference.
+  </Step>
+</Steps>
+
+<Note>
+**Critical**: The AI must use the post-formatting content for subsequent SEARCH blocks. This is especially important when making multiple edits to the same file.
+</Note>
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:5`
+
+### Auto-Formatting Examples
+
+Common transformations your editor might apply:
+
+<AccordionGroup>
+  <Accordion title="Indentation">
+    **Before** (AI writes):
+    ```typescript
+    function example() {
+        return true
+    }
+    ```
+    
+    **After** (Editor formats with 2 spaces):
+    ```typescript
+    function example() {
+      return true
+    }
+    ```
+  </Accordion>
+  <Accordion title="Quote Style">
+    **Before**:
+    ```typescript
+    const name = "John"
+    ```
+    
+    **After** (Prettier with single quotes):
+    ```typescript
+    const name = 'John'
+    ```
+  </Accordion>
+  <Accordion title="Import Organization">
+    **Before**:
+    ```typescript
+    import { z } from './utils'
+    import React from 'react'
+    import { Button } from './Button'
+    ```
+    
+    **After** (Sorted and grouped):
+    ```typescript
+    import React from 'react'
+    
+    import { Button } from './Button'
+    import { z } from './utils'
+    ```
+  </Accordion>
+  <Accordion title="Trailing Commas">
+    **Before**:
+    ```typescript
+    const config = {
+      name: 'app',
+      version: '1.0.0'
+    }
+    ```
+    
+    **After** (With trailing commas):
+    ```typescript
+    const config = {
+      name: 'app',
+      version: '1.0.0',
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+### Be Specific in SEARCH Blocks
+
+<Tabs>
+  <Tab title="❌ Too Generic">
+    ```
+    <SEARCH>
+    const items = []
+    </SEARCH>
+    ```
+    
+    **Problem**: Might match multiple locations or wrong variable.
+  </Tab>
+  <Tab title="✅ Specific">
+    ```
+    <SEARCH>
+    const items: Item[] = []
+    
+    function addItem(item: Item) {
+      items.push(item)
+    }
+    </SEARCH>
+    ```
+    
+    **Benefit**: Uniquely identifies the exact location.
+  </Tab>
+</Tabs>
+
+### Include Surrounding Context
+
+<Tabs>
+  <Tab title="❌ Minimal Context">
+    ```
+    <SEARCH>
+    return result
+    </SEARCH>
+    ```
+    
+    **Problem**: Many functions might have this line.
+  </Tab>
+  <Tab title="✅ Rich Context">
+    ```
+    <SEARCH>
+    async function fetchUser(id: string) {
+      const response = await api.get(`/users/${id}`)
+      return result
+    }
+    </SEARCH>
+    ```
+    
+    **Benefit**: Unambiguous match.
+  </Tab>
+</Tabs>
+
+### Handle Edge Cases
+
+<AccordionGroup>
+  <Accordion title="Multiple Similar Sections">
+    If a file has similar code blocks, include unique identifiers:
+    
+    ```
+    <SEARCH>
+    // User validation
+    function validate(data) {
+      return data.isValid
+    }
+    </SEARCH>
+    ```
+    
+    The comment makes it unique from other `validate` functions.
+  </Accordion>
+  <Accordion title="Dynamic Content">
+    Avoid SEARCH blocks with timestamps or IDs:
+    
+    ❌ `<SEARCH>const id = 12345</SEARCH>`
+    
+    ✅ `<SEARCH>const id = userId // Current user</SEARCH>`
+  </Accordion>
+  <Accordion title="Whitespace Sensitivity">
+    Match exact whitespace in SEARCH blocks:
+    
+    ```
+    <SEARCH>
+    function example() {
+        // 4 spaces indentation
+        return true
+    }
+    </SEARCH>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Workflow Tips
+
+<Steps>
+  <Step title="Assess Scope">
+    Before editing, determine if changes are localized or widespread.
+  </Step>
+  <Step title="Choose Tool">
+    Use `replace_in_file` for targeted edits, `write_to_file` for major changes.
+  </Step>
+  <Step title="Stack Multiple Edits">
+    Combine related changes into a single `replace_in_file` call:
+    
+    ```typescript
+    // Example: Add import and use component
+    // SEARCH/REPLACE 1: Add import
+    // SEARCH/REPLACE 2: Add component usage
+    ```
+  </Step>
+  <Step title="Verify Changes">
+    Review the diff after each edit to ensure correctness.
+  </Step>
+  <Step title="Use Updated Content">
+    For subsequent edits, reference the final formatted state from previous operations.
+  </Step>
+</Steps>
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:71`
+
+## Advanced Techniques
+
+### Multi-Line Replacements
+
+Replace entire blocks while preserving structure:
+
+```
+<SEARCH>
+interface User {
+  id: string
+  name: string
+}
+</SEARCH>
+<REPLACE>
+interface User {
+  id: string
+  name: string
+  email: string
+  createdAt: Date
+}
+</REPLACE>
+```
+
+### Conditional Logic Updates
+
+Modify complex conditional statements:
+
+```
+<SEARCH>
+if (user.role === 'admin') {
+  return true
+}
+return false
+</SEARCH>
+<REPLACE>
+if (user.role === 'admin' || user.permissions.includes('manage_users')) {
+  return true
+}
+return false
+</REPLACE>
+```
+
+### Pattern Replacements
+
+Change recurring patterns:
+
+```
+<SEARCH>
+console.log('Debug:', data)
+</SEARCH>
+<REPLACE>
+logger.debug('Data:', data)
+</REPLACE>
+```
+
+Repeat for each occurrence in the file.
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Add TypeScript Types" icon="code">
+    ```typescript
+    // SEARCH
+    function process(data) {
+      return data.map(item => item.value)
+    }
+    
+    // REPLACE
+    function process(data: DataItem[]): number[] {
+      return data.map(item => item.value)
+    }
+    ```
+  </Card>
+  <Card title="Update Imports" icon="file-import">
+    ```typescript
+    // SEARCH
+    import { Component } from './Component'
+    
+    // REPLACE
+    import { Component } from '@/components/Component'
+    ```
+  </Card>
+  <Card title="Fix ESLint Issues" icon="check">
+    ```typescript
+    // SEARCH
+    const unused = 5
+    
+    // REPLACE
+    // const unused = 5 // Temporarily disabled
+    ```
+  </Card>
+  <Card title="Refactor Function Names" icon="signature">
+    ```typescript
+    // SEARCH
+    function getData() {
+      return fetchUserData()
+    }
+    
+    // REPLACE
+    function fetchData() {
+      return fetchUserData()
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+### Search Block Not Found
+
+**Error**: `SEARCH block not found in file`
+
+**Causes**:
+- Whitespace mismatch
+- File was auto-formatted since last read
+- Searching for old content
+
+**Solution**:
+1. Read the file again to get current state
+2. Copy exact content including whitespace
+3. Use more surrounding context
+
+### Multiple Matches Found
+
+**Error**: `SEARCH block matches multiple locations`
+
+**Solution**:
+- Add more context to make the match unique
+- Include function name, comments, or surrounding code
+- Use variable names or string literals as anchors
+
+### File Changed Externally
+
+**Error**: `File modified externally during operation`
+
+**Solution**:
+- Refresh file content
+- Retry the operation
+- Use version control to resolve conflicts
+
+## Performance Considerations
+
+<Tabs>
+  <Tab title="Efficiency">
+    **Inline Editing is faster** because:
+    - Sends only SEARCH/REPLACE blocks
+    - Doesn't need full file content
+    - Less token usage
+    - Faster processing
+    
+    **Example**:
+    - Full file: 500 lines = ~15,000 tokens
+    - Inline edit: 20 lines = ~600 tokens
+    - **25x reduction** in tokens
+  </Tab>
+  <Tab title="Accuracy">
+    **Inline Editing is safer** because:
+    - No risk of truncating unchanged parts
+    - Exact whitespace preservation
+    - Less prone to formatting errors
+    - Easier to review changes
+  </Tab>
+</Tabs>
+
+## Configuration
+
+### Editor Settings
+
+Configure your editor for optimal inline editing:
+
+```json
+// .vscode/settings.json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  // HAI Build will adapt to these settings
+}
+```
+
+### Ignore Formatting
+
+For CLI environments with no auto-formatting:
+
+```json
+{
+  "hai.inlineEdit.assumeNoFormatting": true
+}
+```
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:84`
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Edits not applying">
+    - Verify file isn't read-only
+    - Check file permissions
+    - Ensure no syntax errors in REPLACE block
+    - Confirm SEARCH block exactly matches file content
+  </Accordion>
+  <Accordion title="Wrong section replaced">
+    - Add more context to SEARCH block
+    - Include unique identifiers (comments, variable names)
+    - Read file first to verify current state
+    - Use function/class names as anchors
+  </Accordion>
+  <Accordion title="Formatting conflicts">
+    - Disable auto-format temporarily
+    - Match current file formatting in SEARCH blocks
+    - Use the post-format content from tool responses
+    - Configure consistent formatting rules
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AI-Powered Coding" icon="robot" href="/features/ai-powered-coding">
+    Learn how the AI decides when to use inline editing
+  </Card>
+  <Card title="File Identification" icon="magnifying-glass" href="/features/file-identification">
+    Discover files to edit with smart search
+  </Card>
+  <Card title="Auto Approve" icon="check-circle" href="/features/auto-approve">
+    Auto-approve safe inline edits for faster workflows
+  </Card>
+  <Card title="Checkpoints" icon="clock-rotate-left" href="/core-workflows/checkpoints">
+    Roll back inline edits if needed
+  </Card>
+</CardGroup>

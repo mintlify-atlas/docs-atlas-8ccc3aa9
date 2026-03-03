@@ -1,0 +1,193 @@
+---
+title: 'Extension Settings'
+description: 'Configure HAI Build Code Generator extension and workspace settings'
+icon: 'gear'
+---
+
+## Overview
+
+HAI Build Code Generator can be configured through various settings to customize your development experience. Settings can be managed through the VS Code settings interface or by modifying configuration files directly.
+
+## Extension Configuration
+
+### Workspace Settings
+
+The extension supports workspace-specific configuration through the `.hai.config` file placed at the root of your workspace.
+
+<Note>
+The `.hai.config` file is **not** git-excluded by default. Ensure sensitive keys are not committed to your repository.
+</Note>
+
+#### Configuration File Format
+
+The `.hai.config` file uses a simple key-value format:
+
+```properties
+# Project name
+name=my-project
+
+# Langfuse Configuration
+langfuse.apiUrl=https://cloud.langfuse.com
+langfuse.apiKey=your-api-key
+langfuse.publicKey=your-public-key
+
+# PostHog Configuration
+posthog.url=https://app.posthog.com
+posthog.apiKey=your-api-key
+
+# COR-Matrix Configuration
+cormatrix.baseURL=https://cormatrix.example.com
+cormatrix.token=your-token
+cormatrix.workspaceId=your-workspace-id
+```
+
+### Environment Variables
+
+For local development, you can use environment variables to configure the extension. See the [.env.example](https://github.com/presidio-oss/hai-build-codegen/blob/main/.env.example) file for available options.
+
+<Accordion title="Development Environment Variables">
+
+```bash
+# Development Flags
+IS_DEV=true
+CLINE_ENVIRONMENT=local
+
+# Langfuse Telemetry
+LANGFUSE_SECRET_KEY=your-langfuse-secret-key
+LANGFUSE_PUBLIC_KEY=your-langfuse-public-key
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+
+# PostHog Telemetry
+TELEMETRY_SERVICE_API_KEY=your-posthog-telemetry-api-key
+ERROR_SERVICE_API_KEY=your-posthog-error-tracking-api-key
+
+# OpenTelemetry (Optional)
+OTEL_TELEMETRY_ENABLED=1
+OTEL_LOGS_EXPORTER=console
+OTEL_METRICS_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+```
+
+</Accordion>
+
+## Activation Events
+
+The extension activates automatically in the following scenarios:
+
+<CardGroup cols={2}>
+  <Card title="On Language Detection" icon="code">
+    Activates when any programming language file is opened
+  </Card>
+  <Card title="On Startup" icon="rocket">
+    Activates when VS Code finishes starting up
+  </Card>
+  <Card title="Workspace Contains" icon="folder">
+    Activates when workspace contains `evals.env` file
+  </Card>
+</CardGroup>
+
+## Commands and Keybindings
+
+HAI Build provides several commands accessible via the Command Palette and keyboard shortcuts.
+
+### Default Keybindings
+
+<ParamField path="Cmd/Ctrl + '" type="keybinding">
+  Jump to HAI chat input or add selected code to chat
+</ParamField>
+
+### Available Commands
+
+| Command | Description | Shortcut |
+|---------|-------------|----------|
+| **New Task** | Start a new HAI task | - |
+| **MCP Servers** | Manage Model Context Protocol servers | - |
+| **History** | View task history | - |
+| **Settings** | Open HAI settings | - |
+| **Add to HAI** | Add selected code to chat | Cmd/Ctrl + ' |
+| **Generate Commit Message** | Generate AI-powered commit messages | - |
+| **Explain with HAI** | Explain selected code | - |
+| **Improve with HAI** | Get improvement suggestions | - |
+
+## Storage Configuration
+
+HAI Build supports object storage backends for syncing data across devices.
+
+### S3 Storage
+
+```bash
+CLINE_STORAGE_ADAPTER="s3"
+CLINE_STORAGE_BUCKET="cline"
+CLINE_STORAGE_ACCESS_KEY_ID="your-access-key"
+CLINE_STORAGE_SECRET_ACCESS_KEY="your-secret-key"
+CLINE_STORAGE_REGION="us-west-1"  # Optional, defaults to us-east-1
+CLINE_STORAGE_ENDPOINT="http://localhost:8333"  # Optional
+```
+
+### Cloudflare R2 Storage
+
+```bash
+CLINE_STORAGE_ADAPTER="r2"
+CLINE_STORAGE_BUCKET="cline"
+CLINE_STORAGE_ACCESS_KEY_ID="your-access-key"
+CLINE_STORAGE_SECRET_ACCESS_KEY="your-secret-key"
+CLINE_STORAGE_ACCOUNT_ID="your-account-id"
+CLINE_STORAGE_ENDPOINT="http://localhost:8333"  # Optional
+```
+
+### Storage Sync Options
+
+<ParamField path="CLINE_STORAGE_SYNC_INTERVAL_MS" type="number" default="30000">
+  Interval for sync worker in milliseconds
+</ParamField>
+
+<ParamField path="CLINE_STORAGE_SYNC_MAX_RETRIES" type="number" default="5">
+  Maximum retries for failed sync operations
+</ParamField>
+
+<ParamField path="CLINE_STORAGE_SYNC_BATCH_SIZE" type="number" default="10">
+  Number of files to sync in each batch
+</ParamField>
+
+<ParamField path="CLINE_STORAGE_SYNC_BACKFILL_ENABLED" type="boolean" default="false">
+  Enable backfill of existing data on startup
+</ParamField>
+
+## Advanced Settings
+
+### Multi-Root Workspace Debugging
+
+```bash
+MULTI_ROOT_TRACE=true
+```
+
+### gRPC Recorder
+
+Enable gRPC request/response recording for testing:
+
+```bash
+GRPC_RECORDER_ENABLED=true
+GRPC_RECORDER_FILE_NAME=test-recording
+```
+
+### Test Mode
+
+```bash
+E2E_TEST=true
+IS_TEST=true
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="LLM Providers" icon="brain" href="/configuration/llm-providers">
+    Configure AI model providers
+  </Card>
+  <Card title="Telemetry" icon="chart-line" href="/configuration/telemetry">
+    Set up telemetry and monitoring
+  </Card>
+  <Card title="Experts" icon="user-tie" href="/configuration/experts-setup">
+    Create custom domain experts
+  </Card>
+</CardGroup>

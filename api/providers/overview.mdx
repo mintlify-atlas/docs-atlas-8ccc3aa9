@@ -1,0 +1,211 @@
+---
+title: "LLM Providers Overview"
+description: "Supported LLM providers and how the provider system works in HAI Build Code Generator"
+icon: "cloud"
+---
+
+HAI Build Code Generator supports multiple LLM providers through a flexible, handler-based architecture. Each provider implements a common `ApiHandler` interface, allowing seamless switching between different AI services.
+
+## Supported Providers
+
+The code generator supports over 40 LLM providers:
+
+### Major Cloud Providers
+
+- [Anthropic](/api/providers/anthropic) - Claude models with extended thinking
+- [OpenAI](/api/providers/openai) - GPT models including o1/o3/o4 reasoning models
+- [OpenRouter](/api/providers/openrouter) - Access to multiple models through a unified API
+- Google Gemini - Gemini models with thinking capabilities
+- AWS Bedrock - Claude and other models via AWS
+- Azure OpenAI - OpenAI models through Azure
+- Google Vertex AI - Gemini models via Vertex
+
+### Specialized Providers
+
+- **Reasoning Models**: DeepSeek, XAI (Grok)
+- **Fast Inference**: Groq, Cerebras, Fireworks
+- **Open Source**: Ollama, LM Studio, Together AI
+- **Enterprise**: SAP AI Core, Huawei Cloud MaaS
+- **Development**: LiteLLM, Vercel AI Gateway
+- **Regional**: Qwen, Doubao, Moonshot, Minimax, ZAi
+
+### Self-Hosted & Custom
+
+- Ollama - Run models locally
+- LM Studio - Local model hosting
+- [Custom Providers](/api/providers/custom) - Add your own provider
+
+## Provider Architecture
+
+### ApiHandler Interface
+
+All providers implement the `ApiHandler` interface:
+
+```typescript
+export interface ApiHandler {
+  createMessage(
+    systemPrompt: string,
+    messages: ClineStorageMessage[],
+    tools?: ClineTool[],
+    useResponseApi?: boolean
+  ): ApiStream
+  
+  getModel(): ApiHandlerModel
+  getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>
+  abort?(): void
+}
+```
+
+### Key Components
+
+<ParamField path="createMessage" type="function">
+  Main method that sends messages to the LLM and returns a streaming response
+</ParamField>
+
+<ParamField path="getModel" type="function">
+  Returns the current model ID and metadata (context window, pricing, features)
+</ParamField>
+
+<ParamField path="getApiStreamUsage" type="function" optional>
+  Retrieves detailed usage statistics after streaming completes
+</ParamField>
+
+<ParamField path="abort" type="function" optional>
+  Cancels an in-progress request
+</ParamField>
+
+## How Provider Selection Works
+
+The system builds handlers dynamically based on configuration:
+
+```typescript
+// From src/core/api/index.ts
+export function buildApiHandler(
+  configuration: ApiConfiguration,
+  mode: Mode
+): ApiHandler {
+  const apiProvider = mode === "plan" 
+    ? configuration.planModeApiProvider 
+    : configuration.actModeApiProvider
+  
+  return createHandlerForProvider(apiProvider, configuration, mode)
+}
+```
+
+### Dual Mode Support
+
+The code generator supports two operational modes:
+
+- **Plan Mode**: Strategic planning and decision-making
+- **Act Mode**: Code execution and implementation
+
+You can configure different providers/models for each mode.
+
+## Common Handler Options
+
+All handlers accept these base options:
+
+<ParamField path="onRetryAttempt" type="function" optional>
+  Callback invoked when retrying failed requests
+</ParamField>
+
+## Stream Format
+
+Providers return an `ApiStream` that yields different chunk types:
+
+### Text Chunks
+```typescript
+{
+  type: "text",
+  text: string
+}
+```
+
+### Tool Call Chunks
+```typescript
+{
+  type: "tool_calls",
+  tool_call: {
+    function: {
+      id: string,
+      name: string,
+      arguments: string
+    }
+  }
+}
+```
+
+### Reasoning Chunks
+```typescript
+{
+  type: "reasoning",
+  reasoning: string,
+  signature?: string,
+  redacted_data?: any
+}
+```
+
+### Usage Chunks
+```typescript
+{
+  type: "usage",
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens?: number,
+  cacheWriteTokens?: number,
+  totalCost?: number
+}
+```
+
+## Message Transformation
+
+Each provider transforms messages to its native format:
+
+- **Anthropic**: Uses `sanitizeAnthropicMessages()` with cache control
+- **OpenAI**: Uses `convertToOpenAiMessages()` 
+- **Gemini**: Uses `convertAnthropicMessageToGemini()`
+- **Ollama**: Uses `convertToOllamaMessages()`
+
+This abstraction lets the code generator work with a unified message format.
+
+## Features by Provider
+
+| Feature | Anthropic | OpenAI | OpenRouter | Gemini |
+|---------|-----------|--------|------------|--------|
+| Tool Calling | ✓ | ✓ | ✓ | ✓ |
+| Streaming | ✓ | ✓ | ✓ | ✓ |
+| Prompt Caching | ✓ | ✓ | ✓ | ✓ |
+| Extended Thinking | ✓ | o1/o3/o4 | Model-dependent | ✓ |
+| Reasoning Effort | Budget tokens | low/medium/high | Model-dependent | low/high |
+
+## Error Handling
+
+All handlers use the `@withRetry()` decorator for automatic retry logic:
+
+```typescript
+@withRetry()
+async *createMessage(...) { ... }
+```
+
+Default retry configuration:
+- Max retries: 3
+- Base delay: 1000ms
+- Max delay: 10000ms
+- Exponential backoff with jitter
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Anthropic Setup" icon="brain" href="/api/providers/anthropic">
+    Configure Claude models with extended thinking
+  </Card>
+  <Card title="OpenAI Setup" icon="openai" href="/api/providers/openai">
+    Set up GPT models and reasoning models
+  </Card>
+  <Card title="OpenRouter Setup" icon="route" href="/api/providers/openrouter">
+    Access multiple providers through one API
+  </Card>
+  <Card title="Custom Provider" icon="code" href="/api/providers/custom">
+    Add your own LLM provider
+  </Card>
+</CardGroup>

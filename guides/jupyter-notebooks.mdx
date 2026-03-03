@@ -1,0 +1,611 @@
+---
+title: "Jupyter Notebooks"
+description: "AI-powered assistance for Jupyter notebook development in VS Code"
+icon: "book"
+---
+
+## Overview
+
+HAI Build provides specialized commands for working with Jupyter notebooks in VS Code. Get AI assistance to generate, explain, and improve notebook cells while maintaining the context of your data science or analysis workflow.
+
+## Features
+
+<CardGroup cols={3}>
+  <Card title="Generate Cells" icon="sparkle">
+    Create new notebook cells with AI-generated code
+  </Card>
+  <Card title="Explain Cells" icon="question">
+    Get detailed explanations of what cells do
+  </Card>
+  <Card title="Improve Cells" icon="lightbulb">
+    Optimize and enhance existing cells
+  </Card>
+</CardGroup>
+
+## Setup
+
+Ensure you have the necessary extensions:
+
+<Steps>
+  <Step title="Install Required Extensions">
+    Make sure you have installed:
+    1. **HAI Build Code Generator** (this extension)
+    2. **Jupyter Extension for VS Code** (by Microsoft)
+
+    <Tip>
+      The Jupyter extension is typically installed automatically when you open a `.ipynb` file.
+    </Tip>
+  </Step>
+
+  <Step title="Open a Jupyter Notebook">
+    Open any `.ipynb` file in VS Code. The notebook interface will activate with HAI Build commands available.
+  </Step>
+
+  <Step title="Verify HAI Build is Active">
+    Look for HAI Build icons in:
+    - Notebook toolbar (top of notebook)
+    - Individual cell toolbars (when hovering over cells)
+  </Step>
+</Steps>
+
+## Generating Notebook Cells
+
+Create new cells with AI-generated code based on your prompts.
+
+<Steps>
+  <Step title="Access Generate Command">
+    Click the **Generate Jupyter Cell** icon (sparkle icon) in the notebook toolbar at the top.
+
+    Or use Command Palette:
+    1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+    2. Type **Generate Jupyter Cell with HAI**
+    3. Press Enter
+  </Step>
+
+  <Step title="Enter Your Prompt">
+    A prompt input box appears. Describe what you want the cell to do:
+
+    <CodeGroup>
+    ```text Data Analysis
+    Load the CSV file 'sales_data.csv' and create a pandas DataFrame. 
+    Show the first 5 rows and basic statistics.
+    ```
+
+    ```text Visualization
+    Create a bar chart showing monthly revenue trends using matplotlib. 
+    Include labels and a title.
+    ```
+
+    ```text Data Cleaning
+    Remove duplicate rows and handle missing values in the 'price' 
+    column by filling with the median.
+    ```
+
+    ```text Machine Learning
+    Split the data into training and testing sets (80/20). 
+    Create a Random Forest classifier and fit it on the training data.
+    ```
+    </CodeGroup>
+
+    Press **Enter** to confirm or **Esc** to cancel.
+  </Step>
+
+  <Step title="Review Generated Cell">
+    HAI Build:
+    1. Analyzes your notebook context (existing cells, variables, imports)
+    2. Generates appropriate code
+    3. Inserts a new cell above or below the current cell
+    4. Populates it with the generated code
+
+    <Note>
+      The AI considers your existing notebook context, including imported libraries and defined variables.
+    </Note>
+  </Step>
+
+  <Step title="Execute and Refine">
+    - **Run the cell** to test the generated code
+    - **Request improvements** if needed
+    - **Iterate** by generating additional cells
+  </Step>
+</Steps>
+
+### Generation Examples
+
+<Tabs>
+  <Tab title="Data Loading">
+    **Prompt:**
+    ```text
+    Load the JSON file 'config.json' and extract the database connection settings
+    ```
+
+    **Generated Cell:**
+    ```python
+    import json
+
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    
+    db_settings = config.get('database', {})
+    print(f"Database: {db_settings.get('host')}:{db_settings.get('port')}")
+    ```
+  </Tab>
+
+  <Tab title="Data Visualization">
+    **Prompt:**
+    ```text
+    Create a scatter plot of age vs income colored by customer segment
+    ```
+
+    **Generated Cell:**
+    ```python
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(10, 6))
+    for segment in df['segment'].unique():
+        segment_data = df[df['segment'] == segment]
+        plt.scatter(segment_data['age'], segment_data['income'], 
+                   label=segment, alpha=0.6)
+    
+    plt.xlabel('Age')
+    plt.ylabel('Income')
+    plt.title('Age vs Income by Customer Segment')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
+    ```
+  </Tab>
+
+  <Tab title="Statistical Analysis">
+    **Prompt:**
+    ```text
+    Perform correlation analysis on numerical columns and display a heatmap
+    ```
+
+    **Generated Cell:**
+    ```python
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    # Calculate correlation matrix
+    correlation_matrix = df.select_dtypes(include=[np.number]).corr()
+
+    # Create heatmap
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', 
+                center=0, fmt='.2f', linewidths=1)
+    plt.title('Correlation Heatmap of Numerical Features')
+    plt.tight_layout()
+    plt.show()
+    ```
+  </Tab>
+</Tabs>
+
+## Explaining Notebook Cells
+
+Get detailed explanations of what existing cells do.
+
+<Steps>
+  <Step title="Select a Cell">
+    Click on the cell you want to understand.
+  </Step>
+
+  <Step title="Trigger Explain">
+    Click the **Explain Jupyter Cell** icon (question mark icon) in the cell toolbar.
+
+    Or use Command Palette:
+    1. Press `Cmd+Shift+P` / `Ctrl+Shift+P`
+    2. Type **Explain Jupyter Cell with HAI**
+    3. Press Enter
+  </Step>
+
+  <Step title="View Explanation">
+    The HAI Build chat opens with a detailed explanation including:
+    - What the code does
+    - How it works step-by-step
+    - Purpose of key functions or methods
+    - Expected inputs and outputs
+    - Potential issues or considerations
+  </Step>
+</Steps>
+
+### Explanation Example
+
+**Cell Code:**
+```python
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+```
+
+**AI Explanation:**
+```text
+This cell performs dimensionality reduction using Principal Component Analysis (PCA):
+
+1. **StandardScaler**: Standardizes features by removing the mean and scaling 
+   to unit variance. This is crucial for PCA because it's sensitive to the 
+   scale of features.
+
+2. **fit_transform**: Fits the scaler on X and transforms it in one step, 
+   resulting in X_scaled where each feature has mean=0 and std=1.
+
+3. **PCA(n_components=2)**: Creates a PCA instance that will reduce the 
+   dimensionality to 2 components (principal components).
+
+4. **fit_transform on PCA**: Finds the principal components from X_scaled 
+   and transforms the data to the new 2-dimensional space.
+
+Result: X_pca contains the data projected onto 2 principal components, 
+making it suitable for 2D visualization while preserving maximum variance.
+```
+
+<Tip>
+  Use **Explain** when reviewing notebooks from colleagues or learning new techniques.
+</Tip>
+
+## Improving Notebook Cells
+
+Optimize, enhance, or fix existing cells with AI assistance.
+
+<Steps>
+  <Step title="Select Cell to Improve">
+    Click on the cell you want to enhance.
+  </Step>
+
+  <Step title="Trigger Improve Command">
+    Click the **Improve Jupyter Cell** icon (lightbulb icon) in the cell toolbar.
+
+    Or use Command Palette:
+    1. Press `Cmd+Shift+P` / `Ctrl+Shift+P`
+    2. Type **Improve Jupyter Cell with HAI**
+    3. Press Enter
+  </Step>
+
+  <Step title="Describe Improvements">
+    Enter what you want to improve:
+
+    <CodeGroup>
+    ```text Performance
+    Optimize this for better performance with large datasets
+    ```
+
+    ```text Error Handling
+    Add error handling and validation
+    ```
+
+    ```text Visualization
+    Make this plot more visually appealing with better colors and labels
+    ```
+
+    ```text Code Quality
+    Refactor to be more readable and add comments
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Review Improvements">
+    HAI provides improved code in the chat. You can:
+    - Review the suggested changes
+    - Ask for different approaches
+    - Accept and apply to your cell
+  </Step>
+</Steps>
+
+### Improvement Examples
+
+<Tabs>
+  <Tab title="Add Error Handling">
+    **Original Cell:**
+    ```python
+    df = pd.read_csv('data.csv')
+    df['date'] = pd.to_datetime(df['date'])
+    result = df.groupby('category')['sales'].sum()
+    ```
+
+    **Improved Cell:**
+    ```python
+    import os
+
+    # Check if file exists
+    if not os.path.exists('data.csv'):
+        raise FileNotFoundError("data.csv not found")
+
+    try:
+        df = pd.read_csv('data.csv')
+        
+        # Validate required columns
+        required_cols = ['date', 'category', 'sales']
+        if not all(col in df.columns for col in required_cols):
+            raise ValueError(f"Missing required columns: {required_cols}")
+        
+        # Convert date with error handling
+        df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        if df['date'].isna().any():
+            print(f"Warning: {df['date'].isna().sum()} invalid dates found")
+        
+        # Group and sum
+        result = df.groupby('category')['sales'].sum()
+        
+    except Exception as e:
+        print(f"Error processing data: {str(e)}")
+        raise
+    ```
+  </Tab>
+
+  <Tab title="Optimize Performance">
+    **Original Cell:**
+    ```python
+    results = []
+    for i in range(len(df)):
+        row = df.iloc[i]
+        results.append(row['value'] * 2 + 10)
+    df['new_column'] = results
+    ```
+
+    **Improved Cell:**
+    ```python
+    # Vectorized operation - much faster for large datasets
+    df['new_column'] = df['value'] * 2 + 10
+    ```
+  </Tab>
+
+  <Tab title="Enhance Visualization">
+    **Original Cell:**
+    ```python
+    plt.plot(x, y)
+    plt.show()
+    ```
+
+    **Improved Cell:**
+    ```python
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(x, y, linewidth=2, color='#2E86AB', label='Data Series')
+    plt.xlabel('X Axis', fontsize=12, fontweight='bold')
+    plt.ylabel('Y Axis', fontsize=12, fontweight='bold')
+    plt.title('Time Series Analysis', fontsize=14, fontweight='bold', pad=20)
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.legend(loc='best', frameon=True, shadow=True)
+    plt.tight_layout()
+    plt.show()
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices for Notebook AI Assistance
+
+<AccordionGroup>
+  <Accordion title="Provide Context in Prompts" icon="comment">
+    Help HAI understand your notebook's context:
+
+    **Good prompts:**
+    - ✅ "Create a function to preprocess the text column removing special characters"
+    - ✅ "Calculate correlation between features X1-X10 and the target variable"
+    - ✅ "Generate a confusion matrix for the classifier stored in 'model' variable"
+
+    **Vague prompts:**
+    - ❌ "Make a chart"
+    - ❌ "Process the data"
+    - ❌ "Add some analysis"
+  </Accordion>
+
+  <Accordion title="Maintain Cell Organization" icon="layer-group">
+    Keep your notebook well-structured:
+
+    1. **Imports at top**: Generate import cells first
+    2. **Data loading**: Load data before processing
+    3. **Exploration**: Analysis cells in logical order
+    4. **Modeling**: Train/test/evaluate sequentially
+    5. **Visualization**: Display results clearly
+
+    This helps HAI understand the notebook flow.
+  </Accordion>
+
+  <Accordion title="Run Cells to Establish Context" icon="play">
+    HAI works better when cells are executed:
+
+    - Execute cells to define variables and imports
+    - HAI can reference executed variables in generations
+    - Kernel state helps determine what's available
+
+    <Tip>
+      Run your notebook sequentially before generating new cells for best results.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Iterate on Generated Code" icon="rotate">
+    Refine generated cells through conversation:
+
+    ```text Workflow
+    1. Generate initial cell
+    2. Run and observe results
+    3. Use "Improve" to refine
+    4. Repeat until satisfied
+    ```
+
+    Example:
+    ```text
+    "Generate a bar chart of sales by region"
+    → Review generated chart
+    → "Make it horizontal and sort by value descending"
+    → Review improvements
+    → "Add data labels on each bar"
+    → Final version
+    ```
+  </Accordion>
+
+  <Accordion title="Combine with Regular HAI Chat" icon="comments">
+    For complex notebook tasks:
+
+    1. **Use Jupyter commands** for quick cell operations
+    2. **Use HAI chat** for multi-cell workflows or complex refactoring
+    3. **Select multiple cells** and add to HAI chat for broader context
+  </Accordion>
+</AccordionGroup>
+
+## Common Notebook Workflows
+
+### Data Science Pipeline
+
+<Steps>
+  <Step title="Data Loading">
+    ```text Prompt
+    Load the dataset from 'experiment_data.csv' and display basic info
+    ```
+  </Step>
+
+  <Step title="Exploration">
+    ```text Prompt
+    Create a summary of missing values and data types for each column
+    ```
+  </Step>
+
+  <Step title="Visualization">
+    ```text Prompt
+    Generate distribution plots for all numerical features in a grid layout
+    ```
+  </Step>
+
+  <Step title="Preprocessing">
+    ```text Prompt
+    Create a preprocessing pipeline that handles missing values, 
+    encodes categorical variables, and scales numerical features
+    ```
+  </Step>
+
+  <Step title="Modeling">
+    ```text Prompt
+    Train a logistic regression model with cross-validation 
+    and display accuracy scores
+    ```
+  </Step>
+</Steps>
+
+### Data Analysis Report
+
+<Steps>
+  <Step title="Import Libraries">
+    ```text Prompt
+    Import pandas, numpy, matplotlib, and seaborn with standard aliases
+    ```
+  </Step>
+
+  <Step title="Load Data">
+    ```text Prompt
+    Load the quarterly sales data and parse date columns
+    ```
+  </Step>
+
+  <Step title="Calculate Metrics">
+    ```text Prompt
+    Calculate year-over-year growth rates for each product category
+    ```
+  </Step>
+
+  <Step title="Visualize Trends">
+    ```text Prompt
+    Create a multi-line chart showing sales trends for top 5 products
+    ```
+  </Step>
+
+  <Step title="Summary Statistics">
+    ```text Prompt
+    Generate a formatted summary table of key metrics by region
+    ```
+  </Step>
+</Steps>
+
+## Tips for Effective Jupyter AI Usage
+
+<CardGroup cols={2}>
+  <Card title="Specify Libraries" icon="book-open">
+    Mention preferred libraries in your prompts:
+    
+    "Use seaborn to create..."
+    
+    "With scikit-learn, implement..."
+  </Card>
+
+  <Card title="Request Comments" icon="comment-lines">
+    Ask for documented code:
+    
+    "Add comments explaining each step"
+    
+    "Include docstrings"
+  </Card>
+
+  <Card title="Define Variables" icon="code">
+    Reference existing variables:
+    
+    "Using the 'df' DataFrame..."
+    
+    "Apply this to 'X_train' and 'y_train'"
+  </Card>
+
+  <Card title="Set Expectations" icon="bullseye">
+    Be clear about outputs:
+    
+    "Return a pandas Series"
+    
+    "Display results in a table format"
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<Tabs>
+  <Tab title="Commands Not Visible">
+    **Issue**: HAI Build icons don't appear in notebook
+
+    **Solutions**:
+    1. Ensure HAI Build extension is installed and enabled
+    2. Verify Jupyter extension is active
+    3. Reload VS Code window: `Cmd+Shift+P` → "Reload Window"
+    4. Check notebook type is `jupyter-notebook`
+  </Tab>
+
+  <Tab title="Context Errors">
+    **Issue**: Generated code references undefined variables
+
+    **Solutions**:
+    1. Run previous cells to establish context
+    2. Specify variable names in your prompt
+    3. Include necessary imports in the prompt
+    4. Check kernel is running and has executed prior cells
+  </Tab>
+
+  <Tab title="Import Issues">
+    **Issue**: Generated code uses unavailable libraries
+
+    **Solutions**:
+    1. Specify available libraries in prompt
+    2. Install missing libraries in your environment
+    3. Request alternative implementations
+    4. Ask for code using standard library only
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Code Generation" icon="code" href="/guides/code-generation">
+    Learn more about AI-powered code generation
+  </Card>
+  <Card title="Task Execution" icon="list-check" href="/guides/task-execution">
+    Execute larger notebook development tasks
+  </Card>
+  <Card title="Settings" icon="gear" href="/configuration/settings">
+    Configure LLM providers for notebook assistance
+  </Card>
+  <Card title="MCP Integration" icon="plug" href="/features/mcp-integration">
+    Connect to data sources via Model Context Protocol
+  </Card>
+</CardGroup>
+
+<Note>
+  **Data Science Tip**: Use HAI Build to quickly prototype analysis workflows, then refine the code for production use. The AI excels at generating exploratory code and visualizations.
+</Note>

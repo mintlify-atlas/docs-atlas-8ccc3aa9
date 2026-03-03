@@ -1,0 +1,533 @@
+---
+title: 'Extension Events'
+description: 'Events and hooks available in the HAI Build Code Generator extension'
+---
+
+## Overview
+
+The HAI Build Code Generator extension provides various events and hooks that allow you to integrate with and extend its functionality. These events are triggered at different stages of the extension lifecycle and user interactions.
+
+## Extension Lifecycle Events
+
+### Extension Activation
+
+The extension activates when specific events occur:
+
+<ParamField path="onLanguage" type="ActivationEvent">
+  Triggered when any language file is opened in the editor
+</ParamField>
+
+<ParamField path="onStartupFinished" type="ActivationEvent">
+  Triggered when VS Code finishes its startup sequence
+</ParamField>
+
+<ParamField path="workspaceContains" type="ActivationEvent">
+  Triggered when the workspace contains specific files (e.g., `evals.env`)
+</ParamField>
+
+**Usage:**
+```json
+"activationEvents": [
+  "onLanguage",
+  "onStartupFinished",
+  "workspaceContains:evals.env"
+]
+```
+
+---
+
+### Extension Deactivation
+
+When the extension deactivates, cleanup operations are performed:
+
+- Disposes of non-VS Code-specific services (via `tearDown()`)
+- Disposes of VS Code-specific services (comment controllers, watchers, etc.)
+- Cleans up registered commands and subscriptions
+
+**Hook into deactivation:**
+```typescript
+export async function deactivate() {
+  // Your cleanup code here
+  await tearDown();
+  disposeVscodeCommentReviewController();
+}
+```
+
+---
+
+## User Interaction Events
+
+### Button Click Events
+
+The extension provides event handlers for sidebar button interactions:
+
+<ResponseField name="sendChatButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the new task (+) button is clicked
+</ResponseField>
+
+<ResponseField name="sendMcpButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the MCP Servers button is clicked
+</ResponseField>
+
+<ResponseField name="sendHistoryButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the History button is clicked
+</ResponseField>
+
+<ResponseField name="sendSettingsButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the Settings button is clicked
+</ResponseField>
+
+<ResponseField name="sendAccountButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the Account button is clicked
+</ResponseField>
+
+<ResponseField name="sendWorktreesButtonClickedEvent" type="() => Promise<void>">
+  Triggered when the Worktrees button is clicked
+</ResponseField>
+
+<ResponseField name="sendHaiBuildTaskListClickedEvent" type="() => Promise<void>">
+  Triggered when the HAI Tasks button is clicked
+</ResponseField>
+
+**Example:**
+```typescript
+import { sendChatButtonClickedEvent } from './core/controller/ui/subscribeToChatButtonClicked';
+
+// Trigger the new task event
+await sendChatButtonClickedEvent();
+```
+
+---
+
+### Webview Events
+
+<ResponseField name="sendShowWebviewEvent" type="(preserveEditorFocus?: boolean) => void">
+  Shows the HAI Build webview sidebar
+
+  **Parameters:**
+  - `preserveEditorFocus` - When true, shows webview without forcing focus away from editor
+</ResponseField>
+
+<ResponseField name="sendAddToInputEvent" type="(content: string) => Promise<void>">
+  Adds content to the chat input field
+
+  **Parameters:**
+  - `content` - The text to add to the input
+</ResponseField>
+
+**Example:**
+```typescript
+import { sendAddToInputEvent } from './core/controller/ui/subscribeToAddToInput';
+
+// Add terminal output to chat
+await sendAddToInputEvent(`Terminal output:\n\`\`\`\n${terminalContents}\n\`\`\``);
+```
+
+---
+
+## State Management Events
+
+### Secret Storage Events
+
+The extension listens for changes to secure credential storage:
+
+**Event Handler:**
+```typescript
+context.secrets.onDidChange(async (event) => {
+  if (event.key === 'cline:clineAccountId') {
+    const secretValue = await context.secrets.get(event.key);
+    if (secretValue) {
+      // Login from another window - restore auth
+      authService?.restoreRefreshTokenAndRetrieveAuthInfo();
+    } else {
+      // Logout - handle deauth
+      authService?.handleDeauth(LogoutReason.CROSS_WINDOW_SYNC);
+    }
+  }
+});
+```
+
+<ParamField path="event.key" type="string">
+  The key of the secret that changed (e.g., `cline:clineAccountId`)
+</ParamField>
+
+**Use cases:**
+- Cross-window authentication sync
+- Credential updates
+- Logout propagation
+
+---
+
+### Workspace Change Events
+
+The extension tracks workspace folder changes for hook discovery:
+
+**Event Handler:**
+```typescript
+vscode.workspace.onDidChangeWorkspaceFolders((callback) => {
+  // Re-initialize hook discovery cache
+  HookDiscoveryCache.getInstance().refresh();
+});
+```
+
+---
+
+## File System Events
+
+### Hook Discovery Watcher
+
+The extension watches for changes to hook files:
+
+**File System Watcher:**
+```typescript
+const watcher = vscode.workspace.createFileSystemWatcher(
+  new vscode.RelativePattern(dir, '*')
+);
+
+watcher.onDidCreate((uri) => {
+  // Hook file created
+});
+
+watcher.onDidChange((uri) => {
+  // Hook file modified
+});
+
+watcher.onDidDelete((uri) => {
+  // Hook file deleted
+});
+```
+
+**Watched directories:**
+- `.clinerules/` - Local Cline rules
+- Custom hook directories
+
+---
+
+## URI Handling Events
+
+### Deep Link Handler
+
+The extension registers a URI handler for deep linking:
+
+**Event Handler:**
+```typescript
+vscode.window.registerUriHandler({
+  async handleUri(uri: vscode.Uri) {
+    const url = decodeURIComponent(uri.toString());
+    const isTaskUri = getUriPath(url) === TASK_URI_PATH;
+    
+    if (isTaskUri) {
+      await openClineSidebarForTaskUri();
+    }
+    
+    const success = await SharedUriHandler.handleUri(url);
+    // Handle result
+  }
+});
+```
+
+<ParamField path="uri" type="vscode.Uri">
+  The deep link URI that was opened (e.g., `vscode://presidio-inc.hai-build-code-generator/task?id=123`)
+</ParamField>
+
+**Supported URI paths:**
+- `/task` - Open a specific task by ID
+
+---
+
+## Telemetry Events
+
+The extension tracks various user interactions for analytics:
+
+### Button Click Tracking
+
+```typescript
+telemetryService.captureButtonClick(
+  'command_focusChatInput',
+  taskUlid?
+);
+```
+
+<ParamField path="buttonId" type="string">
+  Identifier for the button that was clicked
+</ParamField>
+
+<ParamField path="taskUlid" type="string" optional>
+  ULID of the current task (if applicable)
+</ParamField>
+
+### Slash Command Usage
+
+```typescript
+telemetryService.captureSlashCommandUsed(
+  taskUlid,
+  commandName,
+  commandType
+);
+```
+
+<ParamField path="taskUlid" type="string">
+  ULID of the current task
+</ParamField>
+
+<ParamField path="commandName" type="string">
+  Name of the slash command (e.g., 'newtask', 'smol', 'my-workflow')
+</ParamField>
+
+<ParamField path="commandType" type="'builtin' | 'mcp_prompt' | 'workflow'">
+  Category of the slash command
+</ParamField>
+
+---
+
+## Code Action Events
+
+The extension provides code actions that appear in the editor:
+
+### Code Action Provider
+
+**Supported kinds:**
+- `vscode.CodeActionKind.QuickFix` - Quick fixes for diagnostics
+- `vscode.CodeActionKind.RefactorExtract` - Extract refactoring (Explain)
+- `vscode.CodeActionKind.RefactorRewrite` - Rewrite refactoring (Improve)
+
+**Triggered when:**
+- User right-clicks on code
+- User opens the quick fix menu (Ctrl/Cmd + .)
+- Diagnostics (errors/warnings) are present
+
+**Available actions:**
+
+<ResponseField name="Add to Cline" type="CodeAction">
+  Kind: `QuickFix`
+  
+  Adds selected code and diagnostics to chat
+</ResponseField>
+
+<ResponseField name="Explain with Cline" type="CodeAction">
+  Kind: `RefactorExtract`
+  
+  Requests an explanation of the selected code
+</ResponseField>
+
+<ResponseField name="Improve with Cline" type="CodeAction">
+  Kind: `RefactorRewrite`
+  
+  Requests AI suggestions to improve the code
+</ResponseField>
+
+<ResponseField name="Fix with Cline" type="CodeAction">
+  Kind: `QuickFix` (preferred)
+  
+  Only appears when diagnostics are present. Attempts to fix errors/warnings.
+</ResponseField>
+
+---
+
+## Comment Thread Events
+
+The extension provides a comment controller for AI code review:
+
+### Review Comment Controller
+
+**Controller ID:** `hai-ai-review`
+
+**Available commands:**
+
+<ResponseField name="hai.reviewComment.reply" type="Command">
+  Replies to a comment thread
+  
+  **When enabled:** `commentController == hai-ai-review && !commentIsEmpty`
+</ResponseField>
+
+<ResponseField name="hai.reviewComment.addToChat" type="Command">
+  Adds the comment thread to HAI Build chat
+  
+  **When enabled:** `commentController == hai-ai-review`
+</ResponseField>
+
+---
+
+## Development Mode Events
+
+<Info>
+  Development mode events are only available when `IS_DEV === true`
+</Info>
+
+### File Watcher for Hot Reload
+
+In development mode, the extension watches for source file changes:
+
+**Event Handler:**
+```typescript
+const watcher = vscode.workspace.createFileSystemWatcher(
+  new vscode.RelativePattern(DEV_WORKSPACE_FOLDER, 'src/**/*')
+);
+
+watcher.onDidChange(({ scheme, path }) => {
+  Logger.info(`${scheme} ${path} changed. Reloading VSCode...`);
+  vscode.commands.executeCommand('workbench.action.reloadWindow');
+});
+```
+
+**Watched pattern:** `src/**/*` in the development workspace folder
+
+**Action:** Automatically reloads VS Code window when source files change
+
+---
+
+## Storage Migration Events
+
+The extension performs storage migrations on activation:
+
+**Migration functions:**
+
+<ResponseField name="cleanupOldApiKey" type="() => void">
+  Removes legacy API key storage
+</ResponseField>
+
+<ResponseField name="migrateCustomInstructionsToGlobalRules" type="(context) => Promise<void>">
+  Migrates custom instructions to global Cline rules (one-time)
+</ResponseField>
+
+<ResponseField name="migrateWelcomeViewCompleted" type="(context) => Promise<void>">
+  Migrates welcome view state based on existing API keys (one-time)
+</ResponseField>
+
+<ResponseField name="migrateWorkspaceToGlobalStorage" type="(context) => Promise<void>">
+  Migrates workspace storage back to global storage (reverting previous migration)
+</ResponseField>
+
+<ResponseField name="migrateTaskHistoryToFile" type="(context) => Promise<void>">
+  Ensures taskHistory.json exists and migrates legacy state (one-time)
+</ResponseField>
+
+<ResponseField name="cleanupMcpMarketplaceCatalogFromGlobalState" type="(context) => Promise<void>">
+  Cleans up MCP marketplace catalog from global state (moved to disk cache)
+</ResponseField>
+
+---
+
+## Hook Discovery Events
+
+The extension uses a cache system for performance optimization:
+
+**Cache initialization:**
+```typescript
+HookDiscoveryCache.getInstance().initialize(
+  context,
+  createWatcher,
+  onWorkspaceFoldersChanged
+);
+```
+
+**Events:**
+- File creation in hook directories
+- File changes in hook directories
+- File deletion in hook directories
+- Workspace folder changes
+
+---
+
+## Custom Event Integration
+
+To integrate with HAI Build events in your own extension:
+
+### Listen to Extension Activation
+
+```typescript
+const haiExtension = vscode.extensions.getExtension(
+  'presidio-inc.hai-build-code-generator'
+);
+
+if (haiExtension) {
+  // Extension is installed
+  if (haiExtension.isActive) {
+    // Already activated
+    const api = haiExtension.exports;
+  } else {
+    // Wait for activation
+    const api = await haiExtension.activate();
+  }
+}
+```
+
+### Trigger HAI Build Commands
+
+```typescript
+// Open HAI Build and add content to chat
+await vscode.commands.executeCommand('hai.focusChatInput');
+await vscode.commands.executeCommand('hai.addToChat', range, diagnostics);
+```
+
+### Access the Controller API
+
+```typescript
+const api = haiExtension.exports;
+const controller = api.controller;
+
+// Use controller methods
+await controller.clearTask();
+await controller.postStateToWebview();
+```
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Check extension availability">
+    Always verify the HAI Build extension is installed and activated before attempting to use its API:
+    
+    ```typescript
+    const extension = vscode.extensions.getExtension('presidio-inc.hai-build-code-generator');
+    if (!extension) {
+      vscode.window.showErrorMessage('HAI Build extension not found');
+      return;
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Handle activation failures">
+    Extension activation might fail. Always handle errors:
+    
+    ```typescript
+    try {
+      const api = await extension.activate();
+    } catch (error) {
+      Logger.error('Failed to activate HAI Build:', error);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Dispose event listeners">
+    When registering event listeners, always add them to your extension's subscriptions:
+    
+    ```typescript
+    const disposable = vscode.workspace.onDidChangeConfiguration((e) => {
+      // Handle config change
+    });
+    context.subscriptions.push(disposable);
+    ```
+  </Accordion>
+
+  <Accordion title="Use telemetry responsibly">
+    If you're integrating with HAI Build's telemetry, ensure you:
+    - Follow privacy guidelines
+    - Respect user's telemetry settings
+    - Only track meaningful interactions
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/api/commands">
+    Complete VS Code commands reference
+  </Card>
+  <Card title="Slash Commands" icon="slash" href="/api/slash-commands">
+    In-chat slash commands
+  </Card>
+</CardGroup>

@@ -1,0 +1,322 @@
+---
+title: 'Contributing Guidelines'
+description: 'Best practices for contributing to HAI Build Code Generator'
+---
+
+## Before You Start
+
+All contributions must begin with a GitHub Issue, unless the change is for:
+- Small bug fixes
+- Typo corrections
+- Minor wording improvements
+- Simple type fixes that don't change functionality
+
+### For Features and Contributions
+
+<Steps>
+  <Step title="Check existing discussions">
+    First check the [Feature Requests discussions board](https://github.com/presidio-oss/hai-build-codegen/discussions/categories/feature-requests) for similar ideas.
+  </Step>
+  
+  <Step title="Create a feature request">
+    If your idea is new, create a new feature request with a clear description of the problem and proposed solution.
+  </Step>
+  
+  <Step title="Wait for approval">
+    Wait for approval from core maintainers before starting implementation.
+  </Step>
+  
+  <Step title="Start working">
+    Once approved, feel free to begin working on a PR with the help of our community!
+  </Step>
+</Steps>
+
+<Warning>
+PRs without approved issues may be closed.
+</Warning>
+
+## Writing and Submitting Code
+
+### 1. Keep Pull Requests Focused
+
+- Limit PRs to a single feature or bug fix
+- Split larger changes into smaller, related PRs
+- Break changes into logical commits that can be reviewed independently
+
+### 2. Code Quality
+
+<Tabs>
+  <Tab title="Linting">
+    Check code style:
+    ```bash
+    npm run lint
+    ```
+    
+    All PRs must pass CI checks which include linting.
+  </Tab>
+  
+  <Tab title="Formatting">
+    Format code automatically:
+    ```bash
+    npm run format:fix
+    ```
+    
+    This uses Biome to format your code according to project standards.
+  </Tab>
+  
+  <Tab title="Type Safety">
+    Ensure type safety:
+    ```bash
+    npm run check-types
+    ```
+    
+    Follow TypeScript best practices and maintain type safety.
+  </Tab>
+</Tabs>
+
+### 3. Testing
+
+<AccordionGroup>
+  <Accordion title="Add tests for new features">
+    Every new feature should include appropriate tests:
+    - Unit tests for individual functions
+    - Integration tests for component interactions
+    - E2E tests for user-facing features
+  </Accordion>
+  
+  <Accordion title="Run tests before submitting">
+    Ensure all tests pass:
+    ```bash
+    npm run test
+    ```
+  </Accordion>
+  
+  <Accordion title="Update existing tests">
+    If your changes affect existing functionality, update the relevant tests.
+  </Accordion>
+</AccordionGroup>
+
+See the [Testing Guide](/contributing/testing) for detailed information.
+
+### 4. Version Management with Changesets
+
+Create a changeset for any user-facing changes:
+
+<Steps>
+  <Step title="Generate a changeset">
+    ```bash
+    npm run changeset
+    ```
+  </Step>
+  
+  <Step title="Choose the version bump">
+    Select the appropriate version bump:
+    - `major` → breaking changes (1.0.0 → 2.0.0)
+    - `minor` → new features (1.0.0 → 1.1.0)
+    - `patch` → bug fixes (1.0.0 → 1.0.1)
+  </Step>
+  
+  <Step title="Write a clear message">
+    Write clear, descriptive changeset messages that explain the impact to users.
+  </Step>
+  
+  <Step title="Commit the changeset file">
+    Commit the generated `.changeset` file along with your changes.
+  </Step>
+</Steps>
+
+<Note>
+Documentation-only changes don't require changesets.
+</Note>
+
+### 5. Commit Guidelines
+
+- Write clear, descriptive commit messages
+- Use conventional commit format:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation
+  - `refactor:` for refactoring
+  - `test:` for test changes
+  - `chore:` for maintenance tasks
+- Reference relevant issues using `#issue-number`
+
+Example:
+```
+feat: add support for custom embedding models
+
+Implements custom embedding model configuration in settings.
+Closes #123
+```
+
+### 6. Before Submitting
+
+<Checklist>
+  <Check>Rebase your branch on the latest main</Check>
+  <Check>Ensure your branch builds successfully</Check>
+  <Check>All tests are passing</Check>
+  <Check>Code is formatted: `npm run format:fix`</Check>
+  <Check>Changeset created (if needed)</Check>
+  <Check>Remove any debugging code or console logs</Check>
+  <Check>Update documentation if needed</Check>
+</Checklist>
+
+### 7. Pull Request Description
+
+Your PR description should:
+
+- Clearly describe what your changes do
+- Include steps to test the changes
+- List any breaking changes
+- Add screenshots for UI changes
+- Reference the related issue(s)
+
+Example PR template:
+```markdown
+## Description
+Brief description of what this PR does.
+
+## Related Issue
+Closes #123
+
+## Changes
+- Added feature X
+- Fixed bug Y
+- Updated documentation Z
+
+## Testing
+1. Step one to test
+2. Step two to test
+3. Expected result
+
+## Screenshots (if applicable)
+[Add screenshots here]
+
+## Breaking Changes
+- List any breaking changes
+```
+
+## Creating a Pull Request
+
+<Steps>
+  <Step title="Generate a changeset">
+    Before creating a PR, generate a changeset entry:
+    ```bash
+    npm run changeset
+    ```
+  </Step>
+  
+  <Step title="Commit your changes">
+    Commit your changes and the generated `.changeset` file:
+    ```bash
+    git add .
+    git commit -m "feat: your feature description"
+    ```
+  </Step>
+  
+  <Step title="Push and create PR">
+    Push your branch and create a PR on GitHub:
+    ```bash
+    git push origin your-branch-name
+    ```
+    
+    Our CI will:
+    - Run tests and checks
+    - Changesetbot will create a comment showing the version impact
+    - When merged to main, changesetbot will create a Version Packages PR
+    - When the Version Packages PR is merged, a new release will be published
+  </Step>
+</Steps>
+
+## Code Style Guidelines
+
+### TypeScript
+
+- Use TypeScript strict mode
+- Prefer interfaces over types for object shapes
+- Use meaningful variable and function names
+- Add JSDoc comments for public APIs
+- Avoid `any` - use proper types or `unknown`
+
+### React Components
+
+- Use functional components with hooks
+- Keep components small and focused
+- Extract reusable logic into custom hooks
+- Use TypeScript for prop types
+
+### File Organization
+
+- One component per file
+- Co-locate tests with source files
+- Use index files for cleaner imports
+- Group related files in directories
+
+## Documentation
+
+### Code Comments
+
+- Write self-documenting code when possible
+- Add comments for complex logic
+- Use JSDoc for public APIs
+- Explain the "why" not the "what"
+
+### Documentation Updates
+
+If your changes affect user-facing features:
+
+- Update relevant documentation in `/docs`
+- Add examples where helpful
+- Update screenshots if UI changed
+- Consider adding a how-to guide
+
+## Review Process
+
+### What to Expect
+
+1. **Automated checks**: CI will run tests, linting, and type checking
+2. **Changeset validation**: Changesetbot comments on version impact
+3. **Code review**: Maintainers will review your code
+4. **Feedback**: You may receive requests for changes
+5. **Approval**: Once approved, your PR will be merged
+
+### Responding to Feedback
+
+- Be responsive to review comments
+- Ask questions if feedback is unclear
+- Make requested changes in new commits
+- Mark conversations as resolved when addressed
+- Be patient and respectful
+
+## Linux-Specific Development
+
+If you're developing on Linux, you'll need additional system libraries for running tests. See the [Setup Guide](/contributing/setup#linux-specific-setup) for details.
+
+## Getting Help
+
+If you need help:
+
+- Check existing [documentation](https://github.com/presidio-oss/hai-build-codegen/tree/main/docs)
+- Search [existing issues](https://github.com/presidio-oss/hai-build-codegen/issues)
+- Ask in [discussions](https://github.com/presidio-oss/hai-build-codegen/discussions)
+- Reach out to maintainers in your PR
+
+## Recognition
+
+All contributors are recognized in:
+- The project's README
+- Release notes (via changesets)
+- GitHub's contributor graph
+
+Thank you for contributing to HAI Build Code Generator!
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing Guide" icon="vial" href="/contributing/testing">
+    Learn how to test your changes
+  </Card>
+  <Card title="Code of Conduct" icon="handshake" href="/contributing/code-of-conduct">
+    Read our code of conduct
+  </Card>
+</CardGroup>

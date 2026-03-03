@@ -1,80 +1,561 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Get productive with HAI Build Code Generator in minutes - from your first task to advanced workflows
 ---
 
-## Get started in three steps
+## Your First 5 Minutes with HAI Build
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+This guide will take you from installation to successfully completing your first AI-assisted development task.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+Before you begin, ensure you've [installed HAI Build](/installation) and configured at least one LLM provider.
+</Note>
+
+## Understanding HAI Build's Workflow
+
+HAI Build operates differently from autocomplete tools. Here's how it works:
+
+<Steps>
+  <Step title="Analyze">
+    You describe what you want to achieve. HAI analyzes your request and explores your codebase
+  </Step>
+  <Step title="Plan">
+    HAI presents a clear plan outlining what it will do and why
+  </Step>
+  <Step title="Review">
+    You review the plan and proposed changes before anything is applied
+  </Step>
+  <Step title="Execute">
+    Upon approval, HAI executes the plan and modifies your code
+  </Step>
+</Steps>
+
+<Tip>
+You maintain full control at every step. HAI never makes changes without your explicit approval.
+</Tip>
+
+## Task 1: Analyze Your Project Structure
+
+Let's start with something simple to understand how HAI explores and understands codebases.
+
+<Steps>
+  <Step title="Open Your Project">
+    Open a workspace or folder in VS Code that contains code you want to work with
+  </Step>
+  <Step title="Open HAI Build">
+    Click the HAI icon in the activity bar or press `Ctrl+'` (Windows/Linux) or `Cmd+'` (macOS)
+  </Step>
+  <Step title="Start a New Task">
+    Click the `+` (New Task) button in the HAI sidebar
+  </Step>
+  <Step title="Ask About Your Project">
+    Type: "Analyze the structure of this project and explain the main components"
+  </Step>
+</Steps>
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://storage.googleapis.com/cline_public_images/docs/assets/cline-reading-codebase-hifi-2_compress.webp" alt="HAI Analyzing Codebase" />
+</div>
+
+### What to Observe
+
+Watch how HAI:
+
+- **Reads files**: You'll see HAI exploring your codebase in the activity feed
+- **Builds context**: HAI identifies key files, dependencies, and architecture patterns
+- **Asks questions**: If anything is unclear, HAI will ask for clarification
+- **Provides analysis**: You receive a structured explanation of your project
+
+<Note>
+HAI's initial exploration helps it understand your codebase structure. This context improves all subsequent tasks.
+</Note>
+
+## Task 2: Generate Code with Context
+
+Now let's have HAI write some code based on your project's patterns.
+
+<Steps>
+  <Step title="Start a New Task">
+    Click the `+` button to begin a fresh task
+  </Step>
+  <Step title="Describe Your Goal">
+    Be specific about what you want. For example:
+    
+    "Create a new utility function called `formatUserData` that takes a user object and returns a formatted string with the user's full name and email. Follow the existing code style in this project."
+  </Step>
+  <Step title="Review the Plan">
+    HAI will present a plan showing:
+    - Which files it will create or modify
+    - What the implementation will look like
+    - Why it chose this approach
+  </Step>
+  <Step title="Approve or Request Changes">
+    - Type "Yes" or "Approve" to proceed
+    - Or ask HAI to adjust the approach: "Can you add input validation?"
+  </Step>
+</Steps>
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://storage.googleapis.com/cline_public_images/docs/assets/cline-plan-hifi-1_compress.webp" alt="HAI Planning" />
+</div>
+
+### Understanding the Diff View
+
+When HAI proposes changes, you'll see:
+
+<CodeGroup>
+
+```typescript Before (Red)
+// Current code
+export function getUserName(user) {
+  return user.name;
+}
+```
+
+```typescript After (Green)
+// Proposed code with additions
+export function getUserName(user) {
+  return user.name;
+}
+
+export function formatUserData(user) {
+  if (!user || !user.name || !user.email) {
+    throw new Error('Invalid user object');
+  }
+  return `${user.name} <${user.email}>`;
+}
+```
+
+</CodeGroup>
+
+- **Red lines**: Code being removed
+- **Green lines**: Code being added
+- **White lines**: Unchanged context
+
+<Warning>
+Always review diffs carefully before approving. While HAI is intelligent, you're the final decision-maker for your codebase.
+</Warning>
+
+## Task 3: Refactor Existing Code
+
+Let's improve existing code while maintaining functionality.
+
+<Steps>
+  <Step title="Select Code to Refactor">
+    Highlight a function or section of code in your editor
+  </Step>
+  <Step title="Add to HAI">
+    Right-click and select **"Add to HAI"** or press `Ctrl+'` / `Cmd+'` with text selected
+  </Step>
+  <Step title="Request Improvement">
+    HAI will include the selected code in context. Request specific improvements:
+    
+    "Refactor this function to be more readable and add TypeScript types. Also add error handling for edge cases."
+  </Step>
+  <Step title="Review Suggestions">
+    HAI will show the refactored version with explanations of changes
+  </Step>
+</Steps>
+
+### Alternative: Use Context Menu
+
+For common operations, use the context menu shortcuts:
+
+<CodeGroup>
+
+```bash Context Menu Options
+# Right-click selected code
+Add to HAI          - Include code in conversation
+Explain with HAI    - Get detailed explanation
+Improve with HAI    - Request improvements
+```
+
+</CodeGroup>
+
+## Task 4: Work with HAI Tasks Integration
+
+If you're using [Specif AI](https://github.com/presidio-oss/specif-ai) for task generation:
+
+<Steps>
+  <Step title="Load Tasks">
+    Click the checklist icon in the HAI sidebar to open HAI Tasks
+  </Step>
+  <Step title="Import from Specif AI">
+    Load AI-generated user stories and tasks directly into HAI
+  </Step>
+  <Step title="View Task Details">
+    Click the eye icon next to any task to see:
+    - Task description and objectives
+    - Prerequisites and dependencies
+    - Expected outcomes
+  </Step>
+  <Step title="Execute Task">
+    Click **Execute** to have HAI begin working on the task automatically
+  </Step>
+</Steps>
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/gifs/hai-detailed-view.gif" alt="HAI Tasks Detailed View" />
+</div>
+
+<Tip>
+HAI Tasks streamlines your workflow by centralizing AI-driven tasks from ideation to execution.
+</Tip>
+
+## Advanced Workflows
+
+### Using Domain Experts
+
+Customize HAI's behavior with domain-specific experts:
+
+<Steps>
+  <Step title="Access Experts">
+    Navigate to Settings > Experts in the HAI sidebar
+  </Step>
+  <Step title="Choose Built-in Expert">
+    Select from .NET, Terraform, Node.js, or Go experts for predefined best practices
+  </Step>
+  <Step title="Create Custom Expert">
+    Define your own guidelines and attach reference documentation:
+    
+    - Expert name (required)
+    - Custom guidelines in `prompt.md` (required)
+    - Up to 3 reference document links (optional)
+  </Step>
+  <Step title="Use in Tasks">
+    When starting a task, HAI will apply the selected expert's context and guidelines
+  </Step>
+</Steps>
+
+<Note>
+Custom experts are stored in `.hai-experts/[expert-name]/` with `metadata.json` and `prompt.md`. Reference documents are processed into the `docs/` subfolder.
+</Note>
+
+### Git Integration
+
+Let HAI help with version control:
+
+<Steps>
+  <Step title="Stage Your Changes">
+    Use Git to stage files as usual (`git add` or VS Code source control)
+  </Step>
+  <Step title="Generate Commit Message">
+    Click the HAI icon in the Source Control title bar, or use Command Palette:
+    
+    `HAI: Generate Commit Message with HAI`
+  </Step>
+  <Step title="Review Generated Message">
+    HAI analyzes your staged changes and generates a meaningful commit message
+  </Step>
+  <Step title="Edit and Commit">
+    Edit the message if needed, then commit as normal
+  </Step>
+</Steps>
+
+<CodeGroup>
+
+```bash Example Generated Commit
+feat: Add user data formatting utility
+
+- Implement formatUserData function with email and name formatting
+- Add input validation for user objects
+- Follow existing project code style conventions
+- Include TypeScript types for type safety
+```
+
+</CodeGroup>
+
+### MCP Server Integration
+
+Extend HAI's capabilities with Model Context Protocol servers:
+
+<Steps>
+  <Step title="Open MCP Marketplace">
+    Click the server icon in HAI sidebar navigation
+  </Step>
+  <Step title="Browse Available Servers">
+    Explore integrations for:
+    - Database connections (PostgreSQL, MongoDB, etc.)
+    - External APIs (GitHub, Slack, etc.)
+    - Development tools (Docker, Kubernetes, etc.)
+  </Step>
+  <Step title="Install and Configure">
+    Install desired servers and provide configuration (connection strings, API keys)
+  </Step>
+  <Step title="Use in Tasks">
+    HAI can now interact with these systems. For example:
+    
+    "Query the users table in my PostgreSQL database and create a report of active users"
+  </Step>
+</Steps>
+
+### Jupyter Notebook Support
+
+For data science and ML workflows:
+
+<CodeGroup>
+
+```bash Jupyter Commands
+# From notebook toolbar
+Generate Jupyter Cell with HAI  - Create new cell with AI
+
+# From cell context menu
+Explain Jupyter Cell with HAI   - Get cell explanation
+Improve Jupyter Cell with HAI   - Optimize cell code
+```
+
+</CodeGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Be Specific" icon="bullseye">
+    Provide clear, detailed descriptions of what you want to achieve. Include context about your project's architecture and constraints.
+  </Card>
+  <Card title="Review Everything" icon="eye">
+    Always review proposed changes before approval. HAI is intelligent but you know your codebase best.
+  </Card>
+  <Card title="Iterate Freely" icon="arrows-rotate">
+    If HAI's first approach isn't quite right, ask for adjustments. The conversation is iterative.
+  </Card>
+  <Card title="Leverage Context" icon="layer-group">
+    Use "Add to HAI" to include relevant code. More context leads to better results.
+  </Card>
+</CardGroup>
+
+### Effective Prompting Examples
+
+<CodeGroup>
+
+```text Good Prompts
+"Create a REST API endpoint for user registration that follows 
+the existing authentication pattern in auth.service.ts. Include 
+input validation, password hashing, and proper error handling."
+
+"Refactor the PaymentProcessor class to use dependency injection 
+and follow SOLID principles. Maintain backward compatibility with 
+existing code."
+
+"Add comprehensive unit tests for the UserService class, covering 
+happy paths and error cases. Use the testing patterns from existing 
+test files."
+```
+
+```text Avoid These Prompts
+"Make this better"  # Too vague
+
+"Fix the bug"  # No context about which bug
+
+"Add tests"  # Not specific about what to test
+
+"Refactor"  # No guidance on goals or constraints
+```
+
+</CodeGroup>
+
+<Tip>
+The more context and specificity you provide, the better HAI can understand your needs and generate appropriate solutions.
+</Tip>
+
+## Managing HAI's Activity
+
+### Task History
+
+View and restore previous conversations:
+
+<Steps>
+  <Step title="Open History">
+    Click the history icon (clock) in the HAI sidebar
+  </Step>
+  <Step title="Browse Tasks">
+    See all previous tasks with timestamps and descriptions
+  </Step>
+  <Step title="Resume or Review">
+    Click any task to review the conversation and continue if needed
+  </Step>
+</Steps>
+
+### Checkpoints and Rollback
+
+HAI uses checkpoints to enable easy rollback:
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://storage.googleapis.com/cline_public_images/docs/assets/clines-transparency-hifi-5_compress.webp" alt="HAI Transparency" />
+</div>
+
+- Each approved change creates a checkpoint
+- You can revert to any previous state
+- Full transparency into every file read and modification
+
+## Common Workflows
+
+### Adding a New Feature
+
+<Steps>
+  <Step title="Describe the Feature">
+    "Add a dark mode toggle to the settings page that persists user preference in localStorage"
+  </Step>
+  <Step title="Review Plan">
+    HAI will outline which components to modify and what new code to create
+  </Step>
+  <Step title="Approve Implementation">
+    Review the proposed changes and approve
+  </Step>
+  <Step title="Test and Iterate">
+    Test the feature. If adjustments are needed, ask HAI to refine
+  </Step>
+</Steps>
+
+### Fixing a Bug
+
+<Steps>
+  <Step title="Describe the Bug">
+    Include:
+    - What's happening (unexpected behavior)
+    - What should happen (expected behavior)
+    - Steps to reproduce
+    - Any error messages
+  </Step>
+  <Step title="Help HAI Investigate">
+    Add relevant code to context using "Add to HAI"
+  </Step>
+  <Step title="Review Proposed Fix">
+    HAI will identify the root cause and propose a solution
+  </Step>
+  <Step title="Verify Fix">
+    Test the fix and confirm it resolves the issue
+  </Step>
+</Steps>
+
+### Writing Documentation
+
+<Steps>
+  <Step title="Select Code">
+    Highlight a function, class, or module
+  </Step>
+  <Step title="Request Documentation">
+    "Add JSDoc comments to this function with parameter descriptions, return value, and usage examples"
+  </Step>
+  <Step title="Review and Approve">
+    Verify the documentation is accurate and complete
+  </Step>
+</Steps>
+
+## Keyboard Shortcuts Cheat Sheet
+
+<CodeGroup>
+
+```bash Essential Shortcuts
+# Open HAI chat
+Ctrl+' (Windows/Linux) | Cmd+' (macOS)
+
+# Add selected code to HAI
+Select code + Ctrl+' | Cmd+'
+
+# New task
+Click + button in sidebar
+
+# Open settings
+Click gear icon in sidebar
+```
+
+</CodeGroup>
+
+## Troubleshooting Common Issues
+
+### HAI Doesn't Understand Context
+
+<Steps>
+  <Step title="Provide More Information">
+    Use "Add to HAI" to include relevant files and code
+  </Step>
+  <Step title="Be More Specific">
+    Clarify your request with details about architecture and constraints
+  </Step>
+  <Step title="Reference Files">
+    Mention specific files: "Look at user.service.ts for the pattern to follow"
+  </Step>
+</Steps>
+
+### Changes Not Applied as Expected
+
+<Steps>
+  <Step title="Review Diffs Carefully">
+    Ensure you understand what's being changed before approval
+  </Step>
+  <Step title="Request Adjustments">
+    If the approach isn't right, ask HAI to modify: "Can you preserve the existing error handling?"
+  </Step>
+  <Step title="Use Checkpoints">
+    Revert to a previous state if needed
+  </Step>
+</Steps>
+
+### Performance Issues
+
+<Steps>
+  <Step title="Check Model Selection">
+    Faster models like Claude Haiku or GPT-3.5 provide quicker responses
+  </Step>
+  <Step title="Limit Context">
+    For large projects, be selective about which files to include in context
+  </Step>
+  <Step title="Use Targeted Queries">
+    Break large tasks into smaller, focused subtasks
+  </Step>
+</Steps>
+
+## Next Steps
+
+Now that you're productive with HAI Build:
+
+<CardGroup cols={2}>
+  <Card
+    title="Explore Custom Experts"
+    icon="user-gear"
+  >
+    Create domain-specific experts for your team's standards and practices
+  </Card>
+  <Card
+    title="Try MCP Integration"
+    icon="server"
+  >
+    Connect HAI to databases, APIs, and external tools
+  </Card>
+  <Card
+    title="Set Up Telemetry"
+    icon="chart-line"
+  >
+    Monitor AI usage across your team with Langfuse or PostHog
+  </Card>
+  <Card
+    title="Join the Community"
+    icon="users"
+    href="https://github.com/presidio-oss/hai-build-codegen"
+  >
+    Contribute to HAI Build and share your experiences
+  </Card>
+</CardGroup>
+
+## Get Help
+
+<CardGroup cols={2}>
+  <Card title="Documentation" icon="book" href="https://github.com/presidio-oss/hai-build-codegen/wiki">
+    Browse comprehensive guides and references
+  </Card>
+  <Card title="GitHub Issues" icon="bug" href="https://github.com/presidio-oss/hai-build-codegen/issues">
+    Report bugs or request features
+  </Card>
+  <Card title="Discussions" icon="comments" href="https://github.com/presidio-oss/hai-build-codegen/discussions">
+    Ask questions and share ideas
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:hai-feedback@presidio.com">
+    Contact the HAI team directly
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+Remember: HAI Build is designed to assist and enhance your development workflow, not replace your expertise. You're always in control.
 </Note>

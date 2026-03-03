@@ -1,0 +1,332 @@
+---
+title: 'Testing'
+description: 'Learn how to test your changes in HAI Build Code Generator'
+---
+
+## Testing Overview
+
+HAI Build Code Generator uses a comprehensive testing strategy that includes unit tests, integration tests, and end-to-end tests to ensure code quality and reliability.
+
+## Running Tests
+
+### All Tests
+
+Run all tests (unit and integration):
+
+```bash
+npm run test
+```
+
+This command will:
+1. Compile the extension
+2. Compile test files
+3. Run unit tests
+4. Run integration tests
+
+### Unit Tests Only
+
+Run only unit tests:
+
+```bash
+npm run test:unit
+```
+
+### Integration Tests Only
+
+Run only integration tests:
+
+```bash
+npm run test:integration
+```
+
+### Code Coverage
+
+Generate test coverage reports:
+
+```bash
+npm run test:coverage
+```
+
+Coverage reports will be generated in the `coverage/` directory.
+
+## End-to-End (E2E) Testing
+
+HAI includes comprehensive E2E tests using Playwright that simulate real user interactions with the extension in VS Code.
+
+### Running E2E Tests
+
+<Tabs>
+  <Tab title="Full E2E Suite">
+    Build and run all E2E tests:
+    ```bash
+    npm run test:e2e
+    ```
+    
+    This will:
+    - Install Playwright browsers
+    - Build the extension as a .vsix package
+    - Run all E2E tests
+  </Tab>
+  
+  <Tab title="Quick E2E Run">
+    Run tests without rebuilding (if already built):
+    ```bash
+    npm run e2e
+    ```
+  </Tab>
+  
+  <Tab title="Debug Mode">
+    Run with interactive debugger:
+    ```bash
+    npm run test:e2e -- --debug
+    ```
+    
+    Debug mode features:
+    - Interactive Playwright Inspector
+    - Step-by-step debugging
+    - Record new interactions
+    - Visual VS Code instance
+    - Element inspection
+  </Tab>
+  
+  <Tab title="UI Mode">
+    Run with Playwright UI:
+    ```bash
+    npm run test:e2e:ui
+    ```
+  </Tab>
+</Tabs>
+
+### E2E Test Structure
+
+E2E tests are located in `src/test/e2e/` and follow this structure:
+
+```
+src/test/e2e/
+├── auth.test.ts          # Authentication tests
+├── chat.test.ts          # Chat interface tests
+├── diff.test.ts          # Diff viewer tests
+├── editor.test.ts        # Editor integration tests
+├── fixtures/             # Test workspace fixtures
+│   ├── workspace/        # Single-root workspace
+│   └── workspace_2/      # Multi-root workspace
+└── utils/                # Test utilities
+```
+
+### Writing E2E Tests
+
+<Steps>
+  <Step title="Use the e2e fixture">
+    For single-root workspace tests:
+    ```typescript
+    import { test } from './fixtures/e2e'
+
+    test('should perform action', async ({ page, vscode }) => {
+      // Test code
+    })
+    ```
+  </Step>
+  
+  <Step title="Use e2eMultiRoot for multi-root workspaces">
+    For multi-root workspace tests:
+    ```typescript
+    import { test } from './fixtures/e2eMultiRoot'
+
+    test('should work with multi-root', async ({ page, vscode }) => {
+      // Test code
+    })
+    ```
+  </Step>
+  
+  <Step title="Follow existing patterns">
+    Reference these files for examples:
+    - `auth.test.ts` - Authentication flows
+    - `chat.test.ts` - Chat interactions
+    - `diff.test.ts` - Diff operations
+    - `editor.test.ts` - Editor commands
+  </Step>
+  
+  <Step title="Consult the E2E README">
+    See `src/test/e2e/README.md` for detailed documentation on:
+    - Available fixtures
+    - Helper utilities
+    - Best practices
+    - Debugging tips
+  </Step>
+</Steps>
+
+### E2E Test Environment
+
+The E2E test environment includes:
+
+- **Automated VS Code setup** with HAI extension loaded
+- **Mock API server** for backend testing
+- **Temporary workspaces** with test fixtures
+- **Video recording** for failed tests
+- **Screenshot capture** on failures
+
+## Webview Tests
+
+Test the React-based webview UI:
+
+```bash
+npm run test:webview
+```
+
+## Writing Tests
+
+### Unit Tests
+
+Unit tests should:
+- Test individual functions and components in isolation
+- Use mocks for external dependencies
+- Be fast and deterministic
+- Follow the Arrange-Act-Assert pattern
+
+Example:
+```typescript
+import { expect } from 'chai'
+import { myFunction } from '../myFunction'
+
+describe('myFunction', () => {
+  it('should return expected value', () => {
+    // Arrange
+    const input = 'test'
+    
+    // Act
+    const result = myFunction(input)
+    
+    // Assert
+    expect(result).to.equal('expected')
+  })
+})
+```
+
+### Integration Tests
+
+Integration tests should:
+- Test component interactions
+- Use the VS Code test environment
+- Verify file operations and API calls
+- Test against real (or mocked) VS Code APIs
+
+### E2E Tests Best Practices
+
+<AccordionGroup>
+  <Accordion title="Wait for elements properly">
+    Use Playwright's auto-waiting instead of fixed timeouts:
+    ```typescript
+    // Good
+    await page.getByRole('button', { name: 'Submit' }).click()
+    
+    // Avoid
+    await page.waitForTimeout(1000)
+    await page.click('button')
+    ```
+  </Accordion>
+  
+  <Accordion title="Use semantic selectors">
+    Prefer accessible selectors over CSS:
+    ```typescript
+    // Good
+    await page.getByRole('button', { name: 'Submit' })
+    await page.getByLabel('Email')
+    
+    // Avoid
+    await page.locator('.submit-btn')
+    await page.locator('#email-input')
+    ```
+  </Accordion>
+  
+  <Accordion title="Keep tests independent">
+    Each test should be able to run in isolation:
+    ```typescript
+    test.beforeEach(async ({ page }) => {
+      // Set up clean state for each test
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Use descriptive test names">
+    Test names should clearly describe what is being tested:
+    ```typescript
+    // Good
+    test('should display error message when API key is invalid')
+    
+    // Avoid
+    test('test API key')
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Test Requirements
+
+<Warning>
+Before submitting a PR:
+
+1. Add tests for new features
+2. Update existing tests if your changes affect them
+3. Ensure all tests pass: `npm run test`
+4. Include both unit tests and integration tests where appropriate
+5. For UI changes, consider adding E2E tests
+</Warning>
+
+## Continuous Integration
+
+All tests run automatically in CI when you:
+- Push commits to your branch
+- Create or update a pull request
+- Merge to the main branch
+
+CI checks include:
+- Type checking (`npm run check-types`)
+- Linting (`npm run lint`)
+- Code formatting (`npm run format`)
+- Unit tests
+- Integration tests
+- E2E tests (on main branch)
+
+## Debugging Tests
+
+### Debug Unit/Integration Tests
+
+1. Set breakpoints in your test files
+2. Open the Run and Debug panel in VS Code
+3. Select the appropriate debug configuration
+4. Press F5 to start debugging
+
+### Debug E2E Tests
+
+Use Playwright's debug mode:
+
+```bash
+npm run test:e2e -- --debug
+```
+
+This opens the Playwright Inspector where you can:
+- Step through test execution
+- Inspect the DOM
+- View network requests
+- Generate new test code
+- Record user interactions
+
+## Mock API Server
+
+For E2E tests, a mock API server is available to simulate backend responses without making real API calls.
+
+To run the standalone test server:
+
+```bash
+npm run test:sca-server
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guidelines" icon="book" href="/contributing/guidelines">
+    Review the full contributing guidelines
+  </Card>
+  <Card title="Code of Conduct" icon="handshake" href="/contributing/code-of-conduct">
+    Read our code of conduct
+  </Card>
+</CardGroup>

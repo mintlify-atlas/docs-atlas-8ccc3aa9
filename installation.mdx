@@ -1,0 +1,360 @@
+---
+title: Installation
+description: Install HAI Build Code Generator extension in Visual Studio Code and configure your development environment
+---
+
+## Prerequisites
+
+Before installing HAI Build, ensure you have:
+
+<Steps>
+  <Step title="Visual Studio Code">
+    Download and install [VS Code](https://code.visualstudio.com/) version 1.84.0 or higher
+  </Step>
+  <Step title="API Keys (Optional)">
+    Obtain API keys for your preferred LLM provider:
+    - [Anthropic](https://console.anthropic.com/) (Claude)
+    - [OpenAI](https://platform.openai.com/)
+    - [Google AI Studio](https://aistudio.google.com/) (Gemini)
+    - [OpenRouter](https://openrouter.ai/) (Multiple providers)
+  </Step>
+  <Step title="Git (Recommended)">
+    Install [Git](https://git-scm.com/) for version control integration features
+  </Step>
+</Steps>
+
+<Note>
+You can start using HAI Build without API keys by configuring them later. The extension will prompt you when needed.
+</Note>
+
+## Install from VS Code Marketplace
+
+The easiest way to install HAI Build is directly from the VS Code Extensions marketplace:
+
+<Steps>
+  <Step title="Open VS Code Extensions">
+    Press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS) to open the Extensions view
+  </Step>
+  <Step title="Search for HAI Build">
+    Type **"HAI Build"** in the search bar
+  </Step>
+  <Step title="Install the Extension">
+    Click the **Install** button next to "HAI Build Code Generator" by Presidio
+  </Step>
+  <Step title="Verify Installation">
+    Look for the HAI icon in the VS Code activity bar (left sidebar)
+  </Step>
+</Steps>
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/gifs/install-hai-build.gif" alt="HAI Build Installation" />
+</div>
+
+## Alternative Installation Methods
+
+### Install via Command Palette
+
+<CodeGroup>
+
+```bash Command Palette
+# 1. Open Command Palette
+Ctrl+Shift+P (Windows/Linux)
+Cmd+Shift+P (macOS)
+
+# 2. Type: Extensions: Install Extensions
+# 3. Search for "HAI Build"
+# 4. Click Install
+```
+
+</CodeGroup>
+
+### Install from VSIX File
+
+For offline installation or testing pre-release versions:
+
+<Steps>
+  <Step title="Download VSIX">
+    Download the `.vsix` file from [GitHub Releases](https://github.com/presidio-oss/hai-build-codegen/releases)
+  </Step>
+  <Step title="Install from VSIX">
+    Open Command Palette and run: `Extensions: Install from VSIX...`
+  </Step>
+  <Step title="Select File">
+    Browse to your downloaded `.vsix` file and select it
+  </Step>
+  <Step title="Reload VS Code">
+    Reload VS Code when prompted to activate the extension
+  </Step>
+</Steps>
+
+<Warning>
+When installing from VSIX files, you won't receive automatic updates. Check GitHub releases manually for new versions.
+</Warning>
+
+## Post-Installation Setup
+
+After installing HAI Build, complete these configuration steps:
+
+### 1. Open HAI Build Interface
+
+Click the HAI icon in the activity bar or press `Ctrl+'` (Windows/Linux) or `Cmd+'` (macOS)
+
+<div style={{marginTop: '20px', marginBottom: '20px'}}>
+  <img src="https://raw.githubusercontent.com/presidio-oss/hai-build-codegen/main/assets/img/hai-home.png" alt="HAI Home Interface" />
+</div>
+
+### 2. Configure Your LLM Provider
+
+<Steps>
+  <Step title="Open Settings">
+    Click the settings gear icon in the HAI sidebar or use the **Settings** button
+  </Step>
+  <Step title="Select Provider">
+    Choose your preferred LLM provider from the dropdown:
+    - Anthropic (Claude Sonnet, Opus, Haiku)
+    - OpenAI (GPT-4, GPT-3.5)
+    - Google (Gemini Pro, Ultra)
+    - OpenRouter (Access to multiple providers)
+    - Ollama (Local models)
+    - AWS Bedrock, Azure, Vertex AI
+  </Step>
+  <Step title="Enter API Key">
+    Paste your API key in the configuration field
+  </Step>
+  <Step title="Select Model">
+    Choose the specific model you want to use (e.g., `claude-sonnet-4.5`)
+  </Step>
+</Steps>
+
+<Tip>
+Start with Claude Sonnet 3.5 or GPT-4 for the best balance of capability and cost. You can switch models anytime.
+</Tip>
+
+### 3. Configure Optional Features
+
+#### Telemetry Settings
+
+For teams wanting to track AI usage and metrics:
+
+<CodeGroup>
+
+```properties .hai.config
+# Langfuse Configuration
+langfuse.apiUrl=https://your-langfuse-instance.com
+langfuse.apiKey=your-api-key
+langfuse.publicKey=your-public-key
+
+# PostHog Configuration
+posthog.url=https://app.posthog.com
+posthog.apiKey=your-posthog-key
+```
+
+</CodeGroup>
+
+Place this `.hai.config` file at your workspace root.
+
+<Warning>
+The `.hai.config` file is not git-excluded by default. Avoid committing sensitive API keys to version control.
+</Warning>
+
+#### MCP Servers
+
+Extend HAI with Model Context Protocol servers:
+
+<Steps>
+  <Step title="Click MCP Icon">
+    Click the server icon in the HAI sidebar navigation
+  </Step>
+  <Step title="Browse Marketplace">
+    Explore available MCP servers for databases, APIs, and tools
+  </Step>
+  <Step title="Install Servers">
+    Click install on servers you want to use with HAI
+  </Step>
+  <Step title="Configure">
+    Provide any required configuration (connection strings, API keys, etc.)
+  </Step>
+</Steps>
+
+### 4. Complete the Walkthrough
+
+HAI Build includes an interactive walkthrough to help you learn key features:
+
+<CodeGroup>
+
+```bash Command Palette
+# Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
+# Type: HAI: Open Walkthrough
+# Follow the 5-step guided tour
+```
+
+</CodeGroup>
+
+The walkthrough covers:
+
+1. **Goal-oriented prompting** - How to communicate effectively with HAI
+2. **Codebase learning** - Letting HAI understand your project structure
+3. **Model selection** - Choosing the right AI models for your needs
+4. **MCP tools** - Extending capabilities with external integrations
+5. **Control & approval** - Reviewing and managing AI-generated changes
+
+## Verify Your Installation
+
+Confirm everything is working correctly:
+
+<Steps>
+  <Step title="Open a Project">
+    Open a workspace or folder in VS Code
+  </Step>
+  <Step title="Start a New Task">
+    Click the `+` (New Task) button in the HAI sidebar
+  </Step>
+  <Step title="Test Simple Query">
+    Ask HAI a simple question about your code: "Explain the structure of this project"
+  </Step>
+  <Step title="Review Response">
+    Verify that HAI analyzes your codebase and provides a thoughtful response
+  </Step>
+</Steps>
+
+<Note>
+If HAI doesn't respond, check that:
+- Your API key is correctly configured
+- You have internet connectivity
+- Your selected model is available (check provider status pages)
+</Note>
+
+## Keyboard Shortcuts Reference
+
+Memoize these shortcuts for efficient workflow:
+
+<CodeGroup>
+
+```bash Windows/Linux
+# Focus HAI chat input
+Ctrl+'
+
+# Add selected code to HAI
+Ctrl+' (with text selected)
+
+# Open Extensions
+Ctrl+Shift+X
+
+# Open Command Palette
+Ctrl+Shift+P
+```
+
+```bash macOS
+# Focus HAI chat input
+Cmd+'
+
+# Add selected code to HAI
+Cmd+' (with text selected)
+
+# Open Extensions
+Cmd+Shift+X
+
+# Open Command Palette
+Cmd+Shift+P
+```
+
+</CodeGroup>
+
+## Troubleshooting
+
+### Extension Not Appearing
+
+<Steps>
+  <Step title="Reload VS Code">
+    Press `Ctrl+Shift+P` / `Cmd+Shift+P` and run: `Developer: Reload Window`
+  </Step>
+  <Step title="Check Installation">
+    Go to Extensions view and verify HAI Build is installed and enabled
+  </Step>
+  <Step title="Check VS Code Version">
+    Ensure you're running VS Code 1.84.0 or higher
+  </Step>
+</Steps>
+
+### API Key Issues
+
+<Steps>
+  <Step title="Verify Key Format">
+    Ensure your API key has no extra spaces or line breaks
+  </Step>
+  <Step title="Check Provider Status">
+    Visit your LLM provider's status page to verify service availability
+  </Step>
+  <Step title="Test Key">
+    Use the provider's playground or API to verify the key works
+  </Step>
+  <Step title="Review Quotas">
+    Check that you haven't exceeded API rate limits or quotas
+  </Step>
+</Steps>
+
+### Performance Issues on Linux
+
+Linux users may need additional system libraries:
+
+<CodeGroup>
+
+```bash Ubuntu/Debian
+sudo apt update
+sudo apt install -y \
+  dbus \
+  libasound2 \
+  libatk-bridge2.0-0 \
+  libatk1.0-0 \
+  libdrm2 \
+  libgbm1 \
+  libgtk-3-0 \
+  libnss3 \
+  libx11-xcb1 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxkbfile1 \
+  libxrandr2 \
+  xvfb
+```
+
+</CodeGroup>
+
+## Next Steps
+
+Now that HAI Build is installed and configured:
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start Guide"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Learn how to use HAI Build for your first task
+  </Card>
+  <Card
+    title="GitHub Repository"
+    icon="github"
+    href="https://github.com/presidio-oss/hai-build-codegen"
+  >
+    Explore source code and contribute
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card title="Report an Issue" icon="bug" href="https://github.com/presidio-oss/hai-build-codegen/issues">
+    Found a bug? Let us know on GitHub
+  </Card>
+  <Card title="Request a Feature" icon="lightbulb" href="https://github.com/presidio-oss/hai-build-codegen/discussions">
+    Have an idea? Share it in Discussions
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:hai-feedback@presidio.com">
+    Get help from the HAI team
+  </Card>
+  <Card title="Documentation" icon="book" href="https://github.com/presidio-oss/hai-build-codegen/wiki">
+    Browse comprehensive guides
+  </Card>
+</CardGroup>

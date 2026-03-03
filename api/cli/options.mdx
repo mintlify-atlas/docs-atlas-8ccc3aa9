@@ -1,0 +1,453 @@
+---
+title: 'CLI Options'
+description: 'Global options and configuration flags for Cline CLI'
+---
+
+## Global Options
+
+These options are available across all Cline CLI commands.
+
+### Mode Options
+
+<ParamField path="--act" type="boolean">
+  **Description:** Run in Act mode (default)
+  
+  **Behavior:** Cline actively uses tools to accomplish tasks - reading files, writing code, executing commands, and using a headless browser.
+  
+  **Example:**
+  ```bash
+  cline --act "Add unit tests to the authentication module"
+  ```
+</ParamField>
+
+<ParamField path="--plan" type="boolean">
+  **Description:** Run in Plan mode
+  
+  **Behavior:** Cline gathers information and creates a detailed plan before implementation. He explores the codebase, asks clarifying questions, and presents a strategy for approval.
+  
+  **Example:**
+  ```bash
+  cline --plan "Design a REST API for user management"
+  ```
+</ParamField>
+
+<ParamField path="--yolo" type="boolean">
+  **Description:** Enable yolo/yes mode (auto-approve all actions)
+  
+  **Behavior:** 
+  - Automatically approves all actions without user confirmation
+  - Forces plain text output mode (no interactive UI)
+  - Exits process automatically when task completes
+  - Useful for automation, CI/CD, and scripting
+  
+  **Example:**
+  ```bash
+  cline --yolo "Run the test suite and fix any failures"
+  ```
+  
+  <Warning>
+    Yolo mode bypasses safety confirmations. Only use in controlled environments where you trust Cline to make changes autonomously.
+  </Warning>
+</ParamField>
+
+### Model Configuration
+
+<ParamField path="--model" type="string">
+  **Description:** Specify which AI model to use for the task
+  
+  **Behavior:** Overrides the configured model for this session only. The setting is not persisted.
+  
+  **Supported Models:**
+  - Anthropic: `claude-sonnet-4-5-20250929`, `claude-opus-4-20250514`
+  - OpenAI: `gpt-4o`, `gpt-4-turbo`, `o1`, `o1-mini`
+  - Moonshot: `kimi-k2.5`, `kimi-k1.5`
+  - Google: `gemini-2.0-flash-exp`, `gemini-1.5-pro`
+  - And more (depends on your provider)
+  
+  **Example:**
+  ```bash
+  cline --model claude-sonnet-4-5-20250929 "Refactor this module"
+  cline --model gpt-4o "Write documentation"
+  ```
+</ParamField>
+
+<ParamField path="--thinking" type="boolean | number">
+  **Description:** Enable extended thinking with a token budget
+  
+  **Behavior:**
+  - Without value: Uses default 1024 token budget
+  - With value: Uses specified token budget
+  - Allows the model to "think" more deeply about complex problems
+  - Useful for architecture decisions, complex debugging, and system design
+  
+  **Example:**
+  ```bash
+  # Default 1024 tokens
+  cline --thinking "Architect a microservices system"
+  
+  # Custom token budget
+  cline --thinking 2048 "Design a distributed cache"
+  ```
+</ParamField>
+
+<ParamField path="--reasoning-effort" type="string">
+  **Description:** Set the reasoning effort level for the model
+  
+  **Valid Values:** `none`, `low`, `medium`, `high`, `xhigh`
+  
+  **Behavior:** Controls how much computational effort the model puts into reasoning. Higher effort may produce better results but takes longer.
+  
+  **Example:**
+  ```bash
+  cline --reasoning-effort high "Optimize database queries"
+  cline --reasoning-effort low "Fix typo in README"
+  ```
+</ParamField>
+
+### Output Options
+
+<ParamField path="--verbose" type="boolean">
+  **Description:** Show verbose output including reasoning
+  
+  **Behavior:**
+  - Displays detailed reasoning from the AI model
+  - Shows additional debug information
+  - Helpful for understanding decisions and troubleshooting
+  
+  **Example:**
+  ```bash
+  cline --verbose "Analyze this codebase architecture"
+  ```
+</ParamField>
+
+<ParamField path="--json" type="boolean">
+  **Description:** Output messages as JSON instead of styled text
+  
+  **Behavior:**
+  - Forces plain text mode (no Ink UI)
+  - Each message is a JSON object with consistent structure
+  - Suitable for parsing and processing by other tools
+  - Ideal for CI/CD integration and scripting
+  
+  **JSON Structure:**
+  ```json
+  {
+    "type": "say",
+    "text": "I've analyzed the codebase...",
+    "ts": 1704067200000,
+    "reasoning": "First, I need to understand...",
+    "images": [],
+    "files": ["src/index.ts"]
+  }
+  ```
+  
+  **Example:**
+  ```bash
+  cline --json "What files are in this directory?" | jq '.text'
+  ```
+</ParamField>
+
+### Directory Options
+
+<ParamField path="--cwd" type="string">
+  **Description:** Set the working directory for the task
+  
+  **Behavior:** Changes the directory where Cline operates. All file operations are relative to this path.
+  
+  **Example:**
+  ```bash
+  cline --cwd /path/to/project "Add documentation"
+  cline --cwd ~/workspace/frontend "Update React components"
+  ```
+</ParamField>
+
+<ParamField path="--config" type="string">
+  **Description:** Path to Cline configuration directory
+  
+  **Behavior:** Override the default `~/.cline/data/` directory. Useful for managing multiple configurations or using project-specific settings.
+  
+  **Default:** `~/.cline/data/`
+  
+  **Example:**
+  ```bash
+  cline --config ~/.config/cline task "Build a feature"
+  cline --config ./project-cline-config "Run tests"
+  ```
+  
+  <Tip>
+    You can also set the `CLINE_DIR` environment variable instead of using `--config` every time.
+  </Tip>
+</ParamField>
+
+### Safety Options
+
+<ParamField path="--timeout" type="number">
+  **Description:** Timeout in seconds for yolo mode
+  
+  **Default:** 600 seconds (10 minutes)
+  
+  **Behavior:** Automatically stops the task after the specified duration in yolo mode. Prevents runaway processes.
+  
+  **Example:**
+  ```bash
+  cline --yolo --timeout 300 "Quick refactor"
+  ```
+</ParamField>
+
+<ParamField path="--max-consecutive-mistakes" type="number">
+  **Description:** Maximum consecutive mistakes before halting in yolo mode
+  
+  **Behavior:** Safety mechanism that stops execution if Cline makes too many errors in a row. Helps prevent damage in automated workflows.
+  
+  **Example:**
+  ```bash
+  cline --yolo --max-consecutive-mistakes 3 "Automated testing"
+  ```
+</ParamField>
+
+<ParamField path="--double-check-completion" type="boolean">
+  **Description:** Reject first completion attempt to force re-verification
+  
+  **Behavior:** Forces Cline to review and verify his work before marking a task complete. Improves quality but takes longer.
+  
+  **Example:**
+  ```bash
+  cline --double-check-completion "Critical production deployment"
+  ```
+</ParamField>
+
+### Task Management
+
+<ParamField path="--taskId" type="string">
+  **Description:** Resume an existing task by ID
+  
+  **Behavior:**
+  - Loads previous task context and conversation
+  - Optional prompt becomes a follow-up message
+  - Get task IDs from `cline history`
+  
+  **Example:**
+  ```bash
+  # Resume a task
+  cline --taskId abc123def
+  
+  # Resume with follow-up
+  cline --taskId abc123def "Now add unit tests"
+  
+  # Resume in plan mode
+  cline --taskId abc123def --plan "What's left to do?"
+  ```
+</ParamField>
+
+## Environment Variables
+
+### CLINE_DIR
+
+**Description:** Override the default configuration directory
+
+**Default:** `~/.cline/data/`
+
+**Usage:**
+```bash
+export CLINE_DIR=~/.config/cline
+cline "Build a feature"
+```
+
+### CLINE_COMMAND_PERMISSIONS
+
+**Description:** Restrict which shell commands Cline can execute
+
+**Format:** JSON object with `allow`, `deny`, and `allowRedirects` fields
+
+**Fields:**
+
+<ParamField path="allow" type="array">
+  Glob patterns for allowed commands. If specified, only matching commands are permitted.
+  
+  **Pattern Matching:**
+  - `*` matches any characters
+  - `?` matches a single character
+  - Setting allow on anything will deny all others
+  
+  **Example:**
+  ```bash
+  export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *"]}'
+  ```
+</ParamField>
+
+<ParamField path="deny" type="array">
+  Glob patterns for denied commands. Deny rules take precedence over allow rules.
+  
+  **Example:**
+  ```bash
+  export CLINE_COMMAND_PERMISSIONS='{"deny": ["rm -rf *", "sudo *"]}'
+  ```
+</ParamField>
+
+<ParamField path="allowRedirects" type="boolean">
+  Whether to allow shell redirects (`>`, `>>`, `<`, etc.). Defaults to false.
+  
+  **Example:**
+  ```bash
+  export CLINE_COMMAND_PERMISSIONS='{"allow": ["cat *"], "allowRedirects": true}'
+  ```
+</ParamField>
+
+**Rule Evaluation:**
+
+1. Check for dangerous characters (backticks outside quotes, unquoted newlines)
+2. Parse command into segments split by operators (`&&`, `||`, `|`, `;`)
+3. If redirects detected and `allowRedirects` is not true, command is denied
+4. Each segment is validated against deny rules first, then allow rules
+5. Subshell contents (`$(...)` and `(...)`) are recursively validated
+6. All segments must pass for the command to be allowed
+
+**Examples:**
+
+```bash
+# Allow only npm and git commands
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *"]}'
+
+# Allow development commands but deny dangerous ones
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *", "node *"], "deny": ["rm -rf *", "sudo *"]}'
+
+# Allow file operations with redirects
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["cat *", "echo *"], "allowRedirects": true}'
+
+# Deny only specific dangerous patterns (allow all others)
+export CLINE_COMMAND_PERMISSIONS='{"deny": ["rm -rf /*", "sudo rm *", ":(){ :|:& };:"]}'
+```
+
+## Configuration Files
+
+Cline stores configuration and state in several JSON files:
+
+### globalState.json
+
+**Location:** `~/.cline/data/globalState.json`
+
+**Contains:**
+- Global settings and preferences
+- Task history metadata
+- Mode settings (act/plan)
+- UI preferences
+
+### secrets.json
+
+**Location:** `~/.cline/data/secrets.json`
+
+**Contains:**
+- API keys and credentials (stored securely)
+- OAuth tokens
+- Provider authentication details
+
+<Warning>
+  Never commit `secrets.json` to version control or share it publicly.
+</Warning>
+
+### workspace/
+
+**Location:** `~/.cline/data/workspace/`
+
+**Contains:**
+- Workspace-specific state and settings
+- Per-project configurations
+
+### tasks/
+
+**Location:** `~/.cline/data/tasks/`
+
+**Contains:**
+- Task history and conversation data
+- Previous task contexts
+- Message logs
+
+## Debugging
+
+### Log Files
+
+**Location:** `~/.cline/log/`
+
+**View Logs:**
+```bash
+cline dev log
+```
+
+**Log Contents:**
+- API request/response logs
+- Error stack traces
+- State changes
+- Command executions
+
+### Verbose Mode
+
+Enable verbose output to see detailed reasoning:
+
+```bash
+cline --verbose "Debug this error"
+```
+
+### JSON Mode for Debugging
+
+Use JSON output to inspect message structure:
+
+```bash
+cline --json "Test command" | jq .
+```
+
+## Best Practices
+
+### For Development
+
+```bash
+# Use verbose mode to understand decisions
+cline --verbose --thinking "Complex architectural decision"
+
+# Use plan mode for exploratory tasks
+cline --plan "Understand this legacy codebase"
+
+# Specify working directory for multi-project workflows
+cline --cwd ~/projects/frontend "Update UI components"
+```
+
+### For Automation
+
+```bash
+# Use yolo mode with timeout for safety
+cline --yolo --timeout 300 "Run automated tests"
+
+# Use JSON output for parsing
+cline --json "Generate report" | jq -r '.text' > report.txt
+
+# Set max consecutive mistakes to prevent damage
+cline --yolo --max-consecutive-mistakes 3 "Automated refactoring"
+```
+
+### For CI/CD
+
+```bash
+# Combine with command permissions
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *"]}'
+cline --yolo --json "Run tests and fix failures"
+
+# Use specific models for consistency
+cline --model claude-sonnet-4-5-20250929 --yolo "Update documentation"
+
+# Set working directory explicitly
+cline --cwd $CI_PROJECT_DIR --yolo "Automated code review"
+```
+
+### For Production
+
+```bash
+# Use double-check completion for critical tasks
+cline --double-check-completion "Deploy to production"
+
+# Use higher reasoning effort for important decisions
+cline --reasoning-effort high "Security audit"
+
+# Review plans before execution
+cline --plan "Database migration strategy"
+# Then follow up with:
+cline --act "Execute the migration plan"
+```

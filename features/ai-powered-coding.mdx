@@ -1,0 +1,293 @@
+---
+title: "AI-Powered Coding"
+description: "Leverage advanced LLM integration for intelligent code generation, editing, and development workflows in HAI Build Code Generator."
+---
+
+HAI Build Code Generator harnesses cutting-edge AI capabilities to transform how you write, edit, and manage code. Built on [Cline](https://github.com/cline/cline)'s powerful foundation, it integrates with multiple LLM providers to deliver context-aware, intelligent code generation and editing.
+
+<Frame>
+  <img src="/images/ai-coding-demo.gif" alt="AI-powered coding in action" />
+</Frame>
+
+## How It Works
+
+The AI engine operates through a sophisticated multi-step workflow:
+
+1. **Context Collection**: Gathers workspace files, open tabs, and project structure
+2. **System Prompt Generation**: Constructs detailed instructions based on your task and environment
+3. **LLM Communication**: Sends requests to configured AI models with rich context
+4. **Tool Execution**: Processes model responses and executes file operations, commands, and searches
+5. **Iterative Refinement**: Continues the loop until task completion
+
+## Supported LLM Providers
+
+HAI Build supports a wide range of AI providers for maximum flexibility:
+
+<Tabs>
+  <Tab title="Cloud Providers">
+    - **Anthropic**: Claude 4.5 Sonnet, Claude 3 Opus, Claude Haiku
+    - **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5
+    - **Google**: Gemini 2.0, Gemini Pro, Gemini Flash
+    - **AWS Bedrock**: Claude, Llama, Command models
+    - **GCP Vertex AI**: Full model catalog
+  </Tab>
+  <Tab title="Fast Inference">
+    - **Groq**: Lightning-fast inference for Llama, Mixtral, Gemma
+    - **Cerebras**: Ultra-fast Llama 3 variants
+    - **Together AI**: Optimized open models
+    - **Fireworks**: High-speed model serving
+  </Tab>
+  <Tab title="Specialized">
+    - **DeepSeek**: Code-optimized models
+    - **Qwen**: Advanced reasoning capabilities
+    - **xAI Grok**: Twitter-integrated AI
+    - **OpenRouter**: Access 100+ models through one API
+  </Tab>
+</Tabs>
+
+<Info>
+For detailed provider configuration, see [LLM Providers Configuration](/configuration/llm-providers) guide.
+</Info>
+
+## Code Generation Workflows
+
+### Plan and Act Mode
+
+HAI Build features a dual-mode system for handling complex tasks:
+
+**Plan Mode**:
+- Creates detailed implementation plans before writing code
+- Uses reasoning models for strategic thinking
+- Generates comprehensive task breakdowns
+- Perfect for complex features and refactoring
+
+**Act Mode**:
+- Executes code changes directly
+- Fast iteration on well-defined tasks
+- Ideal for bug fixes and small features
+
+<Steps>
+  <Step title="Configure Models">
+    Set separate models for Plan and Act modes in Settings → API Configuration.
+    
+    ```json
+    {
+      "planModeApiProvider": "anthropic",
+      "planModeModelId": "claude-4.5-sonnet-20250514",
+      "actModeApiProvider": "anthropic",
+      "actModeModelId": "claude-4-sonnet-20250514"
+    }
+    ```
+  </Step>
+  <Step title="Start Planning">
+    Use `/deep-planning` command to create detailed implementation plans.
+  </Step>
+  <Step title="Execute">
+    Switch to Act mode to implement the plan step-by-step.
+  </Step>
+</Steps>
+
+### Native Tool Calling
+
+HAI Build leverages native function calling for precise tool execution:
+
+- **Parallel Execution**: Models can call multiple tools simultaneously
+- **Structured Output**: Tools receive properly formatted parameters
+- **Error Handling**: Automatic retry with error context
+- **Context Preservation**: Tool responses integrate seamlessly into conversation
+
+Supported in:
+- Claude 4.5+ (Anthropic)
+- GPT-4 and GPT-4 Turbo (OpenAI)
+- Gemini 2.0+ (Google)
+
+## Intelligent Context Management
+
+### Automatic Context Window Handling
+
+The AI engine automatically manages context limits:
+
+<Accordion title="Context Compaction">
+When approaching token limits, HAI Build:
+1. Summarizes older conversation history
+2. Preserves critical file contents
+3. Maintains task continuity across resets
+4. Executes PreCompact hooks for custom context injection
+</Accordion>
+
+<Accordion title="File Context Tracking">
+Tracks which files are in the AI's context:
+- Shows context status in file explorer
+- Automatically adds relevant files
+- Warns when removing files from context
+- Provides context usage metrics (see `src/core/context/context-tracking/FileContextTracker.ts:9`)
+</Accordion>
+
+### Environment Context
+
+HAI Build automatically includes:
+- Operating system and platform details
+- Available CLI tools (git, npm, docker, etc.)
+- Workspace structure and multi-root support
+- Active terminal sessions and shells
+
+See implementation: `src/core/context/context-tracking/EnvironmentContextTracker.ts:8`
+
+## Advanced Features
+
+### Custom Instructions
+
+Tailor AI behavior with custom rules:
+
+<CardGroup cols={2}>
+  <Card title="Cline Rules" icon="gear">
+    Create `.clinerules` files to define coding standards, patterns, and preferences.
+  </Card>
+  <Card title="External Rules" icon="file-import">
+    Import rules from `.cursorrules`, `.windsurfrules`, or `.agentrules`.
+  </Card>
+</CardGroup>
+
+### System Prompt Customization
+
+The system prompt is built from modular components:
+
+```typescript
+// Core sections (src/core/prompts/system-prompt/components/)
+- capabilities: Available tools and actions
+- editing_files: File operation guidelines
+- mcp: Model Context Protocol servers
+- task_progress: Focus chain integration
+```
+
+Each component can be customized via prompt variants.
+
+### Reasoning Effort Control
+
+For OpenAI o1/o3 models, control reasoning depth:
+
+```json
+{
+  "planModeReasoningEffort": "high",
+  "actModeReasoningEffort": "medium"
+}
+```
+
+Options: `low`, `medium`, `high`
+
+## Code Editing Intelligence
+
+### Two-Tool Approach
+
+HAI Build uses specialized tools for different editing scenarios:
+
+**write_to_file**: Complete file creation or replacement
+- New file scaffolding
+- Boilerplate generation
+- Major refactoring requiring full rewrites
+
+**replace_in_file**: Surgical, targeted edits
+- Function updates
+- Variable renames
+- Localized changes
+- Multiple SEARCH/REPLACE blocks in one operation
+
+<Warning>
+The AI automatically detects auto-formatting in your editor and adapts subsequent edits to match the formatted output.
+</Warning>
+
+See: `src/core/prompts/system-prompt/components/editing_files.ts:1`
+
+### Multi-File Diff Generation
+
+For complex changes across multiple files:
+- Preview all changes before applying
+- Accept or reject changes file-by-file
+- Smart conflict detection and resolution
+- Integration with VS Code diff viewer
+
+## Performance Optimization
+
+### Streaming Responses
+
+All LLM interactions use streaming for:
+- Real-time feedback as the AI "thinks"
+- Partial message display in the UI
+- Early cancellation of problematic responses
+- Lower perceived latency
+
+Implementation: `src/core/task/StreamResponseHandler.ts:1`
+
+### Request Retry Logic
+
+Automatic retry with exponential backoff:
+- Handles rate limits gracefully
+- Recovers from transient network errors
+- Displays retry status in the UI
+- Configurable max attempts and delays
+
+See: `src/core/api/retry.ts:1`
+
+## Best Practices
+
+<Steps>
+  <Step title="Be Specific">
+    Provide clear, detailed task descriptions. The more context you give, the better the AI performs.
+  </Step>
+  <Step title="Use Attachments">
+    Attach relevant files, images, or documents to provide visual context.
+  </Step>
+  <Step title="Leverage Memory Bank">
+    Store project-specific knowledge for consistent behavior across sessions.
+  </Step>
+  <Step title="Monitor Context">
+    Keep an eye on context usage. Use Focus Chain for long-running tasks.
+  </Step>
+  <Step title="Review Changes">
+    Always review AI-generated code before committing, especially with auto-approve enabled.
+  </Step>
+</Steps>
+
+<Tip>
+Combine AI-powered coding with [Experts](/features/experts) for domain-specific code generation following your team's best practices.
+</Tip>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Model not responding">
+    - Check API key validity in Settings
+    - Verify network connectivity
+    - Review provider status pages
+    - Check context window limits
+  </Accordion>
+  <Accordion title="Poor code quality">
+    - Add custom instructions via `.clinerules`
+    - Use Plan mode for complex tasks
+    - Provide more context in your prompt
+    - Try a more capable model
+  </Accordion>
+  <Accordion title="Context window exceeded">
+    - Enable Auto Compact feature
+    - Use Focus Chain to maintain progress
+    - Break task into smaller steps
+    - Remove unnecessary files from context
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Task Management" icon="list-check" href="/features/task-management">
+    Integrate AI-generated tasks from Specif AI
+  </Card>
+  <Card title="Experts" icon="graduation-cap" href="/features/experts">
+    Use domain experts for specialized code generation
+  </Card>
+  <Card title="MCP Integration" icon="plug" href="/features/mcp-integration">
+    Extend AI capabilities with Model Context Protocol
+  </Card>
+  <Card title="Inline Editing" icon="pen-to-square" href="/features/inline-editing">
+    Make quick AI-assisted edits in your code
+  </Card>
+</CardGroup>

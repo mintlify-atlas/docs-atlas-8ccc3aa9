@@ -1,0 +1,532 @@
+---
+title: 'Experts Setup'
+description: 'Create and configure custom domain experts for context-aware code generation'
+icon: 'user-tie'
+---
+
+## Overview
+
+The **Experts** feature in HAI Build enables context-aware code generation tailored to specific technologies, frameworks, or domain standards. You can use built-in experts or create custom ones with your own guidelines and reference documentation.
+
+<Note>
+Experts are currently an **upcoming feature** in HAI Build. Check the latest release notes for availability.
+</Note>
+
+## How Experts Work
+
+Experts provide:
+- Technology-specific guidelines and best practices
+- Reference documentation for accurate code generation
+- Consistent coding standards across your team
+- Domain-specific context for AI-powered development
+
+When you select an expert, HAI Build incorporates their guidelines into the AI's context, ensuring generated code follows your standards.
+
+## Built-in Experts
+
+HAI Build includes four built-in experts available in read-only mode:
+
+<CardGroup cols={2}>
+  <Card title=".NET" icon="microsoft">
+    Best practices for C# and .NET development
+  </Card>
+  <Card title="Terraform" icon="server">
+    Infrastructure as Code guidelines and patterns
+  </Card>
+  <Card title="Node.js" icon="node-js">
+    JavaScript/TypeScript server-side development
+  </Card>
+  <Card title="Go" icon="golang">
+    Go language idioms and conventions
+  </Card>
+</CardGroup>
+
+Built-in experts provide predefined guidelines for quick reference and cannot be modified.
+
+## Custom Experts
+
+Create custom experts to define your own coding standards, architectural patterns, or domain-specific requirements.
+
+### Expert Structure
+
+Custom experts are stored in the `.hai-experts` directory at your workspace root:
+
+```
+my-project/
+├── .hai-experts/
+│   ├── my-expert/
+│   │   ├── metadata.json
+│   │   ├── prompt.md
+│   │   └── docs/
+│   │       ├── document-1.md
+│   │       ├── document-2.md
+│   │       └── status.json
+│   └── another-expert/
+│       ├── metadata.json
+│       └── prompt.md
+├── .git/
+└── src/
+```
+
+### File Structure
+
+<AccordionGroup>
+  <Accordion title="metadata.json">
+    Stores expert metadata and configuration:
+    
+    ```json
+    {
+      "name": "My Custom Expert",
+      "createdAt": "2024-03-03T12:00:00Z",
+      "documentLinks": [
+        "https://example.com/docs/api-guide",
+        "https://example.com/docs/best-practices",
+        "https://example.com/docs/architecture"
+      ]
+    }
+    ```
+    
+    <ParamField path="name" type="string" required>
+      Display name of the expert
+    </ParamField>
+    
+    <ParamField path="createdAt" type="string" required>
+      ISO 8601 timestamp of creation
+    </ParamField>
+    
+    <ParamField path="documentLinks" type="array" default="[]">
+      Up to 3 reference document URLs (optional)
+    </ParamField>
+  </Accordion>
+  
+  <Accordion title="prompt.md">
+    Contains the expert's guidelines and instructions (required):
+    
+    ```markdown
+    # Custom Expert Guidelines
+    
+    ## Code Style
+    - Use functional components with hooks
+    - Prefer TypeScript strict mode
+    - Follow Airbnb style guide
+    
+    ## Architecture
+    - Use repository pattern for data access
+    - Implement dependency injection
+    - Separate concerns with clean architecture
+    
+    ## Testing
+    - Write unit tests for all business logic
+    - Use Jest and React Testing Library
+    - Aim for 80% code coverage
+    ```
+  </Accordion>
+  
+  <Accordion title="docs/ (optional)">
+    Processed reference documents:
+    
+    - Markdown files for each document link
+    - `status.json` tracks processing status
+    
+    ```json
+    // status.json
+    {
+      "processed": 2,
+      "total": 3,
+      "documents": [
+        {
+          "url": "https://example.com/docs/api-guide",
+          "status": "completed",
+          "file": "document-1.md"
+        },
+        {
+          "url": "https://example.com/docs/best-practices",
+          "status": "completed",
+          "file": "document-2.md"
+        },
+        {
+          "url": "https://example.com/docs/architecture",
+          "status": "pending",
+          "file": null
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Creating a Custom Expert
+
+<Steps>
+  <Step title="Open Experts Interface">
+    Navigate to the Experts section in HAI Build sidebar
+  </Step>
+  
+  <Step title="Click Create Expert">
+    Select "Create Custom Expert" to start the wizard
+  </Step>
+  
+  <Step title="Enter Expert Details">
+    Provide required information:
+    
+    <ParamField path="Expert Name" type="string" required>
+      Descriptive name for your expert (e.g., "React Best Practices")
+    </ParamField>
+    
+    <ParamField path="Guidelines" type="markdown" required>
+      Coding standards, patterns, and best practices in Markdown format
+    </ParamField>
+    
+    <ParamField path="Document Links" type="array" default="[]">
+      Up to 3 reference document URLs (optional)
+    </ParamField>
+  </Step>
+  
+  <Step title="Save Expert">
+    HAI Build creates the expert folder structure in `.hai-experts/`
+  </Step>
+  
+  <Step title="Process Documents (if provided)">
+    HAI Build fetches and processes reference documents in the background
+  </Step>
+</Steps>
+
+### Example: React Expert
+
+Create a React expert with your team's standards:
+
+**Expert Name**: `React Best Practices`
+
+**Guidelines** (`prompt.md`):
+```markdown
+# React Development Standards
+
+## Component Structure
+- Use functional components with TypeScript
+- Implement custom hooks for reusable logic
+- Keep components under 200 lines
+
+## State Management
+- Use React Context for global state
+- Implement Redux for complex applications
+- Avoid prop drilling beyond 2 levels
+
+## Styling
+- Use CSS Modules or styled-components
+- Follow BEM naming convention
+- Implement responsive design with mobile-first approach
+
+## Performance
+- Memoize expensive computations with useMemo
+- Use React.memo for pure components
+- Implement code splitting with React.lazy
+
+## Testing
+- Write integration tests with Testing Library
+- Test user interactions, not implementation
+- Aim for 80% code coverage
+```
+
+**Document Links**:
+- `https://react.dev/reference/react`
+- `https://testing-library.com/docs/react-testing-library/intro`
+- `https://styled-components.com/docs`
+
+### Example: API Integration Expert
+
+Create an expert for your API integration standards:
+
+**Expert Name**: `API Integration Standards`
+
+**Guidelines** (`prompt.md`):
+```markdown
+# API Integration Standards
+
+## HTTP Client
+- Use axios with interceptors for auth
+- Implement retry logic with exponential backoff
+- Handle errors with custom error classes
+
+## Request Patterns
+- Separate API calls into service layers
+- Use TypeScript interfaces for request/response
+- Implement request cancellation for search
+
+## Authentication
+- Store tokens in httpOnly cookies
+- Implement token refresh mechanism
+- Handle 401 responses globally
+
+## Error Handling
+- Show user-friendly error messages
+- Log errors to monitoring service
+- Implement fallback UI for failures
+
+## Caching
+- Use React Query for data fetching
+- Implement stale-while-revalidate strategy
+- Cache static data in localStorage
+```
+
+**Document Links**:
+- `https://axios-http.com/docs/intro`
+- `https://tanstack.com/query/latest/docs/react/overview`
+
+## Using Experts
+
+Once created, experts can be selected when starting a new task or conversation with HAI Build.
+
+<Steps>
+  <Step title="Select Expert">
+    Choose the relevant expert from the dropdown when starting a task
+  </Step>
+  
+  <Step title="Expert Context Applied">
+    HAI Build incorporates the expert's guidelines into the AI's context
+  </Step>
+  
+  <Step title="Generate Code">
+    Code generation follows the expert's standards and best practices
+  </Step>
+</Steps>
+
+<Tip>
+For consistent results across your team, commit `.hai-experts/` to your repository (excluding any sensitive data).
+</Tip>
+
+## Managing Experts
+
+### Editing Experts
+
+To modify a custom expert:
+
+1. Navigate to `.hai-experts/expert-name/`
+2. Edit `prompt.md` or `metadata.json`
+3. Save changes
+4. Restart HAI Build or reload the expert
+
+### Deleting Experts
+
+To remove a custom expert:
+
+1. Delete the expert folder from `.hai-experts/`
+2. Refresh HAI Build
+
+<Warning>
+Built-in experts cannot be modified or deleted.
+</Warning>
+
+### Sharing Experts
+
+Share experts with your team by:
+
+1. Committing `.hai-experts/` to version control
+2. Excluding sensitive information from `metadata.json`
+3. Documenting expert usage in your team's documentation
+
+## Reference Document Processing
+
+When you provide document links, HAI Build:
+
+1. Fetches the content from the URLs
+2. Converts to Markdown format
+3. Stores in the `docs/` folder
+4. Updates `status.json` with processing status
+
+### Document Limits
+
+- Maximum **3 document links** per expert
+- Documents must be publicly accessible
+- Supported formats: HTML, Markdown, PDF (depending on implementation)
+
+### Status Tracking
+
+Monitor document processing in `status.json`:
+
+```json
+{
+  "documents": [
+    {
+      "url": "https://example.com/guide",
+      "status": "completed",
+      "file": "document-1.md"
+    },
+    {
+      "url": "https://example.com/api",
+      "status": "failed",
+      "error": "URL not accessible"
+    }
+  ]
+}
+```
+
+Status values:
+- `pending` - Processing not started
+- `in_progress` - Currently fetching/converting
+- `completed` - Successfully processed
+- `failed` - Error during processing
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Be Specific" icon="bullseye">
+    Provide clear, actionable guidelines rather than vague suggestions
+  </Card>
+  
+  <Card title="Use Examples" icon="code">
+    Include code examples in guidelines to demonstrate patterns
+  </Card>
+  
+  <Card title="Keep Updated" icon="arrows-rotate">
+    Regularly review and update expert guidelines as standards evolve
+  </Card>
+  
+  <Card title="Version Control" icon="code-branch">
+    Commit experts to git for team consistency and version history
+  </Card>
+  
+  <Card title="Focus on Domain" icon="crosshairs">
+    Create experts for specific domains rather than general coding
+  </Card>
+  
+  <Card title="Reference Quality Docs" icon="book">
+    Link to official documentation and authoritative sources
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Expert Not Appearing">
+    **Check**:
+    - Expert folder exists in `.hai-experts/`
+    - `metadata.json` is valid JSON
+    - `prompt.md` exists and is not empty
+    - Restart VS Code or reload HAI Build
+  </Accordion>
+  
+  <Accordion title="Document Processing Failed">
+    **Solutions**:
+    - Verify URLs are publicly accessible
+    - Check `status.json` for error messages
+    - Try removing and re-adding document links
+    - Ensure network connectivity
+  </Accordion>
+  
+  <Accordion title="Expert Context Not Applied">
+    **Solutions**:
+    - Verify expert is selected before starting task
+    - Check expert guidelines are clear and specific
+    - Ensure expert folder structure is correct
+    - Try recreating the expert
+  </Accordion>
+  
+  <Accordion title="Cannot Modify Built-in Expert">
+    Built-in experts (.NET, Terraform, Node.js, Go) are read-only by design.
+    
+    **Solution**: Create a custom expert based on the built-in one:
+    1. Copy guidelines from built-in expert
+    2. Create new custom expert
+    3. Modify as needed
+  </Accordion>
+</AccordionGroup>
+
+## Example Experts
+
+<AccordionGroup>
+  <Accordion title="Python Data Science Expert">
+    **Guidelines**:
+    ```markdown
+    # Python Data Science Standards
+    
+    ## Libraries
+    - Use pandas for data manipulation
+    - NumPy for numerical operations
+    - matplotlib/seaborn for visualization
+    - scikit-learn for ML models
+    
+    ## Code Style
+    - Follow PEP 8 style guide
+    - Use type hints for function signatures
+    - Document with NumPy-style docstrings
+    
+    ## Data Processing
+    - Validate data with pandas-schema
+    - Handle missing values explicitly
+    - Use vectorized operations over loops
+    
+    ## Model Development
+    - Split data: 70% train, 15% validation, 15% test
+    - Use cross-validation for hyperparameter tuning
+    - Track experiments with MLflow
+    ```
+  </Accordion>
+  
+  <Accordion title="DevOps Expert">
+    **Guidelines**:
+    ```markdown
+    # DevOps and Infrastructure Standards
+    
+    ## CI/CD
+    - Use GitHub Actions for automation
+    - Implement automated testing in pipeline
+    - Deploy to staging before production
+    
+    ## Infrastructure
+    - Define infrastructure as code with Terraform
+    - Use modules for reusable components
+    - Store state in remote backend
+    
+    ## Containerization
+    - Use multi-stage Docker builds
+    - Scan images for vulnerabilities
+    - Keep images under 500MB
+    
+    ## Monitoring
+    - Implement health checks for all services
+    - Set up alerts for critical metrics
+    - Use structured logging
+    ```
+  </Accordion>
+  
+  <Accordion title="Mobile Development Expert">
+    **Guidelines**:
+    ```markdown
+    # Mobile Development Standards
+    
+    ## Architecture
+    - Use MVVM architecture pattern
+    - Implement dependency injection
+    - Separate UI, business logic, and data layers
+    
+    ## State Management
+    - Use Redux/MobX for complex state
+    - Implement offline-first approach
+    - Sync data in background
+    
+    ## Performance
+    - Lazy load images and heavy components
+    - Implement pagination for lists
+    - Optimize bundle size
+    
+    ## Testing
+    - Write unit tests for business logic
+    - Implement E2E tests with Detox
+    - Test on both iOS and Android
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Settings" icon="gear" href="/configuration/settings">
+    Configure extension settings
+  </Card>
+  <Card title="LLM Providers" icon="brain" href="/configuration/llm-providers">
+    Set up AI model providers
+  </Card>
+  <Card title="Telemetry" icon="chart-line" href="/configuration/telemetry">
+    Configure monitoring and analytics
+  </Card>
+</CardGroup>

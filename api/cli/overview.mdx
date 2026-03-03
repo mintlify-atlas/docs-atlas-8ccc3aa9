@@ -1,0 +1,240 @@
+---
+title: 'CLI Overview'
+description: 'Get started with the Cline CLI - an AI coding assistant in your terminal'
+---
+
+## What is the Cline CLI?
+
+Cline CLI is a command-line interface for the Cline AI coding assistant. It brings the same powerful AI capabilities from the VS Code extension directly to your terminal, allowing you to automate coding tasks, debug issues, and build features without leaving the command line.
+
+Cline is an autonomous AI agent that can:
+- Read and write files across your projects
+- Execute terminal commands (with your approval)
+- Use a headless browser for web testing
+- Explore large codebases and understand context
+- Handle complex multi-step software development tasks
+
+<Note>
+  The CLI shares the same core codebase as the VS Code extension, ensuring feature parity and consistent behavior.
+</Note>
+
+## Installation
+
+### Prerequisites
+
+- Node.js 20.x or later
+- npm, yarn, or pnpm package manager
+
+### Install via npm
+
+```bash
+npm install -g cline
+```
+
+### Install via Homebrew (macOS/Linux)
+
+```bash
+brew install cline
+```
+
+### Verify Installation
+
+```bash
+cline --version
+```
+
+## Quick Start
+
+### 1. Authenticate
+
+Before using Cline, you need to configure an API provider and model:
+
+```bash
+# Interactive authentication wizard
+cline auth
+
+# Or use quick setup
+cline auth -p anthropic -k YOUR_API_KEY -m claude-sonnet-4-5-20250929
+```
+
+<Tip>
+  Supported providers include Anthropic, OpenAI, Google Gemini, AWS Bedrock, Azure, OpenRouter, Moonshot, and more.
+</Tip>
+
+### 2. Run Your First Task
+
+```bash
+# Interactive mode - opens a chat interface
+cline
+
+# Direct task execution
+cline "Create a hello world function in Python"
+
+# With options
+cline --thinking "Analyze this codebase and suggest improvements"
+```
+
+### 3. View Task History
+
+```bash
+cline history
+```
+
+## Modes of Operation
+
+Cline CLI operates in different modes depending on how you invoke it:
+
+### Interactive Mode
+
+When you run `cline` without arguments or with stdin as a TTY, it launches an interactive terminal UI where you can:
+- Type your tasks and see real-time responses
+- Review and approve actions before they execute
+- View conversation history and context
+- Switch between Plan and Act modes
+
+```bash
+cline
+```
+
+### Plain Text Mode
+
+Activated automatically when:
+- stdin is piped from another command
+- Output is redirected to a file
+- `--json` or `--yolo` flags are used
+
+Outputs clean text without the Ink UI, suitable for scripting and CI/CD pipelines.
+
+```bash
+cat README.md | cline "Summarize this document"
+cline --yolo "Run the test suite and fix any failures"
+```
+
+### JSON Output Mode
+
+Use `--json` to get structured output that can be parsed programmatically:
+
+```bash
+cline --json "What files are in this directory?" | jq '.text'
+```
+
+Each message is output as a JSON object with fields:
+- `type`: "ask" or "say"
+- `text`: message content
+- `ts`: Unix timestamp in milliseconds
+- `reasoning`: optional reasoning text
+- `images`: optional list of image URIs
+- `files`: optional list of file paths
+
+## Agent Behavior
+
+Cline operates in two primary modes:
+
+### Act Mode (Default)
+
+Cline actively uses tools to accomplish tasks:
+- Read and write files
+- Execute terminal commands
+- Use a headless browser
+- Search and analyze codebases
+- Install dependencies
+- Run tests and debuggers
+
+```bash
+cline --act "Add unit tests to the authentication module"
+```
+
+### Plan Mode
+
+Cline gathers information and creates a detailed plan before implementation:
+- Explores the codebase structure
+- Asks clarifying questions
+- Presents a strategy for user approval
+- Switches to Act Mode when ready
+
+```bash
+cline --plan "Design a REST API for user management"
+```
+
+## Configuration
+
+Cline stores its data in `~/.cline/data/` by default:
+
+```
+~/.cline/
+├── data/
+│   ├── globalState.json     # Global settings and state
+│   ├── secrets.json         # API keys and secrets
+│   ├── workspace/           # Workspace-specific state
+│   └── tasks/               # Task history and conversation data
+└── log/                     # Log files for debugging
+```
+
+### Custom Configuration Directory
+
+Override the default location using the `--config` option or `CLINE_DIR` environment variable:
+
+```bash
+# Using flag
+cline --config /path/to/config task "Build a feature"
+
+# Using environment variable
+export CLINE_DIR=/path/to/config
+cline task "Build a feature"
+```
+
+## Working Directory
+
+By default, Cline operates in your current working directory. You can specify a different directory:
+
+```bash
+cline --cwd /path/to/project "Add documentation"
+```
+
+## Environment Variables
+
+### CLINE_DIR
+
+Override the default configuration directory:
+
+```bash
+export CLINE_DIR=~/.config/cline
+```
+
+### CLINE_COMMAND_PERMISSIONS
+
+Restrict which shell commands Cline can execute using JSON configuration:
+
+```bash
+# Allow only npm and git commands
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *"]}'
+
+# Allow development commands with redirects
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["cat *", "echo *"], "allowRedirects": true}'
+
+# Deny dangerous commands
+export CLINE_COMMAND_PERMISSIONS='{"deny": ["rm -rf *", "sudo *"]}'
+```
+
+**Fields:**
+- `allow` (array): Glob patterns for allowed commands. If set, only matching commands are permitted.
+- `deny` (array): Glob patterns for denied commands. Deny rules take precedence over allow rules.
+- `allowRedirects` (boolean): Whether to allow shell redirects (`>`, `>>`, `<`). Defaults to false.
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Commands" icon="terminal" href="/api/cli/commands">
+  Explore all available CLI commands and their usage
+</Card>
+
+<Card title="Options" icon="sliders" href="/api/cli/options">
+  Learn about global options and configuration flags
+</Card>
+
+</CardGroup>
+
+<Note>
+  **Need help?** Run `cline --help` to see available commands, or visit our [GitHub repository](https://github.com/cline/cline) for issues and discussions.
+</Note>

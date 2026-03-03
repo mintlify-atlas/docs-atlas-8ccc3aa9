@@ -1,0 +1,649 @@
+---
+title: "Custom LLM Providers"
+description: "Add your own LLM provider to HAI Build Code Generator"
+icon: "code"
+---
+
+Create custom provider integrations by implementing the `ApiHandler` interface. This guide shows you how to add support for any LLM API.
+
+## Provider Interface
+
+All providers must implement the `ApiHandler` interface:
+
+```typescript
+export interface ApiHandler {
+  createMessage(
+    systemPrompt: string,
+    messages: ClineStorageMessage[],
+    tools?: ClineTool[],
+    useResponseApi?: boolean
+  ): ApiStream
+  
+  getModel(): ApiHandlerModel
+  getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>
+  abort?(): void
+}
+```
+
+## Basic Template
+
+Here's a minimal custom provider:
+
+```typescript
+import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import { ApiStream } from "../transform/stream"
+import { withRetry } from "../retry"
+import { ClineStorageMessage } from "@/shared/messages/content"
+import type { ModelInfo } from "@shared/api"
+
+interface CustomProviderOptions extends CommonApiHandlerOptions {
+  apiKey: string
+  baseUrl?: string
+  modelId: string
+}
+
+export class CustomProviderHandler implements ApiHandler {
+  private options: CustomProviderOptions
+  private client: any // Your API client
+
+  constructor(options: CustomProviderOptions) {
+    this.options = options
+  }
+
+  private ensureClient() {
+    if (!this.client) {
+      if (!this.options.apiKey) {
+        throw new Error("API key is required")
+      }
+      // Initialize your client
+      this.client = createYourClient({
+        apiKey: this.options.apiKey,
+        baseURL: this.options.baseUrl
+      })
+    }
+    return this.client
+  }
+
+  @withRetry()
+  async *createMessage(
+    systemPrompt: string,
+    messages: ClineStorageMessage[],
+    tools?: any[]
+  ): ApiStream {
+    const client = this.ensureClient()
+    
+    // Convert messages to your API format
+    const apiMessages = this.convertMessages(messages)
+    
+    // Call your API
+    const stream = await client.chat.create({
+      model: this.options.modelId,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...apiMessages
+      ],
+      stream: true,
+      tools: tools
+    })
+
+    // Process stream and yield chunks
+    for await (const chunk of stream) {
+      if (chunk.content) {
+        yield {
+          type: "text",
+          text: chunk.content
+        }
+      }
+      
+      if (chunk.usage) {
+        yield {
+          type: "usage",
+          inputTokens: chunk.usage.input_tokens || 0,
+          outputTokens: chunk.usage.output_tokens || 0
+        }
+      }
+    }
+  }
+
+  getModel(): { id: string; info: ModelInfo } {
+    return {
+      id: this.options.modelId,
+      info: {
+        maxTokens: 8192,
+        contextWindow: 128000,
+        supportsPromptCache: false,
+        inputPrice: 0,
+        outputPrice: 0
+      }
+    }
+  }
+
+  private convertMessages(messages: ClineStorageMessage[]) {
+    // Convert from HAI Build format to your API format
+    return messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+  }
+}
+```
+
+## Stream Chunk Types
+
+Your provider should yield these chunk types:
+
+### Text Chunks
+```typescript
+yield {
+  type: "text",
+  text: "Response text here"
+}
+```
+
+### Tool Call Chunks
+```typescript
+yield {
+  type: "tool_calls",
+  tool_call: {
+    function: {
+      id: "call_123",
+      name: "function_name",
+      arguments: '{"param": "value"}'
+    }
+  }
+}
+```
+
+### Reasoning Chunks
+```typescript
+yield {
+  type: "reasoning",
+  reasoning: "Model's thinking process",
+  signature?: "optional_signature"
+}
+```
+
+### Usage Chunks
+```typescript
+yield {
+  type: "usage",
+  inputTokens: 100,
+  outputTokens: 50,
+  cacheReadTokens?: 20,
+  cacheWriteTokens?: 0,
+  totalCost?: 0.0015
+}
+```
+
+## Message Conversion
+
+Convert HAI Build messages to your API format:
+
+```typescript
+private convertMessages(messages: ClineStorageMessage[]) {
+  return messages.map(msg => {
+    switch (msg.type) {
+      case "say":
+        return {
+          role: msg.say === "user" ? "user" : "assistant",
+          content: msg.text || ""
+        }
+      
+      case "ask":
+        return {
+          role: "user",
+          content: msg.ask === "tool" 
+            ? `Tool: ${msg.text}`
+            : msg.text || ""
+        }
+      
+      default:
+        return {
+          role: "user",
+          content: JSON.stringify(msg)
+        }
+    }
+  })
+}
+```
+
+## Tool Calling Support
+
+If your API supports tools:
+
+```typescript
+async *createMessage(
+  systemPrompt: string,
+  messages: ClineStorageMessage[],
+  tools?: ClineTool[]
+): ApiStream {
+  const client = this.ensureClient()
+  
+  // Convert tools to your API format
+  const apiTools = tools?.map(tool => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.input_schema
+    }
+  }))
+
+  const stream = await client.chat.create({
+    model: this.options.modelId,
+    messages: [...],
+    tools: apiTools
+  })
+
+  // Process tool calls in stream
+  for await (const chunk of stream) {
+    if (chunk.tool_calls) {
+      for (const toolCall of chunk.tool_calls) {
+        yield {
+          type: "tool_calls",
+          tool_call: {
+            function: {
+              id: toolCall.id,
+              name: toolCall.function.name,
+              arguments: toolCall.function.arguments
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Error Handling
+
+Use the `@withRetry()` decorator for automatic retries:
+
+```typescript
+import { withRetry, RetriableError } from "../retry"
+
+@withRetry({
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 10000
+})
+async *createMessage(...): ApiStream {
+  try {
+    // Your API call
+  } catch (error) {
+    // Retry on rate limits
+    if (error.status === 429) {
+      const retryAfter = error.headers?.['retry-after']
+      throw new RetriableError(
+        error.message,
+        retryAfter ? parseInt(retryAfter) : undefined
+      )
+    }
+    // Don't retry on auth errors
+    if (error.status === 401) {
+      throw error
+    }
+    // Retry on server errors
+    if (error.status >= 500) {
+      throw new RetriableError(error.message)
+    }
+    throw error
+  }
+}
+```
+
+## Prompt Caching
+
+If your API supports prompt caching:
+
+```typescript
+async *createMessage(
+  systemPrompt: string,
+  messages: ClineStorageMessage[],
+  tools?: ClineTool[]
+): ApiStream {
+  const stream = await client.chat.create({
+    model: this.options.modelId,
+    messages: [
+      {
+        role: "system",
+        content: systemPrompt,
+        cache_control: { type: "ephemeral" } // Cache system prompt
+      },
+      ...apiMessages
+    ]
+  })
+
+  for await (const chunk of stream) {
+    if (chunk.usage) {
+      yield {
+        type: "usage",
+        inputTokens: chunk.usage.input_tokens || 0,
+        outputTokens: chunk.usage.output_tokens || 0,
+        cacheReadTokens: chunk.usage.cache_read_input_tokens || 0,
+        cacheWriteTokens: chunk.usage.cache_creation_input_tokens || 0
+      }
+    }
+  }
+}
+```
+
+## Reasoning Models
+
+For models with reasoning capabilities:
+
+```typescript
+interface CustomProviderOptions extends CommonApiHandlerOptions {
+  apiKey: string
+  modelId: string
+  thinkingBudgetTokens?: number
+  reasoningEffort?: string
+}
+
+async *createMessage(
+  systemPrompt: string,
+  messages: ClineStorageMessage[],
+  tools?: ClineTool[]
+): ApiStream {
+  const stream = await client.chat.create({
+    model: this.options.modelId,
+    messages: [...],
+    thinking: this.options.thinkingBudgetTokens
+      ? {
+          enabled: true,
+          budget_tokens: this.options.thinkingBudgetTokens
+        }
+      : undefined
+  })
+
+  for await (const chunk of stream) {
+    // Handle reasoning content
+    if (chunk.thinking) {
+      yield {
+        type: "reasoning",
+        reasoning: chunk.thinking.text,
+        signature: chunk.thinking.signature
+      }
+    }
+    
+    if (chunk.content) {
+      yield {
+        type: "text",
+        text: chunk.content
+      }
+    }
+  }
+}
+```
+
+## Register Your Provider
+
+Add your provider to the system:
+
+```typescript
+// In src/core/api/index.ts
+
+import { CustomProviderHandler } from "./providers/custom-provider"
+
+function createHandlerForProvider(
+  apiProvider: string | undefined,
+  options: Omit<ApiConfiguration, "apiProvider">,
+  mode: Mode
+): ApiHandler {
+  switch (apiProvider) {
+    // ... existing providers ...
+    
+    case "custom-provider":
+      return new CustomProviderHandler({
+        onRetryAttempt: options.onRetryAttempt,
+        apiKey: options.customProviderApiKey,
+        baseUrl: options.customProviderBaseUrl,
+        modelId: mode === "plan" 
+          ? options.planModeCustomProviderModelId 
+          : options.actModeCustomProviderModelId
+      })
+    
+    default:
+      // ...
+  }
+}
+```
+
+## Real-World Example: Ollama Provider
+
+Here's the actual Ollama provider implementation:
+
+```typescript
+import { Ollama } from "ollama"
+import { ApiHandler, CommonApiHandlerOptions } from "../index"
+import { withRetry } from "../retry"
+import { convertToOllamaMessages } from "../transform/ollama-format"
+import { ToolCallProcessor } from "../transform/tool-call-processor"
+
+interface OllamaHandlerOptions extends CommonApiHandlerOptions {
+  ollamaBaseUrl?: string
+  ollamaApiKey?: string
+  ollamaModelId?: string
+  ollamaApiOptionsCtxNum?: string
+  requestTimeoutMs?: number
+}
+
+export class OllamaHandler implements ApiHandler {
+  private options: OllamaHandlerOptions
+  private client: Ollama | undefined
+
+  constructor(options: OllamaHandlerOptions) {
+    this.options = options
+  }
+
+  private ensureClient(): Ollama {
+    if (!this.client) {
+      const clientOptions = {
+        host: this.options.ollamaBaseUrl,
+        headers: this.options.ollamaApiKey
+          ? { Authorization: `Bearer ${this.options.ollamaApiKey}` }
+          : undefined
+      }
+      this.client = new Ollama(clientOptions)
+    }
+    return this.client
+  }
+
+  @withRetry({ retryAllErrors: true })
+  async *createMessage(
+    systemPrompt: string,
+    messages: ClineStorageMessage[],
+    tools?: any[]
+  ): ApiStream {
+    const client = this.ensureClient()
+    const ollamaMessages = [
+      { role: "system", content: systemPrompt },
+      ...convertToOllamaMessages(messages)
+    ]
+
+    const stream = await client.chat({
+      model: this.options.ollamaModelId || "",
+      messages: ollamaMessages,
+      stream: true,
+      options: {
+        num_ctx: Number(this.options.ollamaApiOptionsCtxNum || 32768)
+      },
+      tools: tools as any
+    })
+
+    const toolCallProcessor = new ToolCallProcessor()
+
+    for await (const chunk of stream) {
+      const delta = chunk.message
+
+      if (delta?.tool_calls) {
+        yield* toolCallProcessor.processToolCallDeltas(
+          delta.tool_calls.map((tc, inx) => ({
+            index: inx,
+            id: `ollama-tool-${inx}`,
+            function: {
+              name: tc.function.name,
+              arguments: typeof tc.function.arguments === "string"
+                ? tc.function.arguments
+                : JSON.stringify(tc.function.arguments)
+            },
+            type: "function"
+          }))
+        )
+      }
+
+      if (typeof delta.content === "string") {
+        yield {
+          type: "text",
+          text: delta.content
+        }
+      }
+
+      if (chunk.eval_count || chunk.prompt_eval_count) {
+        yield {
+          type: "usage",
+          inputTokens: chunk.prompt_eval_count || 0,
+          outputTokens: chunk.eval_count || 0
+        }
+      }
+    }
+  }
+
+  getModel() {
+    return {
+      id: this.options.ollamaModelId || "",
+      info: {
+        maxTokens: 8192,
+        contextWindow: Number(this.options.ollamaApiOptionsCtxNum || 32768),
+        supportsPromptCache: false,
+        inputPrice: 0,
+        outputPrice: 0
+      }
+    }
+  }
+
+  abort(): void {
+    this.client?.abort()
+  }
+}
+```
+
+## Testing Your Provider
+
+Create tests for your provider:
+
+```typescript
+import { CustomProviderHandler } from "../custom-provider"
+
+describe("CustomProviderHandler", () => {
+  it("should stream text responses", async () => {
+    const handler = new CustomProviderHandler({
+      apiKey: "test-key",
+      modelId: "test-model"
+    })
+
+    const chunks = []
+    for await (const chunk of handler.createMessage(
+      "You are a helpful assistant",
+      [{ type: "say", say: "user", text: "Hello" }]
+    )) {
+      chunks.push(chunk)
+    }
+
+    expect(chunks.some(c => c.type === "text")).toBe(true)
+    expect(chunks.some(c => c.type === "usage")).toBe(true)
+  })
+
+  it("should handle tool calls", async () => {
+    const handler = new CustomProviderHandler({
+      apiKey: "test-key",
+      modelId: "test-model"
+    })
+
+    const tools = [{
+      name: "test_tool",
+      description: "Test tool",
+      input_schema: {
+        type: "object",
+        properties: {}
+      }
+    }]
+
+    const chunks = []
+    for await (const chunk of handler.createMessage(
+      "System prompt",
+      [{ type: "say", say: "user", text: "Use the tool" }],
+      tools
+    )) {
+      chunks.push(chunk)
+    }
+
+    expect(chunks.some(c => c.type === "tool_calls")).toBe(true)
+  })
+})
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Client Initialization">
+    - Lazy-initialize clients in `ensureClient()`
+    - Validate required options (API key, model ID)
+    - Add proxy support if needed
+    - Include proper headers (User-Agent, etc.)
+  </Accordion>
+
+  <Accordion title="Error Handling">
+    - Use `@withRetry()` for network/rate limit errors
+    - Throw immediately on auth errors (401, 403)
+    - Include error context (status code, message)
+    - Log errors for debugging
+  </Accordion>
+
+  <Accordion title="Streaming">
+    - Yield chunks as soon as available
+    - Don't buffer entire response
+    - Handle partial JSON in tool calls
+    - Report usage at end of stream
+  </Accordion>
+
+  <Accordion title="Message Conversion">
+    - Preserve message order
+    - Handle all message types
+    - Convert tool results correctly
+    - Sanitize invalid content
+  </Accordion>
+
+  <Accordion title="Performance">
+    - Reuse HTTP clients
+    - Enable keep-alive
+    - Support request cancellation
+    - Add timeouts for long requests
+  </Accordion>
+</AccordionGroup>
+
+## Reference Implementations
+
+Study these providers for examples:
+
+- **Simple**: `ollama.ts` - Basic streaming with tools
+- **Advanced**: `anthropic.ts` - Caching, thinking, retries
+- **Complex**: `openai.ts` - Azure, reasoning models, multiple formats
+- **Gateway**: `openrouter.ts` - Cost tracking, error handling
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Provider Overview" icon="cloud" href="/api/providers/overview">
+    Understand the provider system
+  </Card>
+  <Card title="Anthropic Provider" icon="brain" href="/api/providers/anthropic">
+    Reference implementation
+  </Card>
+  <Card title="OpenAI Provider" icon="openai" href="/api/providers/openai">
+    Complex provider example
+  </Card>
+  <Card title="OpenRouter Provider" icon="route" href="/api/providers/openrouter">
+    Gateway pattern
+  </Card>
+</CardGroup>

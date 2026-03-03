@@ -1,0 +1,504 @@
+---
+title: "File Identification"
+description: "Smart file discovery and intelligent indexing for rapid workspace navigation and context-aware code generation."
+---
+
+File Identification is HAI Build's intelligent file discovery system. It combines fast indexing, fuzzy search, and context tracking to help the AI find exactly the files it needs for code generation.
+
+<Frame>
+  <img src="/images/file-search-demo.gif" alt="File identification and search" />
+</Frame>
+
+## How It Works
+
+File Identification uses a multi-layer approach to file discovery:
+
+<Steps>
+  <Step title="Workspace Indexing">
+    Ripgrep scans your workspace to build a comprehensive file index.
+  </Step>
+  <Step title="Active File Tracking">
+    Monitors currently open tabs and recently edited files.
+  </Step>
+  <Step title="Fuzzy Search">
+    Uses Fuse.js for intelligent file matching across paths and names.
+  </Step>
+  <Step title="Context Prioritization">
+    Ranks files based on relevance to the current task.
+  </Step>
+</Steps>
+
+## Core Features
+
+### Lightning-Fast Indexing
+
+File Identification leverages [ripgrep](https://github.com/BurntSushi/ripgrep) for blazing-fast file discovery:
+
+```typescript
+// From src/services/search/file-search.ts:17
+export async function executeRipgrepForFiles(
+  workspacePath: string,
+  limit: number = 5000,
+): Promise<{ path: string; type: "file" | "folder"; label?: string }[]>
+```
+
+**Performance characteristics**:
+- Scans 5,000+ files in milliseconds
+- Follows symlinks automatically
+- Respects `.gitignore` patterns
+- Excludes common build directories (`node_modules`, `dist`, `.git`)
+
+<Info>
+Ripgrep is 10-100x faster than traditional file search tools, making it ideal for large codebases.
+</Info>
+
+### Intelligent File Filtering
+
+Automatic exclusion of irrelevant directories:
+
+```typescript
+// Excluded patterns (src/services/search/file-search.ts:30)
+const excludePatterns = [
+  "node_modules",
+  ".git",
+  ".github",
+  "out",
+  "dist",
+  "__pycache__",
+  ".venv",
+  ".env",
+  "venv",
+  "env",
+  ".cache",
+  "tmp",
+  "temp"
+]
+```
+
+### Active File Prioritization
+
+Files you're actively working on appear first:
+
+```typescript
+// From src/services/search/file-search.ts:101
+async function getActiveFiles(): Promise<Set<string>> {
+  const request = GetOpenTabsRequest.create({})
+  const response = await HostProvider.window.getOpenTabs(request)
+  return new Set(response.paths)
+}
+```
+
+Active files are:
+- Currently open in tabs
+- Recently edited
+- Visible in the editor
+- Part of the current diff view
+
+<Tip>
+The AI sees your open files first, making it context-aware of what you're working on.
+</Tip>
+
+## Fuzzy Search
+
+File Identification uses [Fuse.js](https://fusejs.io/) for intelligent fuzzy matching:
+
+<Tabs>
+  <Tab title="Match Scoring">
+    Files are ranked by multiple factors:
+    
+    ```typescript
+    // From src/services/search/file-search.ts:159
+    const fzf = new fzfModule.Fzf(combinedItems, {
+      selector: (item) => `${item.label} ${item.label} ${item.path}`,
+      tiebreakers: [OrderbyMatchScore, fzfModule.byLengthAsc],
+      limit: limit * 2,
+    })
+    ```
+    
+    **Scoring criteria**:
+    1. Filename matches (weighted 2x)
+    2. Full path matches
+    3. Fewer gaps between matched characters
+    4. Shorter paths preferred
+  </Tab>
+  <Tab title="Gap Scoring">
+    Custom algorithm prioritizes contiguous matches:
+    
+    ```typescript
+    // From src/services/search/file-search.ts:192
+    export const OrderbyMatchScore = (a, b) => {
+      const countGaps = (positions) => {
+        let gaps = 0, prev = -Infinity
+        for (const pos of positions) {
+          if (prev !== -Infinity && pos - prev > 1) {
+            gaps++
+          }
+          prev = pos
+        }
+        return gaps
+      }
+      return countGaps(a.positions) - countGaps(b.positions)
+    }
+    ```
+    
+    **Example**:
+    - `UserController.ts` vs `UsersComponent.tsx`
+    - Query: `UserCont`
+    - `UserController.ts` ranks higher (fewer gaps)
+  </Tab>
+</Tabs>
+
+## Multi-Root Workspace Support
+
+File Identification seamlessly handles multi-root workspaces:
+
+```typescript
+// From src/services/search/file-search.ts:213
+export async function searchWorkspaceFilesMultiroot(
+  query: string,
+  workspaceManager: WorkspaceRootManager,
+  limit: number = 20,
+  selectedType?: "file" | "folder",
+  workspaceHint?: string,
+): Promise<Result[]>
+```
+
+<CardGroup cols={2}>
+  <Card title="Workspace Hints" icon="compass">
+    Search specific workspace roots:
+    
+    `@frontend:/components`
+    
+    Searches only the `frontend` workspace.
+  </Card>
+  <Card title="Parallel Search" icon="network-wired">
+    Searches all roots simultaneously:
+    
+    ```typescript
+    const searchPromises = workspacesToSearch.map(
+      async (workspace) => {
+        return await searchWorkspaceFiles(
+          query,
+          workspace.path,
+          limit,
+          selectedType,
+          workspace.name
+        )
+      }
+    )
+    ```
+  </Card>
+  <Card title="Deduplication" icon="clone">
+    Handles duplicate filenames:
+    
+    ```typescript
+    if (pathCounts.get(result.path)! > 1) {
+      return {
+        ...result,
+        label: `${result.workspaceName}:/${result.path}`
+      }
+    }
+    ```
+  </Card>
+  <Card title="Workspace Labels" icon="tag">
+    Each result includes workspace name:
+    
+    ```typescript
+    {
+      path: "src/components/Button.tsx",
+      workspaceName: "frontend",
+      type: "file"
+    }
+    ```
+  </Card>
+</CardGroup>
+
+See: `src/services/search/file-search.ts:209`
+
+## File Context Tracking
+
+HAI Build tracks which files are in the AI's context:
+
+### Context Status Indicators
+
+<Steps>
+  <Step title="Added to Context">
+    Files explicitly added via mentions or tool use.
+  </Step>
+  <Step title="In Active Use">
+    Files currently being read or edited by the AI.
+  </Step>
+  <Step title="Removed from Context">
+    Files removed during context compaction.
+  </Step>
+</Steps>
+
+### File Mention Tracking
+
+Every file operation is tracked:
+
+```typescript
+// From src/core/context/context-tracking/FileContextTracker.ts
+export class FileContextTracker {
+  async trackFileAccess(filePath: string, operation: 'read' | 'write' | 'list')
+  async getAccessedFiles(): Promise<Set<string>>
+  async clearAccessHistory(): Promise<void>
+}
+```
+
+**Tracked operations**:
+- `read_file`: File content read
+- `write_to_file`: File created or modified
+- `replace_in_file`: File edited
+- `list_files`: Directory listing
+- `search_files`: File search results
+
+### Context Warnings
+
+Users are warned when files are removed:
+
+```typescript
+// From src/core/task/index.ts:1248
+const pendingContextWarning = 
+  await this.fileContextTracker.retrieveAndClearPendingFileContextWarning()
+
+if (pendingContextWarning && pendingContextWarning.length > 0) {
+  const fileContextWarning = formatResponse.fileContextWarning(pendingContextWarning)
+  newUserContent.push({
+    type: "text",
+    text: fileContextWarning,
+  })
+}
+```
+
+<Warning>
+When context is compacted, the AI receives a warning about removed files to maintain awareness.
+</Warning>
+
+## File Type Detection
+
+Automatic file type detection and categorization:
+
+<Accordion title="Type Verification">
+Verifies file types using `fs.lstat()`:
+
+```typescript
+// From src/services/search/file-search.ts:168
+const verifiedResultsPromises = filteredResults.map(
+  async ({ item }) => {
+    const fullPath = path.join(workspacePath, item.path)
+    let type = item.type
+    
+    try {
+      const stats = await fs.promises.lstat(fullPath)
+      type = stats.isDirectory() ? "folder" : "file"
+    } catch {
+      // Keep original type if path doesn't exist
+    }
+    
+    return { ...item, type }
+  },
+)
+```
+</Accordion>
+
+<Accordion title="Directory Discovery">
+Automatically builds directory tree:
+
+```typescript
+// From src/services/search/file-search.ts:61
+let dirPath = path.dirname(relativePath)
+while (dirPath && dirPath !== "." && dirPath !== "/") {
+  dirSet.add(dirPath)
+  dirPath = path.dirname(dirPath)
+}
+```
+
+Enables folder-level operations and navigation.
+</Accordion>
+
+## Search Strategies
+
+Different search approaches for different scenarios:
+
+<CardGroup cols={2}>
+  <Card title="Exact Match" icon="equals">
+    When you know the filename:
+    
+    `UserService.ts`
+    
+    Returns exact matches first.
+  </Card>
+  <Card title="Partial Match" icon="magnifying-glass">
+    When you remember part of the name:
+    
+    `user serv`
+    
+    Fuzzy matches across path segments.
+  </Card>
+  <Card title="Path-Based" icon="folder-tree">
+    When you know the directory:
+    
+    `components/auth`
+    
+    Searches full paths.
+  </Card>
+  <Card title="Extension Filter" icon="filter">
+    When you need specific file types:
+    
+    `*.test.ts`
+    
+    Filters by extension pattern.
+  </Card>
+</CardGroup>
+
+## Integration with AI
+
+### Automatic File Suggestions
+
+The AI uses File Identification to:
+
+1. **Find relevant files** for a task
+2. **Suggest imports** based on available modules
+3. **Locate configuration** files automatically
+4. **Discover test files** for testing tasks
+5. **Navigate project structure** efficiently
+
+### Context-Aware Mentions
+
+File Identification powers the `@` mention feature:
+
+```typescript
+// Type @ in chat to trigger file search
+@src/components/Button
+// AI adds file to context
+```
+
+<Tip>
+Use `@` mentions to explicitly add files to context before describing your task.
+</Tip>
+
+## Performance Optimization
+
+### Lazy Loading
+
+Results are loaded incrementally:
+- Initial 20 results displayed immediately
+- More results loaded on scroll
+- Prevents UI blocking on large workspaces
+
+### Caching Strategy
+
+File index is cached per workspace:
+- Cache invalidated on file system changes
+- Active files cache updated every 500ms
+- Search results cached for 5 seconds
+
+### Limits and Throttling
+
+```typescript
+// Default limits (src/services/search/file-search.ts:18)
+const DEFAULT_FILE_LIMIT = 5000
+const DEFAULT_SEARCH_RESULTS = 20
+const EXTENDED_RESULTS = 40  // For multi-root
+```
+
+Prevents memory issues on massive codebases.
+
+## Configuration
+
+### Custom Exclusions
+
+Add workspace-specific exclusions:
+
+```json
+// .vscode/settings.json
+{
+  "hai.fileSearch.exclude": [
+    "**/build/**",
+    "**/coverage/**",
+    "**/*.log"
+  ]
+}
+```
+
+### Search Behavior
+
+Customize search parameters:
+
+```json
+{
+  "hai.fileSearch.limit": 10000,
+  "hai.fileSearch.fuzzyThreshold": 0.3,
+  "hai.fileSearch.followSymlinks": true
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Filenames">
+    - Clear names improve search accuracy
+    - Include feature/component in filename
+    - Use consistent naming conventions
+    - Avoid generic names like `utils.ts`
+  </Accordion>
+  <Accordion title="Organize with Directories">
+    - Group related files together
+    - Use feature-based folder structure
+    - Keep directory depth reasonable (3-5 levels)
+    - Mirror logical application structure
+  </Accordion>
+  <Accordion title="Leverage Active File Priority">
+    - Open relevant files before starting AI tasks
+    - Keep related files in tabs
+    - Use split editor for context files
+    - Close unrelated files to reduce noise
+  </Accordion>
+  <Accordion title="Optimize Large Workspaces">
+    - Use workspace hints in multi-root setups
+    - Add irrelevant directories to exclusions
+    - Increase file limit if needed
+    - Consider breaking into multiple workspaces
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Files not appearing in search">
+    - Check exclusion patterns
+    - Verify file isn't in `.gitignore`
+    - Confirm file exists on disk
+    - Refresh file index
+  </Accordion>
+  <Accordion title="Slow file search">
+    - Reduce file limit
+    - Add more exclusion patterns
+    - Check for symlink loops
+    - Disable deep directory scanning
+  </Accordion>
+  <Accordion title="Incorrect file rankings">
+    - Use more specific search terms
+    - Include path segments in query
+    - Adjust fuzzy search threshold
+    - Try exact filename match
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Inline Editing" icon="pen-to-square" href="/features/inline-editing">
+    Make quick edits to discovered files
+  </Card>
+  <Card title="AI-Powered Coding" icon="robot" href="/features/ai-powered-coding">
+    See how the AI uses file context
+  </Card>
+  <Card title="Focus Chain" icon="list-check" href="/features/focus-chain">
+    Track which files are being worked on
+  </Card>
+  <Card title="Multi-Root Workspaces" icon="folder-tree" href="/features/multiroot-workspace">
+    Work with multiple project roots
+  </Card>
+</CardGroup>

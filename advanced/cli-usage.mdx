@@ -1,0 +1,422 @@
+---
+title: 'CLI Usage'
+description: 'Complete guide to using the Cline CLI tool for terminal-based AI coding assistance'
+icon: 'terminal'
+---
+
+# CLI Usage
+
+The Cline CLI brings the power of HAI Build Code Generator directly to your terminal. Run AI-powered coding tasks, manage history, and automate workflows without leaving the command line.
+
+## Installation
+
+Install globally via npm:
+
+```bash
+npm i -g cline
+```
+
+Or use directly with npx:
+
+```bash
+npx cline "Your task here"
+```
+
+## Modes of Operation
+
+### Interactive Mode
+
+Launch the interactive terminal UI when you run `cline` without arguments:
+
+```bash
+cline
+```
+
+This provides a rich interface with:
+- Real-time conversation display
+- Task history navigation
+- Live progress updates
+- Interactive approval prompts
+
+### Task Mode
+
+Execute tasks directly with a prompt:
+
+```bash
+cline "Create a hello world function in Python"
+```
+
+Automatically switches between interactive and plain text mode based on the environment.
+
+### Plain Text Mode
+
+Activated automatically when:
+- Output is redirected (`>` or `|`)
+- stdin is piped
+- `--json` or `--yolo` flags are used
+
+Perfect for scripting and CI/CD pipelines:
+
+```bash
+cat requirements.txt | cline "Analyze these dependencies for security issues"
+```
+
+## Core Commands
+
+### task (alias: t)
+
+Run a new coding task:
+
+```bash
+cline task "Add TypeScript types to this module"
+cline t "Fix the bug in auth.js"
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-a, --act` | Run in act mode (default - actively uses tools) |
+| `-p, --plan` | Run in plan mode (gather info before acting) |
+| `-y, --yolo` | Auto-approve all actions, enable plain text output |
+| `-t, --timeout <seconds>` | Timeout for yolo mode (default: 600) |
+| `-m, --model <model>` | Specify which model to use |
+| `-v, --verbose` | Show verbose output including reasoning |
+| `-c, --cwd <path>` | Set working directory |
+| `--config <path>` | Path to Cline config directory |
+| `--thinking [tokens]` | Enable extended thinking (default: 1024) |
+| `--reasoning-effort <level>` | Set reasoning effort: none/low/medium/high/xhigh |
+| `--max-consecutive-mistakes <count>` | Max mistakes before halting in yolo mode |
+| `--json` | Output as JSON for parsing |
+| `--double-check-completion` | Force re-verification of completions |
+| `-T, --taskId <id>` | Resume an existing task by ID |
+
+**Examples:**
+
+```bash
+# Plan mode with verbose output
+cline task -p -v "Design a REST API for user management"
+
+# Yolo mode for automated workflows
+cline task -y "Run tests and fix any failures"
+
+# Use specific model with extended thinking
+cline task -m claude-sonnet-4-5-20250929 --thinking "Refactor this architecture"
+
+# Resume a previous task
+cline task -T abc123def "Now add unit tests"
+```
+
+### history (alias: h)
+
+View and navigate task history:
+
+```bash
+cline history
+cline h -n 20 -p 2
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-n, --limit <number>` | Tasks per page (default: 10) |
+| `-p, --page <number>` | Page number (default: 1) |
+| `--config <path>` | Config directory path |
+
+### config
+
+View current configuration:
+
+```bash
+cline config
+```
+
+Displays global and workspace state, API configurations, and settings.
+
+### auth
+
+Authenticate providers and configure models:
+
+```bash
+# Interactive wizard
+cline auth
+
+# Quick setup
+cline auth -p anthropic -k sk-ant-xxxxx -m claude-sonnet-4-5-20250929
+cline auth -p openai-native -k sk-xxxxx -m gpt-4o
+
+# OpenAI-compatible with custom base URL
+cline auth -p openai -k your-key -m llama-3 -b https://api.example.com/v1
+```
+
+**Quick Setup Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-p, --provider <id>` | Provider ID (anthropic, openai-native, etc.) |
+| `-k, --apikey <key>` | API key |
+| `-m, --modelid <id>` | Model ID |
+| `-b, --baseurl <url>` | Base URL (OpenAI-compatible only) |
+
+### version
+
+Show CLI version:
+
+```bash
+cline version
+```
+
+### update
+
+Check for and install updates:
+
+```bash
+cline update
+```
+
+## Agent Behavior Modes
+
+### Act Mode (Default)
+
+Cline actively uses tools to accomplish tasks:
+- Creates and edits files
+- Executes terminal commands
+- Uses headless browser
+- Searches codebases
+- Makes API calls
+
+```bash
+cline -a "Build a new feature"
+```
+
+### Plan Mode
+
+Cline gathers information and creates a plan before implementation:
+- Explores the codebase
+- Asks clarifying questions
+- Presents a detailed strategy
+- Waits for approval before acting
+
+```bash
+cline -p "Design the authentication system"
+```
+
+## Advanced Usage
+
+### Piped Input
+
+Pass data directly from other commands:
+
+```bash
+# Analyze file contents
+cat README.md | cline "Summarize this documentation"
+
+# Review git changes
+git diff | cline "Review these changes and suggest improvements"
+
+# Process command output
+npm audit | cline "Fix the security vulnerabilities"
+
+# Combine piped input with a prompt
+echo "function add(a, b) { return a + b }" | cline "Add TypeScript types"
+```
+
+### Image References
+
+Include images in your prompts:
+
+```bash
+# Explicit flag
+cline task -i screenshot.png diagram.jpg "Fix the UI based on these images"
+
+# Inline reference
+cline "Implement the design shown in @./mockup.png"
+```
+
+### JSON Output
+
+Parse structured output for automation:
+
+```bash
+cline --json "What files are in this directory?" | jq '.text'
+```
+
+**JSON Format:**
+
+```json
+{
+  "type": "say",
+  "text": "I found 10 files in the current directory...",
+  "ts": 1704067200000,
+  "reasoning": "Optional reasoning text",
+  "say": "completion_result",
+  "partial": false,
+  "files": ["file1.js", "file2.ts"]
+}
+```
+
+### Resuming Tasks
+
+Continue where you left off:
+
+```bash
+# Resume without additional input
+cline -T abc123def
+
+# Resume with follow-up message
+cline -T abc123def "Now add error handling"
+
+# Resume in plan mode
+cline -T abc123def -p "What's left to implement?"
+
+# Resume with yolo mode
+cline -T abc123def -y "Continue the implementation"
+```
+
+### Scripting Examples
+
+**Automated Testing:**
+
+```bash
+#!/bin/bash
+if cline -y --json "Run the test suite" | jq -e '.text | contains("All tests passed")'; then
+  echo "Tests passed!"
+else
+  echo "Tests failed"
+  exit 1
+fi
+```
+
+**CI/CD Integration:**
+
+```bash
+# In GitHub Actions or similar
+cline -y --timeout 300 "Fix linting errors in the codebase"
+```
+
+**Batch Processing:**
+
+```bash
+for file in src/*.js; do
+  cline -y "Add JSDoc comments to $file"
+done
+```
+
+## Environment Variables
+
+### CLINE_DIR
+
+Override the default configuration directory:
+
+```bash
+export CLINE_DIR=/custom/config/path
+cline "Your task"
+```
+
+### CLINE_COMMAND_PERMISSIONS
+
+Restrict shell commands Cline can execute:
+
+```bash
+# Allow only npm and git commands
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["npm *", "git *"]}'
+
+# Deny dangerous commands
+export CLINE_COMMAND_PERMISSIONS='{"deny": ["rm -rf *", "sudo *"]}'
+
+# Allow file operations with redirects
+export CLINE_COMMAND_PERMISSIONS='{"allow": ["cat *", "echo *"], "allowRedirects": true}'
+```
+
+**Configuration format:**
+
+```json
+{
+  "allow": ["pattern1", "pattern2"],
+  "deny": ["pattern3"],
+  "allowRedirects": true
+}
+```
+
+## Configuration Files
+
+### Directory Structure
+
+```
+~/.cline/
+├── data/
+│   ├── globalState.json     # Global settings
+│   ├── secrets.json         # API keys (encrypted)
+│   ├── workspace/           # Workspace state
+│   └── tasks/               # Task history
+└── log/                     # Debug logs
+```
+
+### View Logs
+
+```bash
+cline dev log
+```
+
+## Tips & Best Practices
+
+### Performance Optimization
+
+1. **Use Plan Mode for Large Tasks**: Let Cline explore and plan before taking action
+2. **Enable Thinking for Complex Problems**: `--thinking` provides better reasoning
+3. **Leverage Task Resume**: Continue expensive tasks without starting over
+
+### Security
+
+1. **Use Command Permissions**: Restrict what Cline can execute
+2. **Review Before Yolo**: Test tasks interactively before automating
+3. **Keep API Keys Secure**: Store in `~/.cline/data/secrets.json`
+
+### Workflow Integration
+
+1. **Combine with Git Hooks**: Run Cline on pre-commit
+2. **Pipe from Build Tools**: Process compiler errors automatically
+3. **Chain with Other CLIs**: Use in complex shell pipelines
+
+## Troubleshooting
+
+### Authentication Issues
+
+```bash
+# Verify configuration
+cline config
+
+# Re-authenticate
+cline auth
+```
+
+### Task Not Starting
+
+```bash
+# Check verbose output
+cline -v "Your task"
+
+# View logs
+cline dev log
+```
+
+### Plain Text Mode Unexpected
+
+Plain text mode activates when:
+- Output is redirected
+- stdin is piped
+- `--json` or `--yolo` flags are used
+
+To force interactive mode, ensure stdin/stdout are TTYs.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Integration" icon="code" href="/advanced/api-integration">
+    Integrate Cline into your VS Code extensions
+  </Card>
+  <Card title="Custom Experts" icon="user-gear" href="/advanced/custom-experts">
+    Create domain-specific coding experts
+  </Card>
+</CardGroup>
